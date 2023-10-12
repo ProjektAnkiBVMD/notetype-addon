@@ -58,7 +58,7 @@
   --tag-9: #9E9E9E;
   --tag-10: #607D8B;
 
-  --default-alignment: center;
+  --default-alignment: left;
 }
 
 /* TIMER ON/OFF */
@@ -315,7 +315,7 @@ a.nightMode {
 #text {
   margin: auto;
   width: 100%;
-  text-align: left;
+  text-align: var(--default-alignment);
 }
 
 /* Adjustments For Cloze Edit In Review On Mobile */
@@ -345,7 +345,7 @@ a.nightMode {
   font-size: 14px;
   font-style: italic;
   color: var(--text) !important;
-  text-align: left;
+  text-align: var(--default-alignment);
   margin: auto;
   width: 100%;
   max-width: 800px;
@@ -361,7 +361,7 @@ a.nightMode {
   margin: auto;
   border-radius: 0.4em;
   max-width: 100%;
-  text-align: left;
+  text-align: var(--default-alignment);
 }
 
 #praeparat,
