@@ -1,0 +1,69 @@
+{
+  "id": 1600000000003,
+  "name": "ProjektAnkiBasic",
+  "type": 0,
+  "mod": 1600000000,
+  "usn": -1,
+  "sortf": 0,
+  "did": 1,
+  "tmpls": [
+    {
+      "name": "Front -> Back",
+      "ord": 0,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Vorderseite}}",
+      "bafmt": "{{Vorderseite}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 0
+    }
+  ],
+  "flds": [
+    {
+      "name": "Vorderseite",
+      "ord": 0,
+      "sticky": false,
+      "rtl": false,
+      "font": "Arial",
+      "size": 20,
+      "description": "",
+      "plainText": false,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "meta": null
+    },
+    {
+      "name": "Rückseite",
+      "ord": 1,
+      "sticky": false,
+      "rtl": false,
+      "font": "Arial",
+      "size": 20,
+      "description": "",
+      "plainText": false,
+      "collapsed": false,
+      "excludeFromSearch": false
+    },
+    {
+      "name": "Note ID",
+      "ord": 2,
+      "sticky": false,
+      "rtl": false,
+      "font": "Arial",
+      "size": 20,
+      "description": "",
+      "plainText": false,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "meta": "noteid"
+    }
+  ],
+  "css": "",
+  "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+  "latexPost": "\\end{document}",
+  "latexsvg": false,
+  "req": [[0, "any", [0]]],
+  "tags": [],
+  "vers": []
+}

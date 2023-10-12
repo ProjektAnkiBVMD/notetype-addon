@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="AnKing">
+        <file>projekt_anki.png</file>
+        <file>instagram.png</file>
+        <file>discord.png</file>
+        <file>anking.png</file>
+    </qresource>
+</RCC>

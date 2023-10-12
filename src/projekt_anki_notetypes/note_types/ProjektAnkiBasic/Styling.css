@@ -1,0 +1,754 @@
+/* ZANKIPHYN NOTETPYE */
+/* version  preview-10 */
+/* based on the AnKing NoteType, check out their YouTube Channel / their website under www.AnKingMed.com */
+
+/*#########################################################
+################  USER CUSTOMIZATION START  ##############*/
+/* You can choose colors at www.htmlcolorcodes.com */
+
+/* Color Overview */
+:root {
+  /* #################################### */
+  /* COMBINED COLORS ANKING & ANKIPHIL */
+
+  --bg: #F8F8F8;
+  --text: #363638;
+  --text-header: #CBCBCA;
+  --text-bold: #339961;
+  --text-italics: #30B4C5;
+  --text-underline: #F89925;
+  --text-link: #7C7C7C;
+  --text-cloze: IndianRed;
+
+  --zusatz: #2A9BCB;
+  --klinik: #0fa980;
+  --meditricks: #E19166;
+  --hammer: #FA8072;
+  --praeparat: var(--zusatz);
+
+  --button-bg: #EBEBEB;
+  --button-border: var(--text-header);
+  --button-text: #505050;
+  --button-text-hover: var(--bg);
+  --button-bg-header: #b296cf;
+
+  --nm-bg: #363638;
+  --nm-text: #E9E9E9;
+  --nm-text-header: #525253;
+  --nm-text-bold: MediumSeaGreen;
+  --nm-text-italics: #44C1D2;
+  --nm-text-underline: #FAB763;
+  --nm-button-bg: #424242;
+  --nm-button-border: var(--nm-text-header);
+  --nm-button-text: #AFAFAF;
+  --nm-button-bg-hover: #AFAFAF;
+  --nm-button-text-hover: var(--nm-bg);
+
+  --expanded-button-bg: #ABABAB;
+  --expanded-button-text: black;
+
+  --tag-1: #F44336;
+  --tag-2: #9C27B0;
+  --tag-3: #3F51B5;
+  --tag-4: #03A9F4;
+  --tag-5: #009688;
+  --tag-6: #C0CA33;
+  --tag-7: #FF9800;
+  --tag-8: #FF5722;
+  --tag-9: #9E9E9E;
+  --tag-10: #607D8B;
+
+  --default-alignment: center;
+}
+
+/* TIMER ON/OFF */
+.timer {
+  display: block;
+  /* ‘none’ or ‘block’ */
+}
+
+/*Revealed Hints Font Size*/
+.hints {
+  font-size: .85rem;
+}
+
+/*~~~~~~~~~FONT STYLE~~~~~~~~~*/
+.card,
+kbd {
+  font-family: Arial Greek, Arial, sans-serif;
+  /* Step exam's font is Arial Greek */
+}
+
+/*~~~~~~~~~COLORS~~~~~~~~~/
+/* Timer Countdown Color */
+.timer {
+  color: transparent;
+}
+
+/* Empty Link Color */
+a:not([href]),
+a[href^="javascript:"] {
+  text-decoration: none;
+  color: inherit;
+}
+
+
+/*~~~~~~~~NIGHT MODE COLORS~~~~~~~~*/
+/* NM Default Text Color */
+.nightMode.card,
+.night_mode .card {
+  color: var(--nm-text) !important;
+}
+
+/* NM Background Color */
+.iphone .nightMode.card,
+.iphone .night_mode .card,
+.ipad .nightMode.card,
+.ipad .night_mode .card {
+  background-color: var(--nm-bg) !important;
+}
+
+
+/*################  USER CUSTOMIZATION END  ################
+###########################################################*/
+/* RESTLICHER STYLE */
+html {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  /* CENTERS THE CARD IN THE MIDDLE OF THE WINDOW */
+  padding: 0 constant(safe-area-inset-right) 0 constant(safe-area-inset-left);
+  padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  word-wrap: break-word;
+  /* BREAKS UP LONG WORKS */
+}
+
+/* Styling For Whole Card */
+.card {
+  text-align: center;
+  display: block;
+  position: absolute !important;
+  max-width: 900px;
+  height: auto;
+  inset: 0;
+  /* short for top, right, bottom, left */
+  margin: 15px;
+
+  font-size: 20px;
+  line-height: 1.4;
+  color: var(--text);
+  background-color: var(--bg);
+  word-wrap: break-word;
+}
+
+#qa {
+  text-align: center;
+  display: block;
+  position: absolute !important;
+  max-width: 900px;
+  height: auto;
+  inset: 0;
+  /* short for top, right, bottom, left */
+}
+
+@media (min-width: 930px) {
+  .card {
+    margin: 15px auto;
+  }
+}
+
+.mobile .card {
+  padding-bottom: 5em;
+}
+
+.win #qa,
+.mac #qa,
+.linux:not(.android) #qa {
+  display: flex;
+  position: absolute;
+  height: auto;
+  max-height: 100vh;
+  inset: 0;
+  /* short for top, right, bottom, left */
+  flex-flow: column;
+}
+
+#qa #header-container {
+  flex: 0 1 auto;
+  /* The above is shorthand for:
+  flex-grow: 0,
+  flex-shrink: 1,
+  flex-basis: auto
+  */
+}
+
+#qa #container {
+  flex: 1 1 auto;
+  overflow-y: scroll;
+}
+
+/* Style the horizontal line */
+hr {
+  opacity: .7
+}
+
+/* Style other HTML tags */
+ul,
+ol {
+  text-align: start;
+  margin: 0;
+}
+
+ol li::marker {
+  font-weight: bold;
+}
+
+sup,
+sub {
+  font-size: 0.7em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.3em;
+}
+
+table {
+  font-size: 75%;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid;
+}
+
+td,
+th {
+  padding: 2px;
+  border: 1px solid
+}
+
+/* COLOR ACCENTS FOR BOLD-ITALICS-UNDERLINE */
+/* BOLD STYLE */
+b {
+  color: var(--text-bold) !important;
+}
+
+/* UNDERLINE STYLE */
+u {
+  color: var(--text-underline) !important;
+  text-decoration: none;
+}
+
+/* ITALICS STYLE */
+i {
+  color: var(--text-italics) !important;
+  font-style: inherit;
+}
+
+/* LINK STYLE */
+a {
+  color: var(--text-link) !important;
+  text-decoration: none;
+  font-style: normal;
+}
+
+/* NIGHT MODE */
+/* BOLD STYLE */
+b.nightMode {
+  color: var(--nm-text-bold) !important;
+}
+
+/* UNDERLINE STYLE */
+u.nightMode {
+  color: var(--nm-text-underline) !important;
+  text-decoration: none;
+}
+
+/* ITALICS STYLE */
+i.nightMode {
+  color: var(--nm-text-italics) !important;
+  font-style: inherit;
+}
+
+/* ITALICS STYLE */
+a.nightMode {
+  color: var(--nm-text-link) !important;
+  text-decoration: none;
+  font-size: 10px;
+  font-style: normal;
+}
+
+/* Formatting For Timer
+.timer {
+  font-size: 20px;
+  margin: 12em auto auto auto;
+} */
+
+
+/* ~~~~~~~~~ FIELDS ~~~~~~~~~ */
+/* Cloze format */
+.cloze,
+.cloze b,
+.cloze u,
+.cloze i,
+.cloze[data-content][data-hint] {
+  font-weight: bold;
+  color: var(--text-cloze) !important;
+}
+
+.nightMode .cloze,
+.nightMode .cloze b,
+.nightMode .cloze u,
+.nightMode .cloze i,
+.nightMode .cloze[data-content][data-hint] {
+  font-weight: bold;
+  color: var(--text-cloze) !important;
+}
+
+#text {
+  margin: auto;
+  width: 100%;
+  text-align: left;
+}
+
+/* Adjustments For Cloze Edit In Review On Mobile */
+.clozefield,
+.mobile .editcloze {
+  display: none;
+}
+
+.editcloze,
+.mobile .clozefield {
+  display: block;
+}
+
+/* Text When Hint Is Shown*/
+.hints {
+  font-style: italic;
+}
+
+/*add spacing between hints and extra field*/
+.hints+#extra {
+  margin-top: 1rem;
+}
+
+/* OTHER FIELDS */
+/* WEITERE FELDER */
+#extra {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text) !important;
+  text-align: left;
+  margin: auto;
+  width: 100%;
+  max-width: 800px;
+}
+
+#zusatz,
+#hammer,
+#klinik,
+#praeparat,
+#meditricks {
+  color: var(--text) !important;
+  font-size: 14px;
+  margin: auto;
+  border-radius: 0.4em;
+  max-width: 100%;
+  text-align: left;
+}
+
+#praeparat,
+#meditricks {
+  text-align: center;
+}
+
+.nightMode #extra,
+.nightMode #zusatz,
+.nightMode #hammer,
+.nightMode #klinik,
+.nightMode #praeparat,
+.nightMode #meditricks {
+  color: var(--nm-text) !important;
+}
+
+#zusatz,
+#hammer,
+#klinik,
+#praeparat,
+#meditricks {
+  padding: 5px;
+}
+
+#zusatz {
+  border: 2px solid var(--zusatz);
+}
+
+#hammer {
+  border: 2px solid var(--hammer);
+}
+
+#klinik {
+  border: 2px solid var(--klinik);
+}
+
+#praeparat {
+  border: 2px solid var(--praeparat);
+}
+
+#meditricks {
+  border: 2px solid var(--meditricks)
+}
+
+
+/* ~~~~~~~~~DETAILS FOR IMAGES~~~~~~~~~ */
+img {
+  max-height: 60vh;
+  max-width: 95%;
+}
+
+.ipad img {
+  max-height: 85%;
+  max-width: 85%;
+}
+
+.nightMode img {
+  filter: brightness(0.8) contrast(1.4);
+}
+
+#extra img {
+  min-width: 30%;
+}
+
+/*Image hover zoom*/
+img:active {
+  transform: scale(1.2);
+}
+
+.button-general img:active,
+.mobile img:active {
+  transform: none !important;
+}
+
+#image {
+  font-size: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.ipad #image {
+  max-width: none;
+}
+
+
+/* ~~~~~~~MNEMONICS LEFT JUSTIFIED~~~~~~~ */
+.mnemonics {
+  display: inline-block;
+  text-align: left;
+  /* can change to center to 'turn off' this feature */
+}
+
+.centerbox {
+  text-align: center;
+}
+
+/* ~~~~~~~~~ ADD-ON CONFIGURATIONS ~~~~~~~~~ */
+/*Compatibility with Image Style Editor add-on*/
+.card {
+  --w: 0%;
+}
+
+.mobile .card {
+  --w: 100% !important;
+}
+
+/*Max image width for resize images in editor add-on */
+.card [class^=ui-] img {
+  max-width: 100% !important;
+}
+
+/*Compatibility with resize images in editor add-on */
+.resizer {
+  min-width: 0% !important;
+}
+
+.mobile .resizer {
+  min-width: 100% !important;
+}
+
+/* Fix to make pop-up dictionary images the right size */
+.qtip img {
+  max-width: 95% !important;
+  max-height: 95% !important;
+}
+
+
+/* ~~~~~~~~~ TAGS ~~~~~~~~~ */
+#tags-container {
+  text-align: center;
+  width: 100%;
+  margin-top: .5rem;
+  line-height: .8rem;
+  background-color: transparent;
+}
+
+/* Clickable Tags (need to download the add-on) */
+kbd {
+  display: inline-block;
+  letter-spacing: .2px;
+  font-weight: bold;
+  font-style: normal;
+  font-size: 12px !important;
+  text-shadow: none !important;
+  padding: 0.1rem 0.2rem !important;
+  margin: 1px !important;
+  border-radius: 4px;
+  border-width: 1.5px !important;
+  border-style: solid;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0.5;
+  vertical-align: middle;
+  line-height: 12px;
+  height: auto !important;
+}
+
+/* Tag Becomes More Visible On Hover */
+kbd:hover {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Tag Colors */
+kbd:nth-of-type(1n+0) {
+  border-color: var(--tag-1);
+  color: var(--tag-1) !important;
+}
+
+kbd:nth-of-type(2n+0) {
+  border-color: var(--tag-2);
+  color: var(--tag-2) !important;
+}
+
+kbd:nth-of-type(3n+0) {
+  border-color: var(--tag-3);
+  color: var(--tag-3) !important;
+}
+
+kbd:nth-of-type(4n+0) {
+  border-color: var(--tag-4);
+  color: var(--tag-4) !important;
+}
+
+kbd:nth-of-type(5n+0) {
+  border-color: var(--tag-5);
+  color: var(--tag-5) !important;
+}
+
+kbd:nth-of-type(6n+0) {
+  border-color: var(--tag-6);
+  color: var(--tag-6) !important;
+}
+
+kbd:nth-of-type(7n+0) {
+  border-color: var(--tag-7);
+  color: var(--tag-7) !important;
+}
+
+kbd:nth-of-type(8n+0) {
+  border-color: var(--tag-8);
+  color: var(--tag-8) !important;
+}
+
+kbd:nth-of-type(9n+0) {
+  border-color: var(--tag-9);
+  color: var(--tag-9) !important;
+}
+
+kbd:nth-of-type(10n+0) {
+  border-color: var(--tag-10);
+  color: var(--tag-10) !important;
+}
+
+/* Tag Mobile Adjustments */
+.mobile kbd {
+  opacity: .9;
+  margin: 1px !important;
+  display: inline-block;
+  font-size: 10px !important;
+}
+
+.mobile #tags-container {
+  line-height: 0.6rem;
+  margin-left: 0px;
+}
+
+/* ~~~~~~~~~HEADER LAYOUT~~~~~~~~~ */
+.header {
+  padding: 0px;
+  margin: 0px;
+  color: var(--text-header);
+  font-size: 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  word-break: break-word;
+}
+
+.headhov {
+  display: inline-block;
+}
+
+.head-flex-left {
+  flex: 0 0 75px;
+  text-align: left;
+  display: inline-block;
+}
+
+.head-flex-right {
+  flex: 0 0 75px;
+  text-align: right;
+  display: inline-block;
+}
+
+.head-flex-mid {
+  flex: 1 1 auto;
+  text-align: center;
+  display: inline-block;
+}
+
+.mobile .header {
+  padding-bottom: 4px;
+  top: 0px;
+}
+
+#src,
+#nid {
+  font-size: 14px;
+  font-style: normal;
+  width: 100%;
+  text-align: center !important;
+}
+
+#src,
+#nid,
+#tags-container {
+  margin-top: 0.3rem;
+}
+
+/* ~~~~~~~~~BUTTON LAYOUT~~~~~~~~~ */
+.button-general {
+  outline: 0;
+  background-color: var(--button-bg) !important;
+  border-radius: 0.4em;
+  border: 1px solid var(--button-border);
+  color: var(--button-text) !important;
+  padding: 5px 5px;
+  margin-top: 13px;
+  margin-bottom: 0;
+  text-align: center;
+  display: inline-block;
+  font-size: 13px;
+  /* box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); */
+}
+
+.button-general+.hints {
+  margin-bottom: 0;
+}
+
+.mobile .button-general {
+  padding: 5px 7px;
+}
+
+.mobile .button-one-by-one {
+  padding: 6px 10px !important;
+  font-size: 16px !important;
+}
+
+.button-general:not(.mobile):hover {
+  background-color: var(--button-bg-hover);
+  color: var(--button-text-hover);
+  cursor: default;
+}
+
+#button-hammer:not(.expanded-button) {
+  color: #c26165 !important;
+}
+
+#button-hammer:not(.mobile):hover {
+  background-color: var(--hammer);
+  color: black !important;
+}
+
+.expanded-button {
+  display: block;
+  margin: auto;
+  margin-top: 13px;
+  margin-bottom: 6.5px;
+  font-weight: bold;
+  width: 50%;
+}
+
+/* BUTTONS IN TOP ROW */
+.header .button-general {
+  background: none !important;
+  background-color: transparent !important;
+  color: var(--button-border);
+  padding: 3px 5px;
+  margin: 0px;
+  /* box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); */
+}
+
+.header .button-general:not(.mobile):hover {
+  background-color: var(--button-bg-header) !important;
+  color: var(--button-text-hover) !important;
+  cursor: default;
+}
+
+
+/* ########## NIGHT MODE BUTTONS ########## */
+/* BUTTONS IN TOP ROW */
+.nightMode .header .button-general {
+  background-color: transparent !important;
+  border: 1px solid var(--nm-button-border) !important;
+  color: var(--nm-button-border) !important;
+  /* box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); */
+}
+
+.nightMode .header .button-general:hover {
+  background-color: var(--button-bg-header) !important;
+  color: var(--nm-button-text-hover) !important;
+  cursor: default;
+}
+
+
+/* BUTTONS IN BOTTOM ROW */
+.nightMode .button-general {
+  background-color: var(--nm-button-bg) !important;
+  border: 1px solid var(--nm-button-border) !important;
+  color: var(--nm-button-text) !important;
+  /* box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); */
+}
+
+.nightMode .button-general:not(.mobile):hover {
+  background-image: none;
+  background-color: var(--nm-button-bg-hover) !important;
+  color: var(--nm-button-text-hover) !important;
+  cursor: default;
+}
+
+.nightMode #button-hammer:not(.mobile):hover {
+  background-color: var(--hammer) !important;
+}
+
+.nightMode .expanded-button {
+  background-color: var(--nm-button-bg) !important;
+  color: var(--nm-button-text) !important;
+}

@@ -1,0 +1,160 @@
+{
+  "id": 1606536512076,
+  "name": "ProjektAnkiCloze",
+  "type": 1,
+  "mod": 1638144714,
+  "usn": -1,
+  "sortf": 0,
+  "did": 1542938001934,
+  "tmpls": [
+    {
+      "name": "Cloze",
+      "ord": 0,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{cloze:Text}}",
+      "bafmt": "{{cloze:Text}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12,
+      "scratchPad": false
+    }
+  ],
+  "flds": [
+    {
+      "name": "Text",
+      "ord": 0,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "collapsibleFieldsCollapseByDefault": false,
+      "meta": null,
+      "media": []
+    },
+    {
+      "name": "Extra",
+      "ord": 1,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Bild",
+      "ord": 2,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Eigene Notizen",
+      "ord": 3,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Hammer",
+      "ord": 4,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Klinik",
+      "ord": 5,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Meditricks",
+      "ord": 6,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "AMBOSS-Link",
+      "ord": 7,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Thieme-Link",
+      "ord": 8,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Quelle",
+      "ord": 9,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Datum",
+      "ord": 10,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "One by one",
+      "ord": 11,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 8,
+      "meta": null
+    },
+    {
+      "name": "Note ID",
+      "ord": 12,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "ankihub_id",
+      "ord": 13,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    }
+  ],
+  "css": "",
+  "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+  "latexPost": "\\end{document}",
+  "latexsvg": true,
+  "req": [[0, "any", [0, 12]]],
+  "tags": [],
+  "vers": []
+}

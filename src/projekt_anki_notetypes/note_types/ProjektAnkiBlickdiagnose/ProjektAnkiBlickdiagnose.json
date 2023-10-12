@@ -1,0 +1,158 @@
+{
+  "id": 1600000000002,
+  "name": "ProjektAnkiBlickdiagnose",
+  "type": 0,
+  "mod": 1600000000,
+  "usn": -1,
+  "sortf": 0,
+  "did": 1,
+  "tmpls": [
+    {
+      "name": "Diagnose",
+      "ord": 0,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Diagnose}}",
+      "bafmt": "{{Diagnose}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    }
+  ],
+  "flds": [
+    {
+      "name": "Path-Image",
+      "ord": 0,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Path-Image (Overlay)",
+      "ord": 1,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Diagnose",
+      "ord": 2,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Extra",
+      "ord": 3,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Bild",
+      "ord": 4,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Eigene Notizen",
+      "ord": 5,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Hammer",
+      "ord": 6,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Klinik",
+      "ord": 7,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Meditricks",
+      "ord": 8,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "AMBOSS-Link",
+      "ord": 9,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Thieme-Link",
+      "ord": 10,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Quelle",
+      "ord": 11,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Datum",
+      "ord": 12,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Note ID",
+      "ord": 13,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": [],
+      "meta": "noteid"
+    }
+  ],
+  "css": "",
+  "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+  "latexPost": "\\end{document}",
+  "latexsvg": true,
+  "req": [[0, "any", [0]]],
+  "tags": [],
+  "vers": []
+}

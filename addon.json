@@ -1,0 +1,14 @@
+{
+    "display_name": "Projekt Anki Notetypes",
+    "module_name": "projekt_anki_notetypes",
+    "repo_name": "projekt-anki-notetypes-addon",
+    "ankiweb_id": "2058530482",
+    "author": "Projekt Anki",
+    "conflicts": [],
+    "targets": [
+        "anki21"
+    ],
+    "min_anki_version" : "2.1.36",
+    "max_tested_anki_version" : "2.1.66",
+    "ankiweb_conflicts_with_local": false
+}
