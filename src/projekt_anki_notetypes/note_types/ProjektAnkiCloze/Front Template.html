@@ -1,4 +1,4 @@
-<!-- version 3b04131 -->
+<!-- version f958639 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -614,39 +614,21 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         overflow-y: scroll;
         overflow-x: hidden;
       }
-  
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-  
-      ::-webkit-scrollbar-thumb {
-        background: #C1C1C1; 
-        border-radius: 8px;
-      }
-
-      ::-webkit-scrollbar-corner {
-        background: rgba(0,0,0,0);
-      }
-
-      /* Handle on hover */
-      ::-webkit-scrollbar-thumb:hover {
-        background: #7D7D7D; 
-      }
     }
-  `
+  `;
 
-  var styleSheet = document.createElement("style")
-  styleSheet.innerText = s
+  var styleSheet = document.createElement("style");
+  styleSheet.innerHTML = s;
 
   if (twoColumnLayout) {
-    document.head.appendChild(styleSheet)
+    document.getElementById("qa").appendChild(styleSheet);
   }
 
   if (!twoColumnLayout) {
-    document.head.removeChild(styleSheet)
+    document.getElementById("qa").removeChild(styleSheet);
   }
 </script>
+
 
 <!-- ANKIMOBILE USER ACTIONS -->
 <script>

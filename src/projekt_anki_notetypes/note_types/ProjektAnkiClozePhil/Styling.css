@@ -129,7 +129,6 @@ html {
 .card {
   text-align: center;
   display: block;
-  position: absolute !important;
   max-width: 900px;
   height: auto;
   inset: 0;
@@ -146,7 +145,6 @@ html {
 #qa {
   text-align: center;
   display: block;
-  position: absolute !important;
   max-width: 900px;
   height: auto;
   inset: 0;
@@ -167,7 +165,6 @@ html {
 .mac #qa,
 .linux:not(.android) #qa {
   display: flex;
-  position: absolute;
   height: auto;
   max-height: 100vh;
   inset: 0;
@@ -187,6 +184,26 @@ html {
 #qa #container {
   flex: 1 1 auto;
   overflow-y: scroll;
+}
+
+/* Style the scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C1C1C1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(0, 0, 0, 0);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #7D7D7D;
 }
 
 /* Style the horizontal line */
@@ -223,7 +240,7 @@ sub {
 
 table {
   font-size: 75%;
-  width: 100%;
+  width: 99%;
   border-collapse: collapse;
   border: 1px solid;
 }
