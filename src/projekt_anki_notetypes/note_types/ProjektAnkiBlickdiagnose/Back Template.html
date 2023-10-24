@@ -1,4 +1,4 @@
-<!-- version f958639 -->
+<!-- version 0dc5bcb -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -180,6 +180,9 @@ var indentation = true;
       <div id="image" style="display: none;">
         <br><br>{{edit:Bild}}
       </div>
+    {{/Bild}}
+    {{^Bild}}
+      <span id="image" style="display: none;"></span>
     {{/Bild}}<br>
     {{#Bild}}
       <span id="hint-image" style="display: none;">

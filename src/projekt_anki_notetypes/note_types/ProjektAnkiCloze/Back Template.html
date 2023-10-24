@@ -1,4 +1,4 @@
-<!-- version f958639 -->
+<!-- version 0dc5bcb -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -247,6 +247,9 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
       <div id="image" style="display: none;">
         <br><br>{{edit:Bild}}
       </div>
+    {{/Bild}}
+    {{^Bild}}
+      <span id="image" style="display: none;"></span>
     {{/Bild}}<br>
     {{#Bild}}
       <span id="hint-image" style="display: none;">
@@ -818,7 +821,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       if (revealAnywhere) {
-        document.body.setAttribute("onclick", "revealNextCloze(); event.stopPropagation()")
+        document.documentElement.setAttribute("onclick", "revealNextCloze(); event.stopPropagation()")
       }
     }
 
@@ -870,7 +873,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
      * helper functions for when everything is revealed
      */
     const noMoreTaps = function() {
-      document.body.removeAttribute("onclick")
+      document.documentElement.removeAttribute("onclick")
     }
 
     const noMoreClozes = function() {
@@ -1003,9 +1006,17 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     if (x.matches) {
       // If media query matches
-      content.appendChild(extra);
+      try {
+        content.appendChild(extra);
+      } catch (exception) {
+        console.log(exception);
+      }
     } else {
-      buttons.insertBefore(extra, image);
+      try {
+        buttons.insertBefore(extra, image);
+      } catch (exception) {
+        console.log(exception);
+      }
     }
   }
 
