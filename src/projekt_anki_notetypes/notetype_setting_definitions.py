@@ -406,6 +406,16 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "regex": r"--default-alignment: (.+?);",
             "options": ["left", "center"],
             "section": "Layout",
+            "default": "left",
+        },
+        "button_align": {
+            "text": "Standard-Knopfausrichtung",
+            "tooltip": "left: Knöpfe links ausrichten\ncenter: Knöpfe mittig ausrichten",
+            "type": "dropdown",
+            "file": "style",
+            "regex": r"--button-alignment: (.+?);",
+            "options": ["left", "center"],
+            "section": "Layout",
             "default": "center",
         },
         "image_height": {
@@ -602,6 +612,24 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "section": "Farben",
             "default": "yellow",
         },
+        "custom_colors": {
+            "text": "Custom Farben",
+            "tooltip": "Farben, die die Standardfarben ersetzen sollen",
+            "type": "text",
+            "file": "style",
+            "regex": rf'(/*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~*/)',
+            "section": "ADVANCED",
+            "default": "/*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~*/",
+        },
+        "custom_styles": {
+            "text": "Custom Styles",
+            "tooltip": "Styles, die die Standardfarben ersetzen sollen",
+            "type": "text",
+            "file": "style",
+            "regex": rf'(/*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~*/)',
+            "section": "ADVANCED",
+            "default": "/*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~*/",
+        },
         **{
             f"user_action_{i}": {
                 "text": f"Nutzeraktion {i}",
@@ -786,6 +814,7 @@ general_settings = [
     "back_two_columns",
     "back_column_ratio",
     "text_align",
+    "button_align",
     "front_tts",
     "front_tts_speed",
     "back_tts",
@@ -817,6 +846,8 @@ general_settings = [
     "image_occlusion_border_color",
     "image_occlusion_active_rect_color",
     "image_occlusion_active_border_color",
+    "custom_colors",
+    "custom_styles",
     *[f"user_action_{i}" for i in range(1, 9)],
 ]
 

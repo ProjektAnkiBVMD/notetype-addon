@@ -1,5 +1,4 @@
-/* ZANKIPHYN NOTETPYE */
-/* version  preview-10 */
+/* ProjektAnki NOTETPYE */
 /* based on the AnKing NoteType, check out their YouTube Channel / their website under www.AnKingMed.com */
 
 /*#########################################################
@@ -21,6 +20,7 @@
   --text-cloze: IndianRed;
 
   --zusatz: #2A9BCB;
+  --definition: #99a7b3;
   --klinik: #0fa980;
   --meditricks: #E19166;
   --hammer: #FA8072;
@@ -59,7 +59,12 @@
   --tag-10: #607D8B;
 
   --default-alignment: left;
+  --button-alignment: center;
 }
+
+/*############ DO NOT DELETE #############*/
+/*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~*/
+/*############ DO NOT DELETE #############*/
 
 /* TIMER ON/OFF */
 .timer {
@@ -143,7 +148,7 @@ html {
 }
 
 #qa {
-  text-align: center;
+  text-align: var(--default-alignment);
   display: block;
   max-width: 900px;
   height: auto;
@@ -369,6 +374,7 @@ a.nightMode {
 }
 
 #zusatz,
+#definition,
 #hammer,
 #klinik,
 #praeparat,
@@ -388,6 +394,7 @@ a.nightMode {
 
 .nightMode #extra,
 .nightMode #zusatz,
+.nightMode #definition,
 .nightMode #hammer,
 .nightMode #klinik,
 .nightMode #praeparat,
@@ -396,6 +403,7 @@ a.nightMode {
 }
 
 #zusatz,
+#definition,
 #hammer,
 #klinik,
 #praeparat,
@@ -405,6 +413,10 @@ a.nightMode {
 
 #zusatz {
   border: 2px solid var(--zusatz);
+}
+
+#definition {
+  border: 2px solid var(--definition);
 }
 
 #hammer {
@@ -451,6 +463,18 @@ img:active {
 .button-general img:active,
 .mobile img:active {
   transform: none !important;
+}
+
+#graphic-image {
+  filter: blur(10px);
+}
+
+#graphic-image:hover {
+  filter: none;
+}
+
+#image:has(> #graphic-image) {
+  overflow: hidden;
 }
 
 #image {
@@ -661,6 +685,11 @@ kbd:nth-of-type(10n+0) {
 }
 
 /* ~~~~~~~~~BUTTON LAYOUT~~~~~~~~~ */
+#buttons,
+#onebyone-buttons {
+  text-align: var(--button-alignment);
+}
+
 .button-general {
   outline: 0;
   background-color: var(--button-bg) !important;
@@ -769,3 +798,7 @@ kbd:nth-of-type(10n+0) {
   background-color: var(--nm-button-bg) !important;
   color: var(--nm-button-text) !important;
 }
+
+/*############ DO NOT DELETE #############*/
+/*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~*/
+/*############ DO NOT DELETE #############*/

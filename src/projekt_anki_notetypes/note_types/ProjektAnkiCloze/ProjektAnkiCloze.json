@@ -60,7 +60,7 @@
       "media": []
     },
     {
-      "name": "Hammer",
+      "name": "Definitionen",
       "ord": 4,
       "sticky": false,
       "rtl": false,
@@ -69,7 +69,7 @@
       "media": []
     },
     {
-      "name": "Klinik",
+      "name": "Hammer",
       "ord": 5,
       "sticky": false,
       "rtl": false,
@@ -78,7 +78,7 @@
       "media": []
     },
     {
-      "name": "Meditricks",
+      "name": "Klinik",
       "ord": 6,
       "sticky": false,
       "rtl": false,
@@ -87,7 +87,7 @@
       "media": []
     },
     {
-      "name": "AMBOSS-Link",
+      "name": "Meditricks",
       "ord": 7,
       "sticky": false,
       "rtl": false,
@@ -96,7 +96,7 @@
       "media": []
     },
     {
-      "name": "Thieme-Link",
+      "name": "AMBOSS-Link",
       "ord": 8,
       "sticky": false,
       "rtl": false,
@@ -105,7 +105,7 @@
       "media": []
     },
     {
-      "name": "Quelle",
+      "name": "Thieme-Link",
       "ord": 9,
       "sticky": false,
       "rtl": false,
@@ -114,7 +114,7 @@
       "media": []
     },
     {
-      "name": "Datum",
+      "name": "Quelle",
       "ord": 10,
       "sticky": false,
       "rtl": false,
@@ -123,8 +123,17 @@
       "media": []
     },
     {
-      "name": "One by one",
+      "name": "Datum",
       "ord": 11,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "One by one",
+      "ord": 12,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",
@@ -133,15 +142,6 @@
     },
     {
       "name": "Note ID",
-      "ord": 12,
-      "sticky": false,
-      "rtl": false,
-      "font": "Helvetica",
-      "size": 16,
-      "media": []
-    },
-    {
-      "name": "ankihub_id",
       "ord": 13,
       "sticky": false,
       "rtl": false,
