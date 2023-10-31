@@ -739,93 +739,35 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
     };
 
+    const buttonIds = [
+      "hint-zusatz",
+      "hint-definition",
+      "hint-hammer",
+      "hint-klinik",
+      "hint-praeparat",
+      "hint-image",
+      "hint-amboss",
+      "hint-thieme",
+      "hint-meditricks",
+    ];
+
     const showExtraButtons = function () {
-      try {
-        document.getElementById("hint-zusatz").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-hammer").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-klinik").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document
-          .getElementById("hint-praeparat")
-          .style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-image").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-amboss").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-thieme").style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document
-          .getElementById("hint-meditricks")
-          .style.removeProperty("display");
-      } catch (exception) {
-        console.log(exception);
+      for (const buttonId in buttonIds) {
+        try {
+          document.getElementById(buttonId).style.removeProperty("display");
+        } catch (exception) {
+          console.log(exception);
+        }
       }
     };
 
     const hideExtraButtons = function () {
-      try {
-        document.getElementById("hint-zusatz").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-hammer").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-klinik").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-praeparat").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-image").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-amboss").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-thieme").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
-      }
-      try {
-        document.getElementById("hint-meditricks").style.display = "none";
-      } catch (exception) {
-        console.log(exception);
+      for (const buttonId in buttonIds) {
+        try {
+          document.getElementById(buttonId).style.display = "none";
+        } catch (exception) {
+          console.log(exception);
+        }
       }
     };
 

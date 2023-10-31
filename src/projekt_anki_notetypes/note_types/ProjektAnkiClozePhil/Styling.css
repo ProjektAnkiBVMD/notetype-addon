@@ -466,11 +466,11 @@ img:active {
 }
 
 #graphic-image {
-  filter: blur(10px);
+  filter: blur(10px) !important;
 }
 
 #graphic-image:hover {
-  filter: none;
+  filter: none !important;
 }
 
 #image:has(> #graphic-image) {
