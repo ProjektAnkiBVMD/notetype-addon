@@ -1,4 +1,4 @@
-<!-- version 6acef66 -->
+<!-- version 7d33ee5 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -766,7 +766,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       for (const button in buttonIds) {
         try {
           document
-            .getElementById(buttonId[button])
+            .getElementById(buttonIds[button])
             .style.removeProperty("display");
         } catch (exception) {
           console.log(exception);
@@ -775,9 +775,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     };
 
     const hideExtraButtons = function () {
-      for (const buttonId in buttonIds) {
+      for (const button in buttonIds) {
         try {
-          document.getElementById(buttonId).style.display = "none";
+          document.getElementById(buttonIds[button]).style.display = "none";
         } catch (exception) {
           console.log(exception);
         }
