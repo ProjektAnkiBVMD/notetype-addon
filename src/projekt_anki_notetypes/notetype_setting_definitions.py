@@ -63,7 +63,7 @@ ANKIMOBILE_USER_ACTION_LABELS = [
 setting_configs: Dict[str, Any] = OrderedDict(
     {
         "field_order": {
-            "text": "Feld Reihenfolge",
+            "text": "Feld-Reihenfolge",
             "tooltip": "Zieh die Felder in die gewünschte Reihenfolge.",
             "type": "order",
             "file": "back",
@@ -74,7 +74,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "section": "Felder",
         },
         "toggle_next_button": {
-            "text": "Nächsten Button aufdecken Tastenkürzel",
+            "text": "Nächsten Button aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -83,7 +83,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "H",
         },
         "toggle_all_buttons": {
-            "text": "Alle Buttons aufdecken Tastenkürzel",
+            "text": "Alle Buttons aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -110,7 +110,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": True,
         },
         "io_reveal_next_shortcut": {
-            "text": "Nächstes Image Occlusion aufdecken Tastenkürzel",
+            "text": "Nächste Image Occlusion aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -119,7 +119,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "N",
         },
         "io_toggle_all_shortcut": {
-            "text": "Alle Image Occlusions aufdecken Tastenkürzel",
+            "text": "Alle Image Occlusions aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -128,7 +128,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": ",",
         },
         "reveal_cloze_shortcut": {
-            "text": "Lücke aufdecken Tastenkürzel",
+            "text": "Lücke aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -137,7 +137,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "N",
         },
         "reveal_cloze_word_shortcut": {
-            "text": "Lücke Wort für Wort aufdecken Tastenkürzel",
+            "text": "Lücke Wort für Wort aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -146,7 +146,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "Shift+N",
         },
         "toggle_all_clozes_shortcut": {
-            "text": "Alle Lücken aufdecken Tastenkürzel",
+            "text": "Alle Lücken aufdecken - Tastenkürzel",
             "tooltip": "",
             "type": "shortcut",
             "file": "back",
@@ -166,7 +166,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
         },
         "cloze_hider": {
             "text": "Lückenverdecker",
-            "tooltip": "Text der die Lücke verdeckt",
+            "tooltip": "Text, der die Lücke verdeckt",
             "type": "text",
             "file": "back",
             "regex": rf'var +clozeHider +=[^"]+"({QUOT_STR_RE}*?)"',
@@ -212,7 +212,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": True,
         },
         "front_two_columns": {
-            "text": "2 Spalten Layout auf der Vorderseite verwenden",
+            "text": "2-Spalten-Layout auf der Vorderseite verwenden",
             "tooltip": "",
             "type": "checkbox",
             "file": "front",
@@ -230,7 +230,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "1fr 1.5fr",
         },
         "back_two_columns": {
-            "text": "2 Spalten Layout auf der Rückseite verwenden",
+            "text": "2-Spalten-Layout auf der Rückseite verwenden",
             "tooltip": "",
             "type": "checkbox",
             "file": "back",
@@ -296,7 +296,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": 1.4,
         },
         "front_signal_tag": {
-            "text": "Schlagwort das die Vorderseite rot färbt",
+            "text": "Schlagwort, das die Vorderseite rot färbt",
             "tooltip": "",
             "type": "text",
             "file": "front",
@@ -305,7 +305,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "XXXYYYZZZ",
         },
         "back_signal_tag": {
-            "text": "Schlagwort das die Rückseite rot färbt",
+            "text": "Schlagwort, das die Rückseite rot färbt",
             "tooltip": "",
             "type": "text",
             "file": "back",
@@ -314,7 +314,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "XXXYYYZZZ",
         },
         "university_tag": {
-            "text": "Universität die in den Tags nicht ausgeblendet werden soll",
+            "text": "Universität, die in den Tags nicht ausgeblendet werden soll",
             "tooltip": "",
             "type": "text",
             "file": "back",
@@ -466,7 +466,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "IndianRed",
         },
         "extra_text_color": {
-            "text": "Zusätzliche Textfarbe",
+            "text": "Extra-Textfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -484,7 +484,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "#4297F9",
         },
         "missed_text_color": {
-            "text": "Fehlgeschlagene Textfarbe",
+            "text": "Fehlgeschlagen Textfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -529,7 +529,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "IndianRed",
         },
         "nm_extra_color": {
-            "text": "Dunkelmodus Extrafarbe",
+            "text": "Dunkelmodus Extra-Textfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -538,7 +538,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "magenta",
         },
         "nm_hint_color": {
-            "text": "Dunkelmodus-Hinweis Farbe anzeigen",
+            "text": "Dunkelmodus Hinweis-Textfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -577,7 +577,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "inherit",
         },
         "image_occlusion_rect_color": {
-            "text": "Image Occlusion Rect Color",
+            "text": "Image Occlusion Rechteck-Füllfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -586,7 +586,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "moccasin",
         },
         "image_occlusion_border_color": {
-            "text": "Image Occlusion Rect Border Color",
+            "text": "Image Occlusion Rechteck-Randfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -595,7 +595,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "olive",
         },
         "image_occlusion_active_rect_color": {
-            "text": "Image Occlusion Active Rect Color",
+            "text": "Image Occlusion Rechteck-Füllfarbe - aktiv",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -604,7 +604,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "salmon",
         },
         "image_occlusion_active_border_color": {
-            "text": "Image Occlusion Active Rect Border Color",
+            "text": "Image Occlusion Rechteck-Randfarbe - aktiv",
             "tooltip": "",
             "type": "color",
             "file": "style",

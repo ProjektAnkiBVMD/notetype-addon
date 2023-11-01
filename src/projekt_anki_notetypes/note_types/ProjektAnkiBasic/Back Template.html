@@ -1,4 +1,4 @@
-<!-- version 026b3c6 -->
+<!-- version e8ffba7 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -445,7 +445,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   var tagContainer = document.getElementById("tags-container");
 
   if (tagContainer.childElementCount == 0) {
-    var tagList = tagContainer.innerHTML.split(" ");
+    var tagList = tagContainer.innerHTML.trim().split(" ");
     var kbdList = [];
     var newTagContent = document.createElement("div");
 
@@ -459,7 +459,8 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
       // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
       if (
-        tag.split("::")[1] == "#UNIVERSITÄTEN" &&
+        (tag.split("::")[1] == "#UNIVERSITÄTEN" ||
+          tag.split("::")[1] == "#Universitäten") &&
         tag.split("::")[2] != tagUniversity
       )
         continue;
