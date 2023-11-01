@@ -18,6 +18,7 @@ PROJEKT_ANKI_NOTETYPES_PATH = Path(__file__).parent / "note_types"
 CONDITIONAL_FIELD_RE = r"(?:<!-- ?)?\{\{#.+?\}\}[\w\W]+?\{\{/.+?\}\}(?: ?-->)?"
 CONFIGURABLE_FIELD_HAS_TO_CONTAIN_RE = r'(class="hints"|id="extra")'
 CONFIGURABLE_FIELD_NAME_RE = r"\{\{#(.+?)\}\}"
+DO_NOT_DELETE = r"\/\*############ DO NOT DELETE #############\*\/"
 
 
 # for matching text between double quotes which can contain escaped quotes
@@ -617,7 +618,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "Farben, die die Standardfarben ersetzen sollen",
             "type": "text",
             "file": "style",
-            "regex": r"\/\*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~\*\/(\n*?)\n#",
+            "regex": rf"{DO_NOT_DELETE}\n\/\*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~\*\/\n(((.|\n)*?))\n{DO_NOT_DELETE}",
             "section": "ADVANCED",
             "default": "\n",
         },
@@ -626,7 +627,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "Styles, die die Standardfarben ersetzen sollen",
             "type": "text",
             "file": "style",
-            "regex": r"\/\*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~\*\/(\n*?)\n#",
+            "regex": rf"{DO_NOT_DELETE}\n\/\*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~\*\/\n(((.|\n)*?))\n{DO_NOT_DELETE}",
             "section": "ADVANCED",
             "default": "\n",
         },
