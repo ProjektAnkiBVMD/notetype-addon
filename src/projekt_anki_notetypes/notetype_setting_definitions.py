@@ -617,18 +617,18 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "Farben, die die Standardfarben ersetzen sollen",
             "type": "text",
             "file": "style",
-            "regex": rf'(\/\*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~\*\/)',
+            "regex": r"\/\*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~\*\/(\n*?)\n#",
             "section": "ADVANCED",
-            "default": "/*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~*/",
+            "default": "\n",
         },
         "custom_styles": {
             "text": "Custom Styles",
             "tooltip": "Styles, die die Standardfarben ersetzen sollen",
             "type": "text",
             "file": "style",
-            "regex": rf'(\/\*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~\*\/)',
+            "regex": r"\/\*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~\*\/(\n*?)\n#",
             "section": "ADVANCED",
-            "default": "/*~~~~~~~~~CUSTOM STYLE INSERTION~~~~~~~~~*/",
+            "default": "\n",
         },
         **{
             f"user_action_{i}": {
