@@ -1,4 +1,4 @@
-<!-- version c9ed4e7 -->
+<!-- version 6acef66 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -752,9 +752,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     ];
 
     const showExtraButtons = function () {
-      for (const buttonId in buttonIds) {
+      for (const button in buttonIds) {
         try {
-          document.getElementById(buttonId).style.removeProperty("display");
+          document
+            .getElementById(buttonId[button])
+            .style.removeProperty("display");
         } catch (exception) {
           console.log(exception);
         }
