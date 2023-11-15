@@ -1,4 +1,4 @@
-<!-- version f391d97 -->
+<!-- version ebb047a -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -604,16 +604,17 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   };
 
   /*
-   * @name        replaceOnceUsingDictionary
-   * @author      Rob W http://stackoverflow.com/users/938089/rob-w
-   * @description Replaces phrases in a string, based on keys in a given dictionary.
-   *              Each key is used only once, and the replacements are case-insensitive
-   * @param       Object dictionary  {key: phrase, ...}
-   * @param       String content
-   * @param       Function replacehandler
-   * @returns     Modified string
-   */
-  function replaceOnceUsingDictionary(dictionary, content, replacehandler) {
+    MODIFIED VERSION OF:
+    * @name        replaceUsingDictionary
+    * @author      Rob W http://stackoverflow.com/users/938089/rob-w
+    * @description Replaces phrases in a string, based on keys in a given dictionary.
+    *              Each key is used only once, and the replacements are case-insensitive
+    * @param       Object dictionary  {key: phrase, ...}
+    * @param       String content
+    * @param       Function replacehandler
+    * @returns     Modified string
+  */
+  function replaceUsingDictionary(dictionary, content, replacehandler) {
     if (typeof replacehandler != "function") {
       // Default replacehandler function.
       replacehandler = function (key, dictionary) {
@@ -668,9 +669,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
 
   if (diviformatting) {
-    document.getElementById("qa").innerHTML = replaceOnceUsingDictionary(
+    document.getElementById("container").innerHTML = replaceUsingDictionary(
       diviDict,
-      document.getElementById("qa").innerHTML,
+      document.getElementById("container").innerHTML,
       function (key, dictionary) {
         return dictionary[key];
       }
