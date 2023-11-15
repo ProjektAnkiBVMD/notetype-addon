@@ -84,7 +84,7 @@
       "media": []
     },
     {
-      "name": "Hammer",
+      "name": "Prüfungsfragen",
       "ord": 7,
       "sticky": false,
       "rtl": false,
@@ -161,7 +161,15 @@
   "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
   "latexPost": "\\end{document}",
   "latexsvg": true,
-  "req": [[0, "any", [0]]],
+  "req": [
+    [
+      0,
+      "any",
+      [
+        0
+      ]
+    ]
+  ],
   "tags": [],
   "vers": []
 }

@@ -104,16 +104,8 @@ a[href^="javascript:"] {
 .nightMode.card,
 .night_mode .card {
   color: var(--nm-text) !important;
-}
-
-/* NM Background Color */
-.iphone .nightMode.card,
-.iphone .night_mode .card,
-.ipad .nightMode.card,
-.ipad .night_mode .card {
   background-color: var(--nm-bg) !important;
 }
-
 
 /*################  USER CUSTOMIZATION END  ################
 ###########################################################*/
