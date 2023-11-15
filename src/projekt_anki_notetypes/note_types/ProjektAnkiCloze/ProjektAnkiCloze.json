@@ -1,5 +1,5 @@
 {
-  "id": 1606536512076,
+  "id": 160000001,
   "name": "ProjektAnkiCloze",
   "type": 1,
   "mod": 1638144714,
@@ -154,7 +154,16 @@
   "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
   "latexPost": "\\end{document}",
   "latexsvg": true,
-  "req": [[0, "any", [0, 12]]],
+  "req": [
+    [
+      0,
+      "any",
+      [
+        0,
+        12
+      ]
+    ]
+  ],
   "tags": [],
   "vers": []
 }

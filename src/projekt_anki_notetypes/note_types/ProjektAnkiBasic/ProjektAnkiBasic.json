@@ -1,5 +1,5 @@
 {
-  "id": 1600000000003,
+  "id": 160000003,
   "name": "ProjektAnkiBasic",
   "type": 0,
   "mod": 1600000000,
@@ -63,7 +63,15 @@
   "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
   "latexPost": "\\end{document}",
   "latexsvg": false,
-  "req": [[0, "any", [0]]],
+  "req": [
+    [
+      0,
+      "any",
+      [
+        0
+      ]
+    ]
+  ],
   "tags": [],
   "vers": []
 }
