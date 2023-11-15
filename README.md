@@ -1,5 +1,5 @@
 # Projekt Anki Notetypes AddOn
-<b>Dieses AddOn basiert auf dem [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Schaut gerne dort auch vorbei und unterstützt deren Arbeit.</b><br>
+<b>Dieses AddOn basiert auf dem [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Schaut gerne dort auch vorbei.</b><br>
 This add-on is based on the [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Please consider checking out their work.
 
 ## Probleme, Bugs, Fehler, Verbesserungen
