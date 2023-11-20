@@ -177,7 +177,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
         "selective_one_by_one_front": {
             "text": "Selektives OneByOne auf der Vorderseite",
             "tooltip": "siehe EXPLANATION.md",
-            "type": "text",
+            "type": "checkbox",
             "file": "front",
             "regex": r"var +selectiveOneByOne += +(false|true)",
             "section": "Lücken - erweitert",
@@ -186,7 +186,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
         "selective_one_by_one_back": {
             "text": "Selektives OneByOne auf der Rückseite (muss gleich Vorderseite sein)",
             "tooltip": "siehe EXPLANATION.md",
-            "type": "text",
+            "type": "checkbox",
             "file": "back",
             "regex": r"var +selectiveOneByOne += +(false|true)",
             "section": "Lücken - erweitert",
@@ -215,7 +215,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
         "always_one_by_one_front": {
             "text": "immer OneByOne auf der Vorderseite (wenn mindestens Mindestanzahl an Clozes)",
             "tooltip": "siehe EXPLANATION.md",
-            "type": "text",
+            "type": "checkbox",
             "file": "front",
             "regex": r"var +alwaysOneByOne += +(false|true)",
             "section": "Lücken - erweitert",
@@ -224,7 +224,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
         "always_one_by_one_back": {
             "text": "immer OneByOne auf der Rückseite (muss gleich Vorderseite sein)",
             "tooltip": "siehe EXPLANATION.md",
-            "type": "text",
+            "type": "checkbox",
             "file": "back",
             "regex": r"var +alwaysOneByOne += +(false|true)",
             "section": "Lücken - erweitert",
