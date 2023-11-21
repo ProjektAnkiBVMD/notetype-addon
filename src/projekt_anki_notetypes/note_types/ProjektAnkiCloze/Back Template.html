@@ -1,4 +1,4 @@
-<!-- version 1b39939 -->
+<!-- version 831c6f0 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -48,11 +48,11 @@
 
   // ##############  DIVI FORMAT  ##############
   // Enable experimental DIVI medication formatting feature
-  var diviformatting = true;
+  var diviformatting = false;
 
   // ############  BIONIC READING  ############
   // Enable bionic reading feature (based on AnKing add-on)
-  var bionicReading = true;
+  var bionicReading = false;
 
   // ##############  TWO COLUMN  ##############
   // Enable experimental two column layout feature
@@ -1389,7 +1389,18 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     }
 
     function indexOfWhitespace(text, startPos) {
-      const whitespaces = [" ", "\n", "\t", " ", "&nbsp;", "‑", "-"];
+      const whitespaces = [
+        " ",
+        "\n",
+        "\t",
+        " ",
+        "&nbsp;",
+        "‑",
+        "-",
+        "/",
+        "(",
+        ")",
+      ];
       let nextPos = text.length;
       for (const whitespace of whitespaces) {
         const next = text.indexOf(whitespace, startPos);
