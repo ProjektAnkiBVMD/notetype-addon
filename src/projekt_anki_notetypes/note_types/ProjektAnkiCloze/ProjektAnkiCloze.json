@@ -51,7 +51,7 @@
       "media": []
     },
     {
-      "name": "Eigene Notizen",
+      "name": "Eigene Notizen & Bilder",
       "ord": 3,
       "sticky": false,
       "rtl": false,
@@ -105,7 +105,7 @@
       "media": []
     },
     {
-      "name": "Thieme-Link",
+      "name": "Thieme via medici-Link",
       "ord": 9,
       "sticky": false,
       "rtl": false,
@@ -114,7 +114,7 @@
       "media": []
     },
     {
-      "name": "Quelle",
+      "name": "DocCheck-Link",
       "ord": 10,
       "sticky": false,
       "rtl": false,
@@ -123,7 +123,7 @@
       "media": []
     },
     {
-      "name": "Datum",
+      "name": "Quelle",
       "ord": 11,
       "sticky": false,
       "rtl": false,
@@ -132,8 +132,17 @@
       "media": []
     },
     {
-      "name": "One by one",
+      "name": "Datum",
       "ord": 12,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "One by one",
+      "ord": 13,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",
@@ -142,7 +151,7 @@
     },
     {
       "name": "Note ID",
-      "ord": 13,
+      "ord": 14,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",

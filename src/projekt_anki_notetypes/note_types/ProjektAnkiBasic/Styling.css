@@ -735,6 +735,15 @@ kbd:nth-of-type(10n+0) {
   width: 50%;
 }
 
+#button-thieme {
+  background-color: #023475 !important;
+  color: var(--bg) !important;
+}
+
+#button-thieme-img {
+  mix-blend-mode: normal !important;
+}
+
 /* BUTTONS IN TOP ROW */
 .header .button-general {
   background: none !important;
@@ -790,6 +799,11 @@ kbd:nth-of-type(10n+0) {
 .nightMode .expanded-button {
   background-color: var(--nm-button-bg) !important;
   color: var(--nm-button-text) !important;
+}
+
+.nightMode #button-thieme {
+  background-color: #a3d9f6 !important;
+  color: var(--nm-bg) !important;
 }
 
 /*############ DO NOT DELETE #############*/

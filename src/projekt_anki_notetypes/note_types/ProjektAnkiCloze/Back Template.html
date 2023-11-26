@@ -1,4 +1,4 @@
-<!-- version 831c6f0 -->
+<!-- version af0f899 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -57,7 +57,7 @@
   // ##############  TWO COLUMN  ##############
   // Enable experimental two column layout feature
   // Will work on Save
-  var twoColumnLayout = true;
+  var twoColumnLayout = false;
   var columnRatio = "1fr 1.5fr"; // variable for grid-template-columns
 
   // ##############  CLOZE ONE BY ONE  ##############
@@ -80,7 +80,7 @@
   // THIS NEEDS TO BE SET ON THE BACK AS WELL
   // if selective one-by-one is disabled, set this to select a min number of clozes necessary to activate 1b1
   // can be set to any number to set lower bound, any falsy value (e.g. 0 or null) disables this setting
-  var minNumberOfClozes = 2;
+  var minNumberOfClozes = 3;
 
   // THIS NEEDS TO BE SET ON THE BACK AS WELL
   // enables cloze one-by-one even when one-by-one field is empty
@@ -136,7 +136,7 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
       >
         Tags
       </button>
-      {{/Tags}}
+      | {{/Tags}}
 
       <!-- SOURCE FIELD -->
       {{#Quelle}}
@@ -150,7 +150,7 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
       {{/Quelle}}
 
       <!-- NOTE ID FIELD -->
-      {{#Note ID}}
+      {{#Note ID}} |
       <button
         id="button-nid"
         class="button-general headhov"
@@ -254,11 +254,11 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
     <!-- ##############  BUTTONS  ############## -->
     <!-- ####################################### -->
     <!-- BUTTON FIELDS -->
-    {{#Eigene Notizen}}
+    {{#Eigene Notizen & Bilder}}
     <span
       id="hint-zusatz"
       class="hintBtn"
-      data-name="Eigene Notizen"
+      data-name="Eigene Notizen & Bilder"
       style="display: none"
     >
       <button
@@ -266,13 +266,13 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
         class="button-general"
         onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()"
       >
-        <img src="_zusatz.svg" style="height: 10px" /> Eigene Notizen
+        <img src="_zusatz.svg" style="height: 10px" /> Eigene Notizen & Bilder
       </button>
       <div id="zusatz" class="hints" style="display: none">
-        {{edit:Eigene Notizen}}
+        {{edit:Eigene Notizen & Bilder}}
       </div>
     </span>
-    {{/Eigene Notizen}} {{#Prüfungsfragen}}
+    {{/Eigene Notizen & Bilder}} {{#Prüfungsfragen}}
     <span
       id="hint-hammer"
       class="hintBtn"
@@ -361,19 +361,36 @@ var clozeHider = (elem) => `<span style="background-color: red; color: transpare
         </button>
       </a>
     </span>
-    {{/AMBOSS-Link}} {{#Thieme-Link}}
+    {{/AMBOSS-Link}} {{#Thieme via medici-Link}}
     <span
       id="hint-thieme"
       onclick="event.stopPropagation()"
       style="display: none"
     >
-      <a href="{{text:Thieme-Link}}">
+      <a href="{{text:Thieme via medici-Link}}">
         <button id="button-thieme" class="button-general">
-          <img src="_thieme.svg" style="height: 10px" /> Thieme
+          <img
+            id="button-thieme-img"
+            src="_thieme-heart.svg"
+            style="height: 10px"
+          />
+          Thieme via medici
         </button>
       </a>
     </span>
-    {{/Thieme-Link}} {{#Meditricks}}
+    {{/Thieme via medici-Link}} {{#DocCheck-Link}}
+    <span
+      id="hint-doccheck"
+      onclick="event.stopPropagation()"
+      style="display: none"
+    >
+      <a href="{{text:DocCheck-Link}}">
+        <button id="button-doccheck" class="button-general">
+          <img src="_doccheck.png" style="height: 10px" /> DocCheck
+        </button>
+      </a>
+    </span>
+    {{/DocCheck-Link}} {{#Meditricks}}
     <span
       id="hint-meditricks"
       class="hintBtn"

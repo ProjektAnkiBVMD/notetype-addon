@@ -1,4 +1,4 @@
-<!-- version 831c6f0 -->
+<!-- version af0f899 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -77,7 +77,7 @@
       >
         Tags
       </button>
-      {{/Tags}}
+      | {{/Tags}}
 
       <!-- SOURCE FIELD -->
       {{#Quelle}}
@@ -91,7 +91,7 @@
       {{/Quelle}}
 
       <!-- NOTE ID FIELD -->
-      {{#Note ID}}
+      {{#Note ID}} |
       <button
         id="button-nid"
         class="button-general headhov"
@@ -177,11 +177,11 @@
     <!-- ##############  BUTTONS  ############## -->
     <!-- ####################################### -->
     <!-- BUTTON FIELDS -->
-    {{#Eigene Notizen}}
+    {{#Eigene Notizen & Bilder}}
     <span
       id="hint-zusatz"
       class="hintBtn"
-      data-name="Eigene Notizen"
+      data-name="Eigene Notizen & Bilder"
       style="display: none"
     >
       <button
@@ -189,13 +189,13 @@
         class="button-general"
         onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()"
       >
-        <img src="_zusatz.svg" style="height: 10px" /> Eigene Notizen
+        <img src="_zusatz.svg" style="height: 10px" /> Eigene Notizen & Bilder
       </button>
       <div id="zusatz" class="hints" style="display: none">
-        {{edit:Eigene Notizen}}
+        {{edit:Eigene Notizen & Bilder}}
       </div>
     </span>
-    {{/Eigene Notizen}} {{#Prüfungsfragen}}
+    {{/Eigene Notizen & Bilder}} {{#Prüfungsfragen}}
     <span
       id="hint-hammer"
       class="hintBtn"
@@ -284,19 +284,36 @@
         </button>
       </a>
     </span>
-    {{/AMBOSS-Link}} {{#Thieme-Link}}
+    {{/AMBOSS-Link}} {{#Thieme via medici-Link}}
     <span
       id="hint-thieme"
       onclick="event.stopPropagation()"
       style="display: none"
     >
-      <a href="{{text:Thieme-Link}}">
+      <a href="{{text:Thieme via medici-Link}}">
         <button id="button-thieme" class="button-general">
-          <img src="_thieme.svg" style="height: 10px" /> Thieme
+          <img
+            id="button-thieme-img"
+            src="_thieme-heart.svg"
+            style="height: 10px"
+          />
+          Thieme via medici
         </button>
       </a>
     </span>
-    {{/Thieme-Link}} {{#Meditricks}}
+    {{/Thieme via medici-Link}} {{#DocCheck-Link}}
+    <span
+      id="hint-doccheck"
+      onclick="event.stopPropagation()"
+      style="display: none"
+    >
+      <a href="{{text:DocCheck-Link}}">
+        <button id="button-doccheck" class="button-general">
+          <img src="_doccheck.png" style="height: 10px" /> DocCheck
+        </button>
+      </a>
+    </span>
+    {{/DocCheck-Link}} {{#Meditricks}}
     <span
       id="hint-meditricks"
       class="hintBtn"
