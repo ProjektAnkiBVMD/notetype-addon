@@ -453,21 +453,27 @@ img {
   filter: brightness(0.8) contrast(1.4);
 }
 
+.nightMode img.blur {
+  filter: brightness(0.8) contrast(1.4) blur(15px);
+}
 
+.nightMode img.blur.invert {
+  filter: blur(15px) invert(100%);
+}
 
 #extra img {
   min-width: 30%;
 }
 
 /*Image hover zoom*/
-img:active {
+/* img:active {
   transform: scale(1.2);
 }
 
 .button-general img:active,
 .mobile img:active {
   transform: none !important;
-}
+} */
 
 #image {
   font-size: 12px;

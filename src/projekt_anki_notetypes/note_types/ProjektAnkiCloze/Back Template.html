@@ -1,4 +1,4 @@
-<!-- version e655197 -->
+<!-- version a735a71 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -100,18 +100,18 @@
 
   // What cloze is hidden with
   var clozeHider = (elem) => "___";
-  /*
-  You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
-  
-  // Fixed length:
-  var clozeHider = (elem) => "███"
-  // Replace each character with "█":
-  var clozeHider = (elem) => "█".repeat(elem.textContent.length)
-  // Show whitespaces:
-  var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
-  // Color-filled box (doesn't hide images):
-  var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
-  */
+  /* 
+You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
+
+// Fixed length:
+var clozeHider = (elem) => "███"
+// Replace each character with "█":
+var clozeHider = (elem) => "█".repeat(elem.textContent.length)
+// Show whitespaces:
+var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
+// Color-filled box (doesn't hide images):
+var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
+*/
 
   // ############### USER CONFIGURATION END ###############
 </script>
@@ -656,11 +656,84 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <!-- IMAGE BLUR -->
 <script>
   for (const image of document.querySelectorAll(".blur")) {
+    image.classList.add("tappable");
     image.addEventListener("click", () => {
       image.classList.toggle("blur");
     });
   }
 </script>
+
+<!-- CLICKABLE COLORFUL TAGS -->
+{{#Tags}}
+<script>
+  var tagContainer = document.getElementById("tags-container");
+
+  if (tagContainer.childElementCount == 0) {
+    var tagList = tagContainer.innerHTML.trim().split(" ");
+    var kbdList = [];
+    var newTagContent = document.createElement("div");
+
+    for (var i = 0; i < tagList.length; i++) {
+      var newTag = document.createElement("kbd");
+      var tag = tagList[i];
+      // numTagLevelsToShow == 0 means the whole tag should be shown
+      if (numTagLevelsToShow != 0) {
+        tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
+      }
+
+      // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
+      if (
+        (tag.split("::")[1] == "#UNIVERSITÄTEN" ||
+          tag.split("::")[1] == "#Universitäten") &&
+        tag.split("::")[2] != tagUniversity
+      )
+        continue;
+      if (tag.split("::")[1] == "!NEW_CARDS") continue;
+      if (tag.split("::")[1] == "§Projekt_Anki") continue;
+
+      // improve legibility of tags
+      tag = tag.replaceAll("#Zankiphil_v2.0_Pre-Release_vAnkihub::", "");
+      tag = tag.replaceAll("#AMBOSS::", "");
+      tag = tag
+        .replaceAll("Bibliothek::", "")
+        .replaceAll("M2-100-Tage-Lernplan", "100_Tage");
+      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
+      newTagContent.append(newTag);
+    }
+
+    tagContainer.innerHTML = newTagContent.innerHTML;
+    tagContainer.style.cursor = "default";
+  }
+
+  if (tagContainer.innerHTML.indexOf(tagID) != -1) {
+    tagContainer.style.backgroundColor = "rgba(251,11,11,.15)";
+  }
+
+  function showtags() {
+    var tagContainerShortcut = document.getElementById("tags-container");
+
+    if (tagContainerShortcut.style.display === "none") {
+      tagContainerShortcut.style.display = "inline";
+    } else {
+      tagContainerShortcut.style.display = "none";
+    }
+  }
+
+  var isShortcut = shortcutMatcher(toggleTagsShortcut);
+
+  ankingAddEventListener("keyup", function (e) {
+    if (isShortcut(e)) {
+      toggleHintBtn("hint-tags");
+      showtags();
+    }
+  });
+</script>
+<script>
+  for (const tag of document.getElementsByTagName("kbd")) {
+    tag.innerHTML = tag.innerHTML.replace(/::/g, "::<wbr>");
+  }
+</script>
+{{/Tags}}
 
 <!-- HINT BUTTONS SETUP -->
 <script>
@@ -1092,78 +1165,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     });
   })();
 </script>
-
-<!-- CLICKABLE COLORFUL TAGS -->
-{{#Tags}}
-<script>
-  var tagContainer = document.getElementById("tags-container");
-
-  if (tagContainer.childElementCount == 0) {
-    var tagList = tagContainer.innerHTML.trim().split(" ");
-    var kbdList = [];
-    var newTagContent = document.createElement("div");
-
-    for (var i = 0; i < tagList.length; i++) {
-      var newTag = document.createElement("kbd");
-      var tag = tagList[i];
-      // numTagLevelsToShow == 0 means the whole tag should be shown
-      if (numTagLevelsToShow != 0) {
-        tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
-      }
-
-      // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
-      if (
-        (tag.split("::")[1] == "#UNIVERSITÄTEN" ||
-          tag.split("::")[1] == "#Universitäten") &&
-        tag.split("::")[2] != tagUniversity
-      )
-        continue;
-      if (tag.split("::")[1] == "!NEW_CARDS") continue;
-      if (tag.split("::")[1] == "§Projekt_Anki") continue;
-
-      // improve legibility of tags
-      tag = tag.replaceAll("#Zankiphil_v2.0_Pre-Release_vAnkihub::", "");
-      tag = tag.replaceAll("#AMBOSS::", "");
-      tag = tag
-        .replaceAll("Bibliothek::", "")
-        .replaceAll("M2-100-Tage-Lernplan", "100_Tage");
-      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
-      newTagContent.append(newTag);
-    }
-
-    tagContainer.innerHTML = newTagContent.innerHTML;
-    tagContainer.style.cursor = "default";
-  }
-
-  if (tagContainer.innerHTML.indexOf(tagID) != -1) {
-    tagContainer.style.backgroundColor = "rgba(251,11,11,.15)";
-  }
-
-  function showtags() {
-    var tagContainerShortcut = document.getElementById("tags-container");
-
-    if (tagContainerShortcut.style.display === "none") {
-      tagContainerShortcut.style.display = "inline";
-    } else {
-      tagContainerShortcut.style.display = "none";
-    }
-  }
-
-  var isShortcut = shortcutMatcher(toggleTagsShortcut);
-
-  ankingAddEventListener("keyup", function (e) {
-    if (isShortcut(e)) {
-      toggleHintBtn("hint-tags");
-      showtags();
-    }
-  });
-</script>
-<script>
-  for (const tag of document.getElementsByTagName("kbd")) {
-    tag.innerHTML = tag.innerHTML.replace(/::/g, "::<wbr>");
-  }
-</script>
-{{/Tags}}
 
 <!-- TWO COLUMN LAYOUT -->
 <script>
