@@ -31,7 +31,7 @@ from .gui.menu import setup_menu
 from .gui.utils import choose_subset
 from .notetype_setting_definitions import (
     HINT_BUTTONS,
-    anking_notetype_models,
+    projekt_anki_notetype_models,
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.name)
