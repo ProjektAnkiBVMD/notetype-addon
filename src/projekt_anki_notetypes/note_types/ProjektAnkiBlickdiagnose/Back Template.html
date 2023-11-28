@@ -1,4 +1,4 @@
-<!-- version af0f899 -->
+<!-- version e655197 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -573,6 +573,15 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     }.bind(window, ctrl, shift, alt, mainKey);
 
     return matchShortcut;
+  }
+</script>
+
+<!-- IMAGE BLUR -->
+<script>
+  for (const image of document.querySelectorAll(".blur")) {
+    image.addEventListener("click", () => {
+      image.classList.toggle("blur");
+    });
   }
 </script>
 

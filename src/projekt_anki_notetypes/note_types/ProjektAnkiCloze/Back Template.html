@@ -1,4 +1,4 @@
-<!-- version af0f899 -->
+<!-- version e655197 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -100,18 +100,18 @@
 
   // What cloze is hidden with
   var clozeHider = (elem) => "___";
-  /* 
-You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
-
-// Fixed length:
-var clozeHider = (elem) => "███"
-// Replace each character with "█":
-var clozeHider = (elem) => "█".repeat(elem.textContent.length)
-// Show whitespaces:
-var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
-// Color-filled box (doesn't hide images):
-var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
-*/
+  /*
+  You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
+  
+  // Fixed length:
+  var clozeHider = (elem) => "███"
+  // Replace each character with "█":
+  var clozeHider = (elem) => "█".repeat(elem.textContent.length)
+  // Show whitespaces:
+  var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
+  // Color-filled box (doesn't hide images):
+  var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
+  */
 
   // ############### USER CONFIGURATION END ###############
 </script>
@@ -650,6 +650,15 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     }.bind(window, ctrl, shift, alt, mainKey);
 
     return matchShortcut;
+  }
+</script>
+
+<!-- IMAGE BLUR -->
+<script>
+  for (const image of document.querySelectorAll(".blur")) {
+    image.addEventListener("click", () => {
+      image.classList.toggle("blur");
+    });
   }
 </script>
 

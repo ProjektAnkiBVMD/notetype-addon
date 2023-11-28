@@ -433,6 +433,15 @@ a.nightMode {
 img {
   max-height: 60vh;
   max-width: 95%;
+  transition: filter 0.3s ease;
+}
+
+.blur {
+  filter: blur(15px);
+}
+
+.nightMode .invert {
+  filter: invert(100%);
 }
 
 .ipad img {
@@ -443,6 +452,8 @@ img {
 .nightMode img {
   filter: brightness(0.8) contrast(1.4);
 }
+
+
 
 #extra img {
   min-width: 30%;
@@ -456,18 +467,6 @@ img:active {
 .button-general img:active,
 .mobile img:active {
   transform: none !important;
-}
-
-#graphic-image {
-  filter: blur(10px) !important;
-}
-
-#graphic-image:hover {
-  filter: none !important;
-}
-
-#image:has(> #graphic-image) {
-  overflow: hidden;
 }
 
 #image {
@@ -686,7 +685,7 @@ kbd:nth-of-type(10n+0) {
 .button-general {
   outline: 0;
   background-color: var(--button-bg) !important;
-  border-radius: 0.4em;
+  border-radius: 0.4em !important;
   border: 1px solid var(--button-border);
   color: var(--button-text) !important;
   padding: 5px 5px;
@@ -695,7 +694,7 @@ kbd:nth-of-type(10n+0) {
   text-align: center;
   display: inline-block;
   font-size: 13px;
-  /* box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19); */
+  box-shadow: none !important;
 }
 
 .button-general+.hints {

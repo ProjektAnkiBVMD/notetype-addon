@@ -77,7 +77,6 @@ class ConfigWindow(QDialog):
         self.setup_buttons(self.btn_layout)
 
     def setup_buttons(self, btn_box: "ConfigLayout") -> None:
-
         btn_box.addStretch(1)
 
         self.cancel_btn = QPushButton("Abbrechen")
@@ -240,7 +239,7 @@ class ConfigLayout(QBoxLayout):
 
         if tooltip:
             combobox.setToolTip(tooltip)
-            row.addWidget(self._info_icon_label())
+            row.addWidget(self._info_icon_label(tooltip))
 
         if description is not None:
             row.text(description, tooltip=tooltip)
@@ -321,7 +320,7 @@ class ConfigLayout(QBoxLayout):
         row = self.hlayout()
 
         if tooltip:
-            row.addWidget(self._info_icon_label())
+            row.addWidget(self._info_icon_label(tooltip))
             line_edit.setToolTip(tooltip)
 
         if description is not None:
@@ -378,7 +377,7 @@ class ConfigLayout(QBoxLayout):
         row = self.hlayout()
 
         if tooltip:
-            row.addWidget(self._info_icon_label())
+            row.addWidget(self._info_icon_label(tooltip))
             spin_box.setToolTip(tooltip)
 
         if description is not None:
@@ -436,7 +435,7 @@ class ConfigLayout(QBoxLayout):
         row = self.hlayout()
 
         if tooltip:
-            row.addWidget(self._info_icon_label())
+            row.addWidget(self._info_icon_label(tooltip))
             button.setToolTip(tooltip)
 
         if description is not None:
@@ -732,12 +731,14 @@ class ConfigLayout(QBoxLayout):
             QStyle.StandardPixmap.SP_MessageBoxInformation
         )
 
-    def _info_icon_label(self) -> QLabel:
+    def _info_icon_label(self, tooltip: str) -> QLabel:
         result = QLabel("")
         pixmap = self._info_icon().pixmap(
             QCheckBox().iconSize()
         )  # use same icon size as for checkbox
         result.setPixmap(pixmap)
+        result.setToolTip(tooltip)
+        result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         return result
 
 

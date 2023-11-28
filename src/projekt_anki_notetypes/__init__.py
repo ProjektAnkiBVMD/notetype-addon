@@ -7,14 +7,19 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
+from aqt.qt import QUrl
 from aqt.browser import Browser
+from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
     browser_will_show_context_menu,
     card_layout_will_show,
     profile_did_open,
+    editor_will_show_context_menu,
 )
-from aqt.qt import QMenu, QPushButton
+from aqt.qt import QMenu, QPushButton, qtmajor, QAction, qconnect
 from aqt.utils import askUserDialog, tooltip
+
+from bs4 import BeautifulSoup
 
 from .compat import add_compat_aliases
 from .gui.config_window import (
@@ -24,7 +29,10 @@ from .gui.config_window import (
 )
 from .gui.menu import setup_menu
 from .gui.utils import choose_subset
-from .notetype_setting_definitions import HINT_BUTTONS, projekt_anki_notetype_models
+from .notetype_setting_definitions import (
+    HINT_BUTTONS,
+    anking_notetype_models,
+)
 
 ADDON_DIR_NAME = str(Path(__file__).parent.name)
 RESOURCES_PATH = Path(__file__).parent / "resources"
@@ -42,6 +50,8 @@ def setup():
     profile_did_open.append(on_profile_did_open)
 
     browser_will_show_context_menu.append(on_browser_will_show_context_menu)
+
+    editor_will_show_context_menu.append(on_editor_will_show_context_menu)
 
 
 def on_profile_did_open():
@@ -192,6 +202,72 @@ def on_browser_will_show_context_menu(browser: Browser, context_menu: QMenu) -> 
     context_menu.addAction(action)
     if not selected_nids:
         action.setDisabled(True)
+
+
+def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> None:
+    def on_blur_image() -> None:
+        editor = webview.editor
+        url = data.mediaUrl()
+        if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
+            src = url.path().strip("/")
+        else:
+            src = url.toString()
+        field = editor.note.fields[editor.currentField]
+        soup = BeautifulSoup(field, "html.parser")
+        for img in soup("img"):
+            if img.get("src", "").strip("/") != src:
+                continue
+            classes = img.get("class", [])
+            if "blur" in classes:
+                classes.remove("blur")
+            else:
+                classes.append("blur")
+            if classes:
+                img["class"] = classes
+            elif "class" in img.attrs:
+                del img["class"]
+        editor.note.fields[editor.currentField] = soup.decode_contents()
+        editor.loadNoteKeepingFocus()
+
+    def on_invert_image() -> None:
+        editor = webview.editor
+        url = data.mediaUrl()
+        if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
+            src = url.path().strip("/")
+        else:
+            src = url.toString()
+        field = editor.note.fields[editor.currentField]
+        soup = BeautifulSoup(field, "html.parser")
+        for img in soup("img"):
+            if img.get("src", "").strip("/") != src:
+                continue
+            classes = img.get("class", [])
+            if "invert" in classes:
+                classes.remove("invert")
+            else:
+                classes.append("invert")
+            if classes:
+                img["class"] = classes
+            elif "class" in img.attrs:
+                del img["class"]
+        editor.note.fields[editor.currentField] = soup.decode_contents()
+        editor.loadNoteKeepingFocus()
+
+    if qtmajor >= 6:
+        data = webview.lastContextMenuRequest()  # type: ignore
+    else:
+        data = webview.page().contextMenuData()
+    if data.mediaUrl().isValid():
+        blur_image_action = QAction(
+            "Projekt Anki Notiztypen: Bild weichzeichnen ja/nein", menu
+        )
+        qconnect(blur_image_action.triggered, on_blur_image)
+        menu.addAction(blur_image_action)
+        invert_image_action = QAction(
+            "Projekt Anki Notiztypen: Bild invertieren ja/nein", menu
+        )
+        qconnect(invert_image_action.triggered, on_invert_image)
+        menu.addAction(invert_image_action)
 
 
 if mw is not None:
