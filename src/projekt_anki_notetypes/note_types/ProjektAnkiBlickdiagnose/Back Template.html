@@ -1,4 +1,4 @@
-<!-- version 39b75da -->
+<!-- version ea39d92 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -244,15 +244,16 @@
       </a>
     </span>
     {{/Thieme via medici-Link}}
-    {{#DocCheck-Link}}
-    <span id="hint-doccheck" onclick="event.stopPropagation()" style="display: none;">
-      <a href="{{text:DocCheck-Link}}">
-        <button id="button-doccheck" class="button-general">
-          <img src="_doccheck.png" style="height: 10px;"> DocCheck
-        </button>
-      </a>
+    {{#weitere Links}}
+    <span id="hint-linkcontainer" class="hintBtn" data-name="linkContainer" style="display: none;">
+      <button id="button-linkcontainer" class="button-general"
+        onclick="toggleHintBtn('hint-linkcontainer'); event.stopPropagation()">
+        <img src="_internet.svg" style="height: 10px;"> weitere Links
+      </button>
+      <div id="linkcontainer" class="hints" style="display: none;"></div>
+      <span id="linkContainerLinks" style="display: none;">{{edit:weitere Links}}</span>
     </span>
-    {{/DocCheck-Link}}
+    {{/weitere Links}}
 
     {{#Meditricks}}
     <span id="hint-meditricks" class="hintBtn" data-name="Meditricks" style="display: none;">
