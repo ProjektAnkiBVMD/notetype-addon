@@ -771,6 +771,10 @@ kbd:nth-of-type(10n+0) {
   color: var(--bg) !important;
 }
 
+#button-thieme:not(.mobile):hover {
+  background-color: #0349a6 !important;
+}
+
 #button-thieme-img {
   mix-blend-mode: normal !important;
 }
