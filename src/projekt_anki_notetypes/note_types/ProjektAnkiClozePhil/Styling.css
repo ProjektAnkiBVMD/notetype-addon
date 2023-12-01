@@ -25,6 +25,7 @@
   --meditricks: #E19166;
   --hammer: #FA8072;
   --praeparat: var(--zusatz);
+  --merksprueche: #295dae;
 
   --button-bg: #EBEBEB;
   --button-border: var(--text-header);
@@ -372,6 +373,8 @@ a.nightMode {
 #klinik,
 #praeparat,
 #meditricks,
+#merksprueche,
+#memes,
 #linkcontainer {
   color: var(--text) !important;
   font-size: 14px;
@@ -393,6 +396,8 @@ a.nightMode {
 .nightMode #klinik,
 .nightMode #praeparat,
 .nightMode #meditricks,
+.nightMode #merksprueche,
+.nightMode #memes,
 .nightMode #linkcontainer {
   color: var(--nm-text) !important;
 }
@@ -403,6 +408,8 @@ a.nightMode {
 #klinik,
 #praeparat,
 #meditricks,
+#merksprueche,
+#memes,
 #linkcontainer {
   padding: 5px;
 }
@@ -411,7 +418,8 @@ a.nightMode {
   border: 2px solid var(--zusatz);
 }
 
-#definition {
+#definition,
+#memes {
   border: 2px solid var(--definition);
 }
 
@@ -423,13 +431,17 @@ a.nightMode {
   border: 2px solid var(--klinik);
 }
 
+#merksprueche {
+  border: 2px solid var(--merksprueche);
+}
+
 #praeparat {
   border: 2px solid var(--praeparat);
 }
 
 #linkcontainer {
   max-width: unset;
-  width: 50%;
+  width: max(min(400px, 90%), 50%);
   border: 2px solid var(--text-link);
 }
 
@@ -817,11 +829,6 @@ kbd:nth-of-type(10n+0) {
 .nightMode .expanded-button {
   background-color: var(--nm-button-bg) !important;
   color: var(--nm-button-text) !important;
-}
-
-.nightMode #button-thieme {
-  background-color: #a3d9f6 !important;
-  color: var(--nm-bg) !important;
 }
 
 /*############ DO NOT DELETE #############*/

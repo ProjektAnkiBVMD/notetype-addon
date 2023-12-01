@@ -60,7 +60,7 @@
       "media": []
     },
     {
-      "name": "Definitionen",
+      "name": "Eigene Prüfungsfragen",
       "ord": 4,
       "sticky": false,
       "rtl": false,
@@ -69,7 +69,7 @@
       "media": []
     },
     {
-      "name": "Prüfungsfragen",
+      "name": "Definitionen",
       "ord": 5,
       "sticky": false,
       "rtl": false,
@@ -78,7 +78,7 @@
       "media": []
     },
     {
-      "name": "Klinik",
+      "name": "Merksprüche",
       "ord": 6,
       "sticky": false,
       "rtl": false,
@@ -87,7 +87,7 @@
       "media": []
     },
     {
-      "name": "Meditricks",
+      "name": "Klinik",
       "ord": 7,
       "sticky": false,
       "rtl": false,
@@ -96,7 +96,7 @@
       "media": []
     },
     {
-      "name": "AMBOSS-Link",
+      "name": "Memes",
       "ord": 8,
       "sticky": false,
       "rtl": false,
@@ -105,7 +105,7 @@
       "media": []
     },
     {
-      "name": "Thieme via medici-Link",
+      "name": "Meditricks",
       "ord": 9,
       "sticky": false,
       "rtl": false,
@@ -114,7 +114,7 @@
       "media": []
     },
     {
-      "name": "weitere Links",
+      "name": "AMBOSS-Link",
       "ord": 10,
       "sticky": false,
       "rtl": false,
@@ -123,7 +123,7 @@
       "media": []
     },
     {
-      "name": "Quelle",
+      "name": "Thieme via medici-Link",
       "ord": 11,
       "sticky": false,
       "rtl": false,
@@ -132,7 +132,7 @@
       "media": []
     },
     {
-      "name": "Datum",
+      "name": "weitere Links",
       "ord": 12,
       "sticky": false,
       "rtl": false,
@@ -141,8 +141,26 @@
       "media": []
     },
     {
-      "name": "One by one",
+      "name": "Quelle",
       "ord": 13,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Datum",
+      "ord": 14,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "One by one",
+      "ord": 15,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",
@@ -151,7 +169,7 @@
     },
     {
       "name": "Note ID",
-      "ord": 14,
+      "ord": 16,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",

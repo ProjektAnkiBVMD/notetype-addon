@@ -11,7 +11,7 @@ Do note that some fields have changed names ("Image" is now "Bild", "Date Stamp"
 
 ## How it should look
 
-![How it should look](Screenshot%202023-06-02%20at%2018.23.37.png)
+![How it should look](EXPLANATION_EXAMPLE.png)
 
 # USER CONFIGURATION
 
@@ -21,19 +21,20 @@ Do note that some fields have changed names ("Image" is now "Bild", "Date Stamp"
 // ##############  HINT REVEAL SHORTCUTS  ##############
 // All shortcuts will also open with "H" if using the Hint Hotkeys add-on
 var ButtonShortcuts = {
-    "Zusatzinfos" : "Alt + 1",
-    "Hammer" : "Alt + 2",
-    "Klinik" : "Alt + 3",
-    "Meditricks" : "Alt + 4",
-    "Tags" : "Alt + 8",
-    "Quelle" : "Alt + 9",
-    "Note ID" : "Alt + 0"
+  "Eigene Notizen": "Alt + 1",
+  "Prüfungsfragen": "Alt + 2",
+  "Klinik": "Alt + 3",
+  "Definitionen": "Alt + 4",
+  "linkContainer": "Alt + L",
+  "Meditricks": "Alt + M",
+  "Tags": "Alt + 8",
+  "Quelle": "Alt + 9",
+  "Note ID": "Alt + 0"
 }
 var ToggleNextButtonShortcut = "H"
 var ToggleAllButtonsShortcut = "J"
 // ToggleAllButtonsShortcut currently toggling every button individually
-//    1, 2 open;   3, 4 closed
-// -> 1, 2 closed; 3, 4 open
+// 1, 2 open; 3, 4 closed -> 1, 2 closed; 3, 4 open
 ```
 
 ## Set which Fields should be shown
@@ -43,13 +44,15 @@ set "\<Field\>" to true to show automatically (on flip)
 ```
 // ##############  SHOW HINTS AUTOMATICALLY  ##############
 var ButtonAutoReveal = {
-    "Zusatzinfos" : false,
-    "Hammer" : false,
-    "Klinik" : false,
-    "Meditricks" : false,
-    "Tags" : false,
-    "Quelle" : false,
-    "Note ID" : false
+  "Eigene Notizen": false,
+  "Prüfungsfragen": false,
+  "Klinik": false,
+  "Definitionen": false,
+  "linkContainer": true,
+  "Meditricks": false,
+  "Tags": false,
+  "Quelle": false,
+  "Note ID": false
 }
 var ScrollToButton = false;
 ```
@@ -91,7 +94,34 @@ var indentation = true;
 ```
 
 The heuristic indentation feature was developed to enable notes containing lists to make use of the advantages of lists (i.e. each item is clearly delimited by a bullet point or similar symbol) without having to redo the content of thousands of cards to add HTML `<ul></ul>`-Tags to each and every list.<br>
-This is especially relevant for huge collaborative decks with thousands of individual notes (like the German _Zankiphil — Klinik_ deck this notetype was originally developed for).
+This is especially relevant for huge collaborative decks with thousands of individual notes (like the German _Ankizin_ deck this notetype was originally developed for).
+
+## Textformatting features
+
+```
+// ##############  DIVI FORMAT  ##############
+// Enable experimental DIVI medication formatting feature
+var formattingDIVI = false;
+
+// ##############  CONFOUNDER FORMAT  ##############
+// Enable experimental confounder formatting feature
+var formattingConfounders = false;
+```
+
+These formatting features are usability features for those who want it.
+
+- `formattingDIVI` changes medication names to the tall-man-letter concept introduced to improve patient safety (e.g. `Fentanyl` -> `fentaNYL`)
+- `formattingConfounders` adds an underline to common confounders (e.g. `Hyp_o_kaliämie`)
+
+## Bionic Reading
+
+```
+// ############  BIONIC READING  ############
+// Enable bionic reading feature (based on AnKing add-on)
+var bionicReading = false;
+```
+
+This feature implements a Bionic Reading feature based on the AnKing AddOn, with a few tweaks for compatibility.
 
 ## Two-Column Layout
 
@@ -103,7 +133,7 @@ var twoColumnLayout = true;
 var columnRatio = "1fr 1.5fr"; // variable for grid-template-columns
 ```
 
-enable an experimental two column layout for widescreen devices, where the additional info on the back gets it's own column improve access.
+Enable an experimental two column layout for widescreen devices, where the additional info on the back gets it's own column to improve access.
 
 ## ONEBYONE-specific settings
 
@@ -192,6 +222,8 @@ This way you can simply change the notetypes of all your cards to this new one, 
 
 ### All cards where cloze $x$ has more than 3 occurences, should use OneByOne
 
+**This is the standard setting!**
+
 ```
 var selectiveOneByOne = false;
 var minNumberOfClozes = 3;
@@ -227,3 +259,17 @@ var selectiveOneByOne = true;
 var minNumberOfClozes = 2; # doesn't matter
 var alwaysOneByOne = false;
 ```
+
+# Specific fields
+
+## `weitere Links`
+
+The `weitere Links` field allows one to add an theoretically unlimited number of additional weblinks to other resources without a dedicated Button (as Amboss & Thieme _via medici_ have).
+
+Please use the [Add Hyperlink](https://ankiweb.net/shared/info/318752047) addon to insert the links, as they need to follow the following standard HTML structure:
+
+```
+<a href=" $weblink "> $weblink-title </a>
+```
+
+The added links get their own buttons generated automatically.

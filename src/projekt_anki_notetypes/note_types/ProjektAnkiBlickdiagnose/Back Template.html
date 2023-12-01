@@ -1,13 +1,15 @@
-<!-- version ea39d92 -->
+<!-- version 011a787 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
   // All shortcuts will also open with "H" if using the Hint Hotkeys add-on 
   var ButtonShortcuts = {
-    "Eigene Notizen": "Alt + 1",
-    "Prüfungsfragen": "Alt + 2",
-    "Klinik": "Alt + 3",
-    "Definitionen": "Alt + 4",
+    "Eigene Notizen & Bilder": "Alt + 1",
+    "Eigene Prüfungsfragen": "Alt + 2",
+    "Definitionen": "Alt + 3",
+    "Merksprüche": "Alt + 4",
+    "Klinik": "Alt + 5",
+    "Memes": "Alt + 6",
     "linkContainer": "Alt + L",
     "Meditricks": "Alt + M",
     "Tags": "Alt + 8",
@@ -20,10 +22,12 @@
 
   // ##############  SHOW HINTS AUTOMATICALLY  ##############
   var ButtonAutoReveal = {
-    "Eigene Notizen": false,
-    "Prüfungsfragen": false,
-    "Klinik": false,
+    "Eigene Notizen & Bilder": false,
+    "Eigene Prüfungsfragen": false,
     "Definitionen": false,
+    "Merksprüche": false,
+    "Klinik": false,
+    "Memes": false,
     "linkContainer": true,
     "Meditricks": false,
     "Tags": false,
@@ -174,23 +178,14 @@
     </span>
     {{/Eigene Notizen & Bilder}}
 
-    {{#Prüfungsfragen}}
-    <span id="hint-hammer" class="hintBtn" data-name="Prüfungsfragen" style="display: none;">
+    {{#Eigene Prüfungsfragen}}
+    <span id="hint-hammer" class="hintBtn" data-name="Eigene Prüfungsfragen" style="display: none;">
       <button id="button-hammer" class="button-general" onclick="toggleHintBtn('hint-hammer'); event.stopPropagation()">
-        <img src="_hammer.svg" style="height: 10px;"> Prüfungsfragen
+        <img src="_hammer.svg" style="height: 10px;"> Eigene Prüfungsfragen
       </button>
-      <div id="hammer" class="hints" style="display: none;">{{edit:Prüfungsfragen}}</div>
+      <div id="hammer" class="hints" style="display: none;">{{edit:Eigene Prüfungsfragen}}</div>
     </span>
-    {{/Prüfungsfragen}}
-
-    {{#Klinik}}
-    <span id="hint-klinik" class="hintBtn" data-name="Klinik" style="display: none;">
-      <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
-        <img src="_stethoscope.svg" style="height: 10px;"> Klinik
-      </button>
-      <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
-    </span>
-    {{/Klinik}}
+    {{/Eigene Prüfungsfragen}}
 
     {{#Definitionen}}
     <span id="hint-definition" class="hintBtn" data-name="Definitionen" style="display: none;">
@@ -201,6 +196,34 @@
       <div id="definition" class="hints" style="display: none;">{{edit:Definitionen}}</div>
     </span>
     {{/Definitionen}}
+
+    {{#Merksprüche}}
+    <span id="hint-merksprueche" class="hintBtn" data-name="Merksprüche" style="display: none;">
+      <button id="button-merksprueche" class="button-general"
+        onclick="toggleHintBtn('hint-merksprueche'); event.stopPropagation()">
+        <img src="_merkhilfe.svg" style="height: 10px;"> Merksprüche
+      </button>
+      <div id="merksprueche" class="hints" style="display: none;">{{edit:Merksprüche}}</div>
+    </span>
+    {{/Merksprüche}}
+
+    {{#Klinik}}
+    <span id="hint-klinik" class="hintBtn" data-name="Klinik" style="display: none;">
+      <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
+        <img src="_stethoscope.svg" style="height: 10px;"> Klinik
+      </button>
+      <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
+    </span>
+    {{/Klinik}}
+
+    {{#Memes}}
+    <span id="hint-memes" class="hintBtn" data-name="Memes" style="display: none;">
+      <button id="button-memes" class="button-general" onclick="toggleHintBtn('hint-memes'); event.stopPropagation()">
+        <img src="_sonstiges.svg" style="height: 10px;"> Memes
+      </button>
+      <div id="memes" class="hints" style="display: none;">{{edit:Memes}}</div>
+    </span>
+    {{/Memes}}
 
     <!-- Extra field -->
     {{#Extra}}
@@ -244,16 +267,6 @@
       </a>
     </span>
     {{/Thieme via medici-Link}}
-    {{#weitere Links}}
-    <span id="hint-linkcontainer" class="hintBtn" data-name="linkContainer" style="display: none;">
-      <button id="button-linkcontainer" class="button-general"
-        onclick="toggleHintBtn('hint-linkcontainer'); event.stopPropagation()">
-        <img src="_internet.svg" style="height: 10px;"> weitere Links
-      </button>
-      <div id="linkcontainer" class="hints" style="display: none;"></div>
-      <span id="linkContainerLinks" style="display: none;">{{edit:weitere Links}}</span>
-    </span>
-    {{/weitere Links}}
 
     {{#Meditricks}}
     <span id="hint-meditricks" class="hintBtn" data-name="Meditricks" style="display: none;">
@@ -264,6 +277,17 @@
       <div id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
     </span>
     {{/Meditricks}}
+
+    {{#weitere Links}}
+    <span id="hint-linkcontainer" class="hintBtn" data-name="linkContainer" style="display: none;">
+      <button id="button-linkcontainer" class="button-general"
+        onclick="toggleHintBtn('hint-linkcontainer'); event.stopPropagation()">
+        <img src="_internet.svg" style="height: 10px;"> weitere Links
+      </button>
+      <div id="linkcontainer" class="hints" style="display: none;"></div>
+      <span id="linkContainerLinks" style="display: none;">{{edit:weitere Links}}</span>
+    </span>
+    {{/weitere Links}}
 
   </div>
 </div>
