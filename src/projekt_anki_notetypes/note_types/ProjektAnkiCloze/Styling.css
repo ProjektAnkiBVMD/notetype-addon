@@ -763,6 +763,7 @@ kbd:nth-of-type(10n+0) {
 
 #linkcontainer .expanded-button {
   width: 90%;
+  font-weight: normal;
 }
 
 #button-thieme {
