@@ -111,7 +111,7 @@
       "media": []
     },
     {
-      "name": "Memes",
+      "name": "Präparat",
       "ord": 10,
       "sticky": false,
       "rtl": false,
@@ -120,7 +120,7 @@
       "media": []
     },
     {
-      "name": "Meditricks",
+      "name": "Memes",
       "ord": 11,
       "sticky": false,
       "rtl": false,
@@ -129,7 +129,7 @@
       "media": []
     },
     {
-      "name": "AMBOSS-Link",
+      "name": "Meditricks",
       "ord": 12,
       "sticky": false,
       "rtl": false,
@@ -138,7 +138,7 @@
       "media": []
     },
     {
-      "name": "Thieme via medici-Link",
+      "name": "AMBOSS-Link",
       "ord": 13,
       "sticky": false,
       "rtl": false,
@@ -147,7 +147,7 @@
       "media": []
     },
     {
-      "name": "weitere Links",
+      "name": "Thieme via medici-Link",
       "ord": 14,
       "sticky": false,
       "rtl": false,
@@ -156,7 +156,7 @@
       "media": []
     },
     {
-      "name": "Quelle",
+      "name": "weitere Links",
       "ord": 15,
       "sticky": false,
       "rtl": false,
@@ -165,7 +165,7 @@
       "media": []
     },
     {
-      "name": "Datum",
+      "name": "Quelle",
       "ord": 16,
       "sticky": false,
       "rtl": false,
@@ -174,8 +174,17 @@
       "media": []
     },
     {
-      "name": "Note ID",
+      "name": "Datum",
       "ord": 17,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Note ID",
+      "ord": 18,
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",

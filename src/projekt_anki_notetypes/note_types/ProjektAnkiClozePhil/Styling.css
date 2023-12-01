@@ -251,6 +251,10 @@ th {
 }
 
 /* COLOR ACCENTS FOR BOLD-ITALICS-UNDERLINE */
+emu {
+  text-decoration: underline;
+}
+
 /* BOLD STYLE */
 b {
   color: var(--text-bold) !important;
@@ -833,6 +837,10 @@ kbd:nth-of-type(10n+0) {
 
 .nightMode .expanded-button {
   background-color: var(--nm-button-bg) !important;
+  color: var(--nm-button-text) !important;
+}
+
+.nightMode #button-thieme {
   color: var(--nm-button-text) !important;
 }
 
