@@ -202,7 +202,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "section": "Lücken - erweitert",
             "default": 2,
         },
-        "min_number_clozes_front": {
+        "min_number_clozes_back": {
             "text": "Mindestanzahl an Clozes für OneByOne — Rückseite (muss gleich Vorderseite sein)",
             "tooltip": "siehe EXPLANATION.md",
             "type": "number",
