@@ -227,8 +227,13 @@ class NotetypesConfigWindow:
         tab.space(10)
 
         update_btn = tab.button(
-            "Aktualisiere Notiztyp",
+            "Aktualisiere Notiztypen",
             on_click=self._update_all_notetypes_to_newest_version_and_reload_ui,
+        )
+
+        reset_btn = tab.button(
+            "Setze alle Notiztypen zurück",
+            on_click=self._reset_all_notetypes_and_reload_ui,
         )
 
         if models_with_available_updates():
@@ -356,6 +361,23 @@ class NotetypesConfigWindow:
         self._reload_tab(model["name"])
 
         tooltip("Notiztyp wurde zurückgesetzt", parent=self.window, period=1200)
+
+    def _reset_all_notetypes_and_reload_ui(self):
+        if not askUser(
+            "Willst du wirklich alle Notiztypen auf Originaleinstellungen zurücksetzen?<br><br>"
+            "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen."
+            "Stell sicher, dass du vorher alle anderen Geräte synchronisiert hast.",
+            defaultno=True,
+        ):
+            return
+
+        for name in projekt_anki_notetype_names():
+            for model in _note_type_versions(name):
+                self._reset_notetype_and_reload_ui(model)
+
+        self._reload_tab("Allgemein")
+
+        tooltip("Alle Notiztypen wurden zurückgesetzt", parent=self.window, period=1200)
 
     def _update_all_notetypes_to_newest_version_and_reload_ui(self):
         if not askUser(
