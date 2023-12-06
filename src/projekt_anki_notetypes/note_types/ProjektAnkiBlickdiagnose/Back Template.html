@@ -1,4 +1,4 @@
-<!-- version fb71306 -->
+<!-- version d7e850c -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -107,11 +107,17 @@
 
     <!-- ERRATA BUTTON -->
     <div class="head-flex-right" onclick="event.stopPropagation()">
-      <a href="https://app.ankihub.net/">
+      <a id="link-ankihub" href="https://app.ankihub.net/">
         <button id="button-ankihub" class="button-general" title="Karte in AnkiHub">
           <strong>AnkiHub</strong>
         </button>
       </a>
+      <script>
+        try {
+          document.getElementById("link-ankihub").href =
+            document.getElementsByClassName("ankihub-view-note")[0].href
+        } catch (e) { }
+      </script>
     </div>
   </div>
 
@@ -162,6 +168,8 @@
     </div>
 
     <div style="color: MediumSeaGreen;">{{edit:Diagnose}}</div>
+
+    <br>
 
   </div>
 
@@ -512,11 +520,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
       if (tag.split("::")[1] == "!NEW_CARDS") continue;
       if (tag.split("::")[1] == "§Projekt_Anki") continue;
+      if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
 
       // improve legibility of tags
-      tag = tag.replaceAll("#Zankiphil_v2.0_Pre-Release_vAnkihub::", "");
-      tag = tag.replaceAll("#AMBOSS::", "");
-      tag = tag.replaceAll("Bibliothek::", "").replaceAll("M2-100-Tage-Lernplan", "100_Tage");;
+      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1::", "");
+      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
+      tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
       newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
       newTagContent.append(newTag)
     }
@@ -664,6 +673,18 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     el.appendChild(btn);
 
     document.getElementById("linkcontainer").appendChild(el)
+  }
+</script>
+
+<script>
+  var buttonIds = ["hint-zusatz", "hint-definition", "hint-hammer", "hint-klinik", "hint-praeparat", "hint-merksprueche", "hint-memes", "hint-image", "hint-amboss", "hint-thieme", "hint-meditricks", "hint-linkcontainer"]
+
+  for (const button in buttonIds) {
+    try {
+      document.getElementById(buttonIds[button]).style.removeProperty("display")
+    } catch (exception) {
+      console.log(exception)
+    }
   }
 </script>
 

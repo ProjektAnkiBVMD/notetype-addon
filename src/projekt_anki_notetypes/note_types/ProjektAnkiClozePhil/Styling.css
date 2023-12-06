@@ -145,7 +145,7 @@ html {
   text-align: var(--default-alignment);
   display: block;
   max-width: 900px;
-  height: auto;
+  height: 100%;
   inset: 0;
   /* short for top, right, bottom, left */
 }
@@ -165,7 +165,8 @@ html {
 .linux:not(.android) #qa {
   display: flex;
   height: auto;
-  max-height: 100vh;
+  max-height: calc(100vh - 30px);
+  padding-bottom: 0;
   inset: 0;
   /* short for top, right, bottom, left */
   flex-flow: column;
@@ -181,7 +182,7 @@ html {
 }
 
 #qa #container {
-  flex: 1 1 auto;
+  flex: 1 1 1;
   overflow-y: scroll;
 }
 
@@ -553,6 +554,9 @@ img {
   max-height: 95% !important;
 }
 
+.ankihub-view-note {
+  display: none !important;
+}
 
 /* ~~~~~~~~~ TAGS ~~~~~~~~~ */
 #tags-container {

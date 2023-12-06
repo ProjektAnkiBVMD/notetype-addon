@@ -1,4 +1,4 @@
-<!-- version fb71306 -->
+<!-- version d7e850c -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -343,11 +343,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
       if (tag.split("::")[1] == "!NEW_CARDS") continue;
       if (tag.split("::")[1] == "§Projekt_Anki") continue;
+      if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
 
       // improve legibility of tags
-      tag = tag.replaceAll("#Zankiphil_v2.0_Pre-Release_vAnkihub::", "");
-      tag = tag.replaceAll("#AMBOSS::", "");
-      tag = tag.replaceAll("Bibliothek::", "").replaceAll("M2-100-Tage-Lernplan", "100_Tage");;
+      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1::", "");
+      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
+      tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
       newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
       newTagContent.append(newTag)
     }
