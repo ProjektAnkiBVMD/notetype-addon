@@ -1,12 +1,21 @@
-b, u, i {
+b,
+u,
+i {
     color: var(--text) !important;
 }
-u, u.nightMode {
+
+u,
+u.nightMode {
     text-decoration: underline !important;
 }
-i. i.nightMode {
+
+i,
+i.nightMode {
     font-style: italic !important;
 }
-b.nightMode, u.nightMode, i.nightMode {
+
+b.nightMode,
+u.nightMode,
+i.nightMode {
     color: var(--nm-text) !important;
 }

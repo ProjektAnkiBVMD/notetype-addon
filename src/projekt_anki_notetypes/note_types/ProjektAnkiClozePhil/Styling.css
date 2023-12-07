@@ -87,11 +87,6 @@ kbd {
 }
 
 /*~~~~~~~~~COLORS~~~~~~~~~/
-/* Timer Countdown Color */
-.timer {
-  color: transparent;
-}
-
 /* Empty Link Color */
 a:not([href]),
 a[href^="javascript:"] {
@@ -129,7 +124,7 @@ html {
   text-align: center;
   display: block;
   max-width: 900px;
-  height: auto;
+  height: calc(100% - 30px);
   inset: 0;
   /* short for top, right, bottom, left */
   margin: 15px;
@@ -164,7 +159,6 @@ html {
 .mac #qa,
 .linux:not(.android) #qa {
   display: flex;
-  height: auto;
   max-height: calc(100vh - 30px);
   padding-bottom: 0;
   inset: 0;
@@ -182,7 +176,7 @@ html {
 }
 
 #qa #container {
-  flex: 1 1 1;
+  flex: 1 1 auto;
   overflow-y: scroll;
 }
 
@@ -476,11 +470,11 @@ img {
 }
 
 .nightMode img {
-  filter: brightness(0.8) contrast(1.4);
+  filter: brightness(0.8);
 }
 
 .nightMode img.blur {
-  filter: brightness(0.8) contrast(1.4) blur(15px);
+  filter: brightness(0.8) blur(15px);
 }
 
 .nightMode img.blur.invert {
