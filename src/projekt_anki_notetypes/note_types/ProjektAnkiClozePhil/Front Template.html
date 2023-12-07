@@ -1,4 +1,4 @@
-<!-- version 2089e9c -->
+<!-- version 3c75ba5 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -630,6 +630,18 @@ replace the arrows/dashes from the statement below with double curly brackets-->
               return
             }
 
+            if (autoflip && !(document.documentElement.className.includes("iphone") || document.documentElement.className.includes("ipad"))) {
+              // avoid flickering. Must unset this in the back.
+              document.getElementById("qa").style.display = "none";
+
+              if (window.pycmd) {
+                pycmd("ans")
+              } else if (window.showAnswer) {
+                showAnswer()
+              }
+            }
+            // AnkiMobile JS API doesn't have one for show answer.
+            // Best alternative is to use Taps/Swipes to show answer.
 
           }
           observer.disconnect();
