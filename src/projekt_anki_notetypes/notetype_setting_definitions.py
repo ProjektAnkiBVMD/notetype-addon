@@ -919,7 +919,7 @@ general_settings = [
     "selective_one_by_one_front",
     "selective_one_by_one_back",
     "min_number_clozes_front",
-    "min_number_clozes_front",
+    "min_number_clozes_back",
     "always_one_by_one_front",
     "always_one_by_one_back",
     "timer",
