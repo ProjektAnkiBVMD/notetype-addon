@@ -1,4 +1,4 @@
-<!-- version 3c75ba5 -->
+<!-- version e2a40e0 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -549,6 +549,8 @@ replace the arrows/dashes from the statement below with double curly brackets-->
    * Credit to the original authors, except where modified or otherwise indicated.
    */
 
+  Persistence.clear();
+
   // check if OneByOne is generally enabled for this card
   var oneByOneFieldEmpty = "{{One by one}}" === "";
   var clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty;
@@ -630,18 +632,24 @@ replace the arrows/dashes from the statement below with double curly brackets-->
               return
             }
 
-            if (autoflip && !(document.documentElement.className.includes("iphone") || document.documentElement.className.includes("ipad"))) {
+            in_web = document.getElementById("qa").className.includes("svelte")
+            on_ios =
+              document.documentElement.className.includes("iphone") ||
+              document.documentElement.className.includes("ipad");
+
+            if (autoflip && !on_ios && !in_web) {
               // avoid flickering. Must unset this in the back.
               document.getElementById("qa").style.display = "none";
 
               if (window.pycmd) {
-                pycmd("ans")
+                pycmd("ans");
               } else if (window.showAnswer) {
-                showAnswer()
+                showAnswer();
               }
             }
             // AnkiMobile JS API doesn't have one for show answer.
             // Best alternative is to use Taps/Swipes to show answer.
+
 
           }
           observer.disconnect();

@@ -1,4 +1,4 @@
-<!-- version 3c75ba5 -->
+<!-- version e2a40e0 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -698,6 +698,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     (function () {
       var clozeOneByOneEnabled = true;
 
+      const clozeHints = Persistence.getItem("clozeHints");
+      Persistence.clear();
+
       // remove the clickAnywhere function from global scope
       document.documentElement.removeAttribute("onclick")
 
@@ -835,7 +838,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           cloze.appendChild(clozeReplacer)
           cloze.appendChild(clozeHidden)
 
-          var clozeHints = Persistence.getItem("clozeHints");
           if (clozeHints && clozeHints[count]) {
             clozeReplacer.classList.add("cloze-hint")
             clozeReplacer.innerHTML = clozeHints[count] + CLOZE_REPLACER_SEP
