@@ -63,7 +63,7 @@
   --button-alignment: center;
 }
 
-root {
+:root {
   --canvas: var(--bg);
 }
 
