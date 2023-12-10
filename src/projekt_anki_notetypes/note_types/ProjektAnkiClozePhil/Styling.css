@@ -63,6 +63,14 @@
   --button-alignment: center;
 }
 
+root {
+  --canvas: var(--bg);
+}
+
+:root[class*=night-mode] {
+  --canvas: var(--nm-bg);
+}
+
 /*############ DO NOT DELETE #############*/
 /*~~~~~~~~~CUSTOM COLOR INSERTION~~~~~~~~~*/
 
