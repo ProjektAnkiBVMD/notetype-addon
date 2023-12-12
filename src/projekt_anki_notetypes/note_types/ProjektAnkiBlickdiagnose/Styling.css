@@ -61,6 +61,12 @@
 
   --default-alignment: left;
   --button-alignment: center;
+
+  --font-size: 22px;
+  --extra-font-size: 18px;
+  --table-font-size: 1em;
+
+  --max-card-width: 900px;
 }
 
 :root {
@@ -118,7 +124,7 @@ html {
   overflow-y: scroll;
   overflow-x: hidden;
   height: 100vh;
-  max-width: 900px;
+  max-width: var(--max-card-width);
   margin: 0 auto;
   /* CENTERS THE CARD IN THE MIDDLE OF THE WINDOW */
   padding: 0 constant(safe-area-inset-right) 0 constant(safe-area-inset-left);
@@ -131,13 +137,13 @@ html {
 .card {
   text-align: center;
   display: block;
-  max-width: 900px;
+  max-width: var(--max-card-width);
   height: calc(100% - 30px);
   inset: 0;
   /* short for top, right, bottom, left */
   margin: 15px;
 
-  font-size: 20px;
+  font-size: var(--font-size);
   line-height: 1.4;
   color: var(--text);
   background-color: var(--bg);
@@ -147,7 +153,7 @@ html {
 #qa {
   text-align: var(--default-alignment);
   display: block;
-  max-width: 900px;
+  max-width: var(--max-card-width);
   height: 100%;
   inset: 0;
   /* short for top, right, bottom, left */
@@ -241,7 +247,7 @@ sub {
 }
 
 table {
-  font-size: 75%;
+  font-size: var(--table-font-size);
   width: 99%;
   border-collapse: collapse;
   border: 1px solid;
@@ -304,7 +310,6 @@ i.nightMode {
 a.nightMode {
   color: var(--nm-text-link) !important;
   text-decoration: none;
-  font-size: 10px;
   font-style: normal;
 }
 
@@ -365,7 +370,7 @@ a.nightMode {
 /* OTHER FIELDS */
 /* WEITERE FELDER */
 #extra {
-  font-size: 14px;
+  font-size: var(--extra-font-size);
   font-style: italic;
   color: var(--text) !important;
   text-align: var(--default-alignment);
@@ -384,7 +389,7 @@ a.nightMode {
 #memes,
 #linkcontainer {
   color: var(--text) !important;
-  font-size: 14px;
+  font-size: var(--extra-font-size);
   margin: auto;
   border-radius: 0.4em;
   max-width: 100%;
@@ -504,7 +509,7 @@ img {
 } */
 
 #image {
-  font-size: 12px;
+  font-size: .6em;
   max-width: 800px;
   margin: 0 auto;
   text-align: center;

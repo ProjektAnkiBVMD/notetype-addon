@@ -101,7 +101,8 @@ def maybe_show_notetypes_update_notice():
 
     answer = askUserDialog(
         title="Projekt Anki Notiztyp Update",
-        text="Es ist eine neue Version der Projekt Anki Notiztypen verfügbar! \nDu kannst dich im neuen Fenster gleich entscheiden ob du es herunterladen willst. "
+        text="Es ist eine neue Version der Projekt Anki Notiztypen verfügbar!<br>"
+        "Du kannst dich im neuen Fenster gleich entscheiden ob du es herunterladen willst.<br><br>"
         "Kann ich das Fenster öffnen?",
         buttons=reversed(["Ja", "Nein", "Erinnere mich später"]),
     ).run()

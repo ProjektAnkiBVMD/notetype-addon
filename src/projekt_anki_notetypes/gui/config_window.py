@@ -345,7 +345,7 @@ class NotetypesConfigWindow:
     def _reset_notetype_and_reload_ui(self, model: "NotetypeDict"):
         if not askUser(
             f"Willst du wirklich den Notiztyp <b>{model['name']}</b> auf Originaleinstellungen zurücksetzen?<br><br>"
-            "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen."
+            "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen.<br>"
             "Stell sicher, dass du vorher alle anderen Geräte synchronisiert hast.",
             defaultno=True,
         ):
@@ -365,7 +365,7 @@ class NotetypesConfigWindow:
     def _reset_all_notetypes_and_reload_ui(self):
         if not askUser(
             "Willst du wirklich alle Notiztypen auf Originaleinstellungen zurücksetzen?<br><br>"
-            "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen."
+            "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen.<br>"
             "Stell sicher, dass du vorher alle anderen Geräte synchronisiert hast.",
             defaultno=True,
         ):
@@ -382,8 +382,9 @@ class NotetypesConfigWindow:
 
     def _update_all_notetypes_to_newest_version_and_reload_ui(self):
         if not askUser(
-            "Willst du die Notiztypen wirklich aktualisieren? Einstellungen bleiben erhalten.<br><br>Anschließend muss Anki "
-            "vollständig mit AnkiWeb synchronisiert werden. Stell sicher, dass du vorher alle anderen Geräte synchronisiert hast.",
+            "Willst du die Notiztypen wirklich aktualisieren? Einstellungen bleiben erhalten.<br><br>"
+            "Anschließend muss Anki vollständig mit AnkiWeb synchronisiert werden.<br>"
+            "Stell sicher, dass du vorher alle anderen Geräte synchronisiert hast.",
             defaultno=True,
         ):
             return
