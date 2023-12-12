@@ -563,6 +563,15 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "section": "Bilder",
             "default": 85,
         },
+        "image_brightness": {
+            "text": "Bild-Helligkeit (Nachtmodus)",
+            "tooltip": "",
+            "type": "text",
+            "file": "style",
+            "regex": r"--nm-brightness: (.+?);",
+            "section": "Bilder",
+            "default": "0.8",
+        },
         "text_color": {
             "text": "Standard-Textfarbe",
             "tooltip": "",
@@ -966,6 +975,7 @@ general_settings = [
     "font_family",
     "image_height",
     "image_width",
+    "image_brightness",
     "text_color",
     "background_color",
     "cloze_color",

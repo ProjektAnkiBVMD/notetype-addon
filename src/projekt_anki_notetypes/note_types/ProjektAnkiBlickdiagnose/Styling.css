@@ -67,6 +67,8 @@
   --table-font-size: 1em;
 
   --max-card-width: 900px;
+
+  --nm-brightness: 0.8;
 }
 
 :root {
@@ -483,11 +485,11 @@ img {
 }
 
 .nightMode img {
-  filter: brightness(0.8);
+  filter: brightness(var(--nm-brightness));
 }
 
 .nightMode img.blur {
-  filter: brightness(0.8) blur(15px);
+  filter: brightness(var(--nm-brightness)) blur(15px);
 }
 
 .nightMode img.blur.invert {
