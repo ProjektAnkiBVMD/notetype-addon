@@ -145,7 +145,7 @@ html {
   /* short for top, right, bottom, left */
   margin: 15px;
 
-  font-size: var(--font-size);
+  font-size: var(--text-font-size);
   line-height: 1.4;
   color: var(--text);
   background-color: var(--bg);
