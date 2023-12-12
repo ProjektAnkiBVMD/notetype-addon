@@ -492,7 +492,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "",
             "type": "text",
             "file": "style",
-            "regex": r"--font-size: (.+?);",
+            "regex": r"--text-font-size: (.+?);",
             "section": "Schriftart",
             "default": "22px",
         },
