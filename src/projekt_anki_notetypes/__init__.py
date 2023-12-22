@@ -116,10 +116,11 @@ def maybe_show_notetypes_update_notice():
 
 
 def copy_resources_into_media_folder():
-    # add recources of all notetypes to collection media folder
+    # add resources of all notetypes to collection media folder
     for file in Path(RESOURCES_PATH).iterdir():
-        if not mw.col.media.have(file.name):
-            mw.col.media.add_file(str(file.absolute()))
+        # if not mw.col.media.have(file.name):
+        #     mw.col.media.add_file(str(file.absolute()))
+        mw.col.media.add_file(str(file.absolute()))
 
 
 def replace_default_addon_config_action():

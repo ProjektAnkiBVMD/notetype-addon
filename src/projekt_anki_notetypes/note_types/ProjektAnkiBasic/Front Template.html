@@ -1,4 +1,4 @@
-<!-- version 3075da1 -->
+<!-- version 2e62b59 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -132,6 +132,120 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <!-- ####################################### -->
 <!-- ##############  SCRIPTS  ############## -->
 <!-- ####################################### -->
+
+<!-- INDENTING -->
+<script>
+  /**
+   * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
+   * 
+   * @param {String} text: The text to be rendered.
+   * @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
+   * 
+   * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
+   */
+  function getTextWidth(text, font) {
+    // re-use canvas object for better performance
+    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    context.font = font;
+    const metrics = context.measureText(text);
+    return metrics.width;
+  }
+
+  function getCSSStyle(element, prop) {
+    return window.getComputedStyle(element, null).getPropertyValue(prop);
+  }
+
+  function getCanvasFont(el = document.body) {
+    const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
+    const fontSize = getCSSStyle(el, 'font-size') || '16px';
+    const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
+
+    return `${fontWeight} ${fontSize} ${fontFamily}`;
+  }
+
+  /**
+   * Iterates over a list of divs containing text to be indented
+   *
+   * @param {HTMLCollection} divs: The divs to be iterated over.
+   */
+  function indentText(divs) {
+    // if heuristic indentation is not wanted, don't indent
+    if (!indentation) {
+      return;
+    }
+
+    // setup the indentation markers
+    var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
+    var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
+    var bulletP = "•"
+    var minus = "– "
+    var enter = "↳(?! ↳)"
+    var arrow = "→"
+
+    // heuristic indentation hierarchy
+    hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
+
+    // set up RegEx to analyze the provided divs
+    // negative lookbehinds unfortunately do not work yet on iPad / Android
+    var beginning = '(?<=<br>)(?<!cloze=")('
+    var middle = ".*?)((?:<br>)(?=("
+    var end = "))|(?=(<\/indent>|<\/div>|<br><br>)))"
+
+    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
+    const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
+    const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
+    const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
+    const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
+
+    // iterate over divs
+    for (const div of divs) {
+      // calculate indentation depths
+      var canvasFont = getCanvasFont(div)
+      var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
+      var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
+      var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
+      var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
+      var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
+
+      var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
+      var indentEnd = ';">$1</indent>'
+
+      // do the indentation
+      divHTML = div.outerHTML
+      divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
+      divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
+
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
+
+      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>")
+    }
+
+    // remove uneeded EventListener -> see line 284
+    window.removeEventListener('load', doIndentText)
+  }
+
+  // use a function for the EventListener in line 284
+  function doIndentText() {
+    indentText(document.getElementById("content").getElementsByTagName("div"));
+    indentText(document.getElementById("buttons").getElementsByTagName("div"));
+  }
+
+  // do the indentation only after the text content of the card is loaded
+  window.addEventListener('load', doIndentText, {
+    once: true
+  });
+  dispatchEvent(new Event('load'));
+</script>
 
 <!-- NOT-PERSISTING EVENT LISTENER -->
 <script>
@@ -279,14 +393,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   (function () {
     window.toggleHintBtn = function (containerId, noScrolling = false) {
       const container = document.getElementById(containerId)
-      const link = container.getElementsByTagName("a")[0]
+      // const link = container.getElementsByTagName("a")[0]
       const button = container.getElementsByTagName("button")[0]
       const hint = container.getElementsByTagName("div")[0]
 
       if (hint.style.display == "none") {
         button.classList.add("expanded-button")
         hint.style.display = "block"
-        link.style.display = "none"
+        // link.style.display = "none"
         if (ScrollToButton && !noScrolling) {
           hint.scrollIntoView({
             behavior: "smooth", // "auto" for instant scrolling
@@ -297,7 +411,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       } else {
         button.classList.remove("expanded-button")
         hint.style.display = "none"
-        link.style.display = ""
+        // link.style.display = ""
       }
     }
 
@@ -558,120 +672,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
 </script>
 
-
-<!-- INDENTING -->
-<script>
-  /**
-   * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
-   * 
-   * @param {String} text: The text to be rendered.
-   * @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
-   * 
-   * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
-   */
-  function getTextWidth(text, font) {
-    // re-use canvas object for better performance
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    const context = canvas.getContext("2d");
-    context.font = font;
-    const metrics = context.measureText(text);
-    return metrics.width;
-  }
-
-  function getCSSStyle(element, prop) {
-    return window.getComputedStyle(element, null).getPropertyValue(prop);
-  }
-
-  function getCanvasFont(el = document.body) {
-    const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
-    const fontSize = getCSSStyle(el, 'font-size') || '16px';
-    const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
-
-    return `${fontWeight} ${fontSize} ${fontFamily}`;
-  }
-
-  /**
-   * Iterates over a list of divs containing text to be indented
-   *
-   * @param {HTMLCollection} divs: The divs to be iterated over.
-   */
-  function indentText(divs) {
-    // if heuristic indentation is not wanted, don't indent
-    if (!indentation) {
-      return;
-    }
-
-    // setup the indentation markers
-    var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
-    var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
-    var bulletP = "•"
-    var minus = "– "
-    var enter = "↳(?! ↳)"
-    var arrow = "→"
-
-    // heuristic indentation hierarchy
-    hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
-
-    // set up RegEx to analyze the provided divs
-    // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<br>)(?<!cloze=")('
-    var middle = ".*?)((?:<br>)(?=("
-    var end = "))|(?=(<\/indent>|<\/div>|<br><br>)))"
-
-    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
-    const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
-    const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
-    const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
-    const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
-    const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
-
-    // iterate over divs
-    for (const div of divs) {
-      // calculate indentation depths
-      var canvasFont = getCanvasFont(div)
-      var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
-      var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
-      var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
-      var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
-      var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
-
-      var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
-      var indentEnd = ';">$1</indent>'
-
-      // do the indentation
-      divHTML = div.outerHTML
-      divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
-      divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
-
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
-
-      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>")
-    }
-
-    // remove uneeded EventListener -> see line 284
-    window.removeEventListener('load', doIndentText)
-  }
-
-  // use a function for the EventListener in line 284
-  function doIndentText() {
-    indentText(document.getElementById("content").getElementsByTagName("div"));
-    indentText(document.getElementById("buttons").getElementsByTagName("div"));
-  }
-
-  // do the indentation only after the text content of the card is loaded
-  window.addEventListener('load', doIndentText, {
-    once: true
-  });
-  dispatchEvent(new Event('load'));
-</script>
 
 <script>
   /**
