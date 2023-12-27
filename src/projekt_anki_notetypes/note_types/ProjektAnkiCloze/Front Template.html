@@ -1,4 +1,4 @@
-<!-- version 2e62b59 -->
+<!-- version c05cf2b -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -171,7 +171,7 @@
 
 
 <div id="container">
-  <div class="col" id="content">
+  <div class="col" id="container-content">
 
     <!-- ####################################### -->
     <!-- ##############  CONTENT  ############## -->
@@ -183,7 +183,7 @@
 
   </div>
 
-  <div class="col" id="buttons"></div>
+  <div class="col" id="container-buttons"></div>
 
 </div>
 
@@ -303,8 +303,8 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
   // use a function for the EventListener in line 284
   function doIndentText() {
-    indentText(document.getElementById("content").getElementsByTagName("div"));
-    indentText(document.getElementById("buttons").getElementsByTagName("div"));
+    indentText(document.getElementById("container-content").getElementsByTagName("div"));
+    indentText(document.getElementById("container-buttons").getElementsByTagName("div"));
   }
 
   // do the indentation only after the text content of the card is loaded

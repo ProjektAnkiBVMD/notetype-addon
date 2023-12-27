@@ -1,4 +1,4 @@
-<!-- version 2e62b59 -->
+<!-- version c05cf2b -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -114,7 +114,7 @@
 </div>
 
 <div id="container">
-  <div class="col" id="content">
+  <div class="col" id="container-content">
 
     <!-- ####################################### -->
     <!-- ##############  CONTENT  ############## -->
@@ -173,11 +173,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
    * @param {HTMLCollection} divs: The divs to be iterated over.
    */
   function indentText(divs) {
-    // if heuristic indentation is not wanted, don't indent
-    if (!indentation) {
-      return;
-    }
-
     // setup the indentation markers
     var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
     var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
@@ -236,8 +231,8 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
   // do the indentation if wanted
   if (indentation) {
-    indentText(document.getElementById("content").getElementsByTagName("div"));
-    indentText(document.getElementById("buttons").getElementsByTagName("div"));
+    indentText(document.getElementById("container-content").getElementsByTagName("div"));
+    indentText(document.getElementById("container-buttons").getElementsByTagName("div"));
   }
 </script>
 
