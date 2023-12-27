@@ -721,7 +721,7 @@ kbd:nth-of-type(10n+0) {
 }
 
 /* ~~~~~~~~~BUTTON LAYOUT~~~~~~~~~ */
-#buttons,
+#container-buttons,
 #onebyone-buttons {
   text-align: var(--button-alignment);
 }
