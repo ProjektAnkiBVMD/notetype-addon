@@ -251,6 +251,7 @@ sub {
 table {
   font-size: var(--table-font-size);
   width: 99%;
+  max-width: 99%;
   border-collapse: collapse;
   border: 1px solid;
 }

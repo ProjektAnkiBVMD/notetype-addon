@@ -1,4 +1,4 @@
-<!-- version c05cf2b -->
+<!-- version 95d4716 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -139,13 +139,13 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 <script>
   /**
-   * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
-   * 
-   * @param {String} text: The text to be rendered.
-   * @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
-   * 
-   * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
-   */
+* Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
+* 
+* @param {String} text: The text to be rendered.
+* @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
+* 
+* @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
+*/
   function getTextWidth(text, font) {
     // re-use canvas object for better performance
     const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
@@ -168,17 +168,17 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
 
   /**
-   * Iterates over a list of divs containing text to be indented
-   *
-   * @param {HTMLCollection} divs: The divs to be iterated over.
-   */
+  * Iterates over a list of divs containing text to be indented
+  *
+  * @param {HTMLCollection} divs: The divs to be iterated over.
+  */
   function indentText(divs) {
     // setup the indentation markers
     var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
     var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
     var bulletP = "•"
     var minus = "– "
-    var enter = "↳(?! ↳)"
+    var enter = "↳(?!( ↳|↳))"
     var arrow = "→"
 
     // heuristic indentation hierarchy
@@ -219,9 +219,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
 
       divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
       divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ")
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
       divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
       //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
 

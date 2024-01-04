@@ -262,11 +262,12 @@ class ConfigLayout(QBoxLayout):
                 val.append(table.item(rIdx, 0).data(0))
             self.conf.set(key, val)
 
-        table = OrderTable(on_edit)
+        table = OrderTable(on_edit=on_edit)
         table.setDragEnabled(True)
         table.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         table.horizontalHeader().hide()
+        table.verticalHeader().hide()
 
         def update() -> None:
             val = self.conf.get(key)
