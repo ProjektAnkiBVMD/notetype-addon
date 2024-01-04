@@ -260,7 +260,7 @@ class NotetypesConfigWindow:
         for nts, section in nts_to_section.items():
             section_to_ntss[section].append(nts)
 
-        note_type_base_name = _notetype_base_name(model["name"]) if model else None
+        notetype_base_name = _notetype_base_name(model["name"]) if model else None
         for section_name, section_ntss in sorted(section_to_ntss.items()):
             section = layout.collapsible_section(section_name)
             for nts in section_ntss:
@@ -268,7 +268,7 @@ class NotetypesConfigWindow:
                     nts.add_widget_to_general_config_layout(section)
                 else:
                     nts.add_widget_to_config_layout(
-                        section, note_type_base_name=note_type_base_name, model=model
+                        section, notetype_base_name=notetype_base_name, model=model
                     )
                 section.space(7)
             layout.hseparator()
@@ -282,7 +282,7 @@ class NotetypesConfigWindow:
                 nts.add_widget_to_general_config_layout(layout)
             else:
                 nts.add_widget_to_config_layout(
-                    layout, note_type_base_name=note_type_base_name, model=model
+                    layout, notetype_base_name=notetype_base_name, model=model
                 )
             layout.space(7)
 

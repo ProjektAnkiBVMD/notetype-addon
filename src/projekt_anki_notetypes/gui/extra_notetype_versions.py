@@ -18,15 +18,15 @@ def handle_extra_notetype_versions() -> None:
         if mw.col.models.by_name(notetype_base_name) is None:
             continue
 
-        model_copy_mids = [
+        notetype_copy_mids = [
             x.id
             for x in mw.col.models.all_names_and_ids()
             if re.match(
                 NOTETYPE_COPY_RE.format(notetype_base_name=notetype_base_name), x.name
             )
         ]
-        if model_copy_mids:
-            copy_mids_by_notetype_base_name[notetype_base_name] = model_copy_mids
+        if notetype_copy_mids:
+            copy_mids_by_notetype_base_name[notetype_base_name] = notetype_copy_mids
 
     if not copy_mids_by_notetype_base_name:
         return

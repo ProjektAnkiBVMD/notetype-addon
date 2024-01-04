@@ -470,7 +470,7 @@ class ConfigLayout(QBoxLayout):
         row.addWidget(button)
 
         if tooltip:
-            row.insertWidget(0, self._info_icon_label())
+            row.insertWidget(0, self._info_icon_label(tooltip))
             line_edit.setToolTip(tooltip)
 
         def update() -> None:
