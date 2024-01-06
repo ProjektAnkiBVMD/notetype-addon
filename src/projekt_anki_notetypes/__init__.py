@@ -207,7 +207,7 @@ def on_browser_will_show_context_menu(browser: Browser, context_menu: QMenu) -> 
 
 
 def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> None:
-    def on_blur_image() -> None:
+    def helper() -> None:
         editor = webview.editor
         url = data.mediaUrl()
         if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
@@ -216,6 +216,20 @@ def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> Non
             src = url.toString()
         field = editor.note.fields[editor.currentField]
         soup = BeautifulSoup(field, "html.parser")
+        return editor, src, soup
+
+    def is_blur_image() -> bool:
+        _, src, soup = helper()
+        for img in soup("img"):
+            if img.get("src", "").strip("/") != src:
+                continue
+            classes = img.get("class", [])
+            if "blur" in classes:
+                return True
+        return False
+
+    def on_blur_image() -> None:
+        editor, src, soup = helper()
         for img in soup("img"):
             if img.get("src", "").strip("/") != src:
                 continue
@@ -231,15 +245,18 @@ def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> Non
         editor.note.fields[editor.currentField] = soup.decode_contents()
         editor.loadNoteKeepingFocus()
 
+    def is_invert_image() -> bool:
+        _, src, soup = helper()
+        for img in soup("img"):
+            if img.get("src", "").strip("/") != src:
+                continue
+            classes = img.get("class", [])
+            if "invert" in classes:
+                return True
+        return False
+
     def on_invert_image() -> None:
-        editor = webview.editor
-        url = data.mediaUrl()
-        if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
-            src = url.path().strip("/")
-        else:
-            src = url.toString()
-        field = editor.note.fields[editor.currentField]
-        soup = BeautifulSoup(field, "html.parser")
+        editor, src, soup = helper()
         for img in soup("img"):
             if img.get("src", "").strip("/") != src:
                 continue
@@ -260,13 +277,30 @@ def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> Non
     else:
         data = webview.page().contextMenuData()
     if data.mediaUrl().isValid():
-        blur_image_action = QAction(
-            "Projekt Anki Notiztypen: Bild weichzeichnen ja/nein", menu
+        blur_image_action = (
+            QAction(
+                "Projekt Anki Notiztypen: Bild nicht mehr weichzeichnen",
+                menu,
+            )
+            if is_blur_image()
+            else QAction(
+                "Projekt Anki Notiztypen: Bild weichzeichnen",
+                menu,
+            )
         )
         qconnect(blur_image_action.triggered, on_blur_image)
         menu.addAction(blur_image_action)
-        invert_image_action = QAction(
-            "Projekt Anki Notiztypen: Bild invertieren ja/nein", menu
+
+        invert_image_action = (
+            QAction(
+                "Projekt Anki Notiztypen: Bild nicht mehr invertieren",
+                menu,
+            )
+            if is_invert_image()
+            else QAction(
+                "Projekt Anki Notiztypen: Bild invertieren",
+                menu,
+            )
         )
         qconnect(invert_image_action.triggered, on_invert_image)
         menu.addAction(invert_image_action)
