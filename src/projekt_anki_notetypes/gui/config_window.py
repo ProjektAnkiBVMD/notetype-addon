@@ -225,20 +225,21 @@ class NotetypesConfigWindow:
         )
         tab.space(10)
 
+        if models_with_available_updates():
+            tab.text("Es gibt Updates für die Notiztypen!")
+
         update_btn = tab.button(
             "Aktualisiere Notiztypen",
             on_click=self._update_all_notetypes_to_newest_version_and_reload_ui,
         )
 
+        if not models_with_available_updates():
+            update_btn.setDisabled(True)
+
         reset_btn = tab.button(
             "Setze alle Notiztypen zurück",
             on_click=self._reset_all_notetypes_and_reload_ui,
         )
-
-        if models_with_available_updates():
-            tab.text("Es gibt Updates für die Notiztypen!")
-        else:
-            update_btn.setDisabled(True)
 
     def _add_nts_widgets_to_layout(
         self,
