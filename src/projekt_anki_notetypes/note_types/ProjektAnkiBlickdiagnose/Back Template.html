@@ -1,4 +1,4 @@
-<!-- version 6d4f584 -->
+<!-- version d0c5473 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -160,14 +160,17 @@
 
     <span style="color:IndianRed; font-weight: bold;">Blickdiagnose?</span>
 
-    <div class="bild">
-      <p>
-        {{Path-Image (Overlay)}}
-        {{^Path-Image (Overlay)}} {{Path-Image}} {{/Path-Image (Overlay)}}
-      </p>
+    <br>
+    <br>
+
+    <div class="bild" id="bild" onclick="toggleOverlay(); event.stopPropagation()">
+      {{Path-Image (Overlay)}}
+      {{^Path-Image (Overlay)}} {{Path-Image}} {{/Path-Image (Overlay)}}
     </div>
 
-    <div style="color: MediumSeaGreen;">{{edit:Diagnose}}</div>
+    <br>
+
+    {{edit:Diagnose}}
 
     <br>
 
@@ -590,6 +593,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     } catch (exception) {
       console.log(exception)
     }
+  }
+</script>
+
+<script>
+  function toggleOverlay() {
+    if (document.getElementById("bild").innerHTML == '{{Path-Image}}' && '{{Path-Image (Overlay)}}') {
+      document.getElementById("bild").innerHTML = '{{Path-Image (Overlay)}}';
+    } else {
+      document.getElementById("bild").innerHTML = '{{Path-Image}}';
+    };
   }
 </script>
 

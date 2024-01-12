@@ -72,11 +72,11 @@
 }
 
 :root {
-  --canvas: var(--bg);
+  --canvas: transparent;
 }
 
 :root[class*=night-mode] {
-  --canvas: var(--nm-bg);
+  --canvas: transparent;
 }
 
 /*############ DO NOT DELETE #############*/

@@ -33,10 +33,10 @@ def handle_extra_notetype_versions() -> None:
 
     if not askUser(
         "Es gibt ein paar Duplikate der Projekt Anki Notiztypen. Willst du alle Notiztypen mit Namen wie "
-        '"ProjektAnkiCloze-1dgs0" zu "ProjektAnkiCloze" konvertieren?\n\n'
-        "Das wird alle Notizen mit dem Notiztyp ändern und die Duplikate löschen. Die Änderungen benötigen eine Vollsynchronisation mit AnkiWeb. "
-        "Ein Backup wird automatisch erstellt bevor die Änderungen angewendet werden.\n\n"
-        "Egal wie du dich entscheidest wird sich das Notiztyp Fenster öffnen.",
+        '"ProjektAnkiCloze-1dgs0" zu "ProjektAnkiCloze" konvertieren?<br><br>'
+        "Das wird alle Notizen mit diesem Notiztyp ändern und die Duplikate löschen. Die Änderungen benötigen eine Vollsynchronisation mit AnkiWeb. "
+        "Ein Backup wird automatisch erstellt bevor die Änderungen angewendet werden.<br><br>"
+        "Egal wie du dich entscheidest, wird sich das Notiztyp-Fenster öffnen.",
         title="Duplikate der Projekt Anki Notiztypen",
     ):
         return
