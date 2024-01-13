@@ -8,18 +8,19 @@ This add-on is based on the [AnKing Notes AddOn](https://github.com/AnKing-VIP/a
 ## <a href="https://projekt-anki-bvmd.notion.site/a1a3eece169441b292f6a4da8d8b5b40?v=483e1b5bf4b540d09f4316e3f8509707" rel="nofollow">WIKI / FAQ / Quick-Fixes</a>
 Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("Alle zurücksetzen").<br>AddOn-Kreuzkompatibilitäten sind nicht garantiert!
 
-~~**AnkiHub-Nutzer**: Vergesst nicht die Basis-Notiztypen `ProjektAnkiCloze` und `ProjektAnkiBlickdiagnose` zu importieren, damit die AnkiHub-Notiztypen auch editiert werden können!~~ <br>
+**AnkiHub-Nutzer**: Vergesst nicht die Basis-Notiztypen `ProjektAnkiCloze` und `ProjektAnkiBlickdiagnose` zu importieren, damit die AnkiHub-Notiztypen auch editiert werden können!<br>
 **FIXED**: siehe NEW-YEARS-Update
 
 ## sonstige Probleme, Bugs, Fehler, Verbesserungen
 Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofollow">hier</a> melden.
+- Heuristisches Einrücken ist inkompatibel mit [Edit Field During Review (Cloze) [ID: 385888438]](https://ankiweb.net/shared/info/385888438)
 
 **Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 23.10.1)!**
 
 ## Updates
 - 2024-01-04: NEW-YEARS-Update — Update zu AnKing v2.9.4 (Anzeige Notiztypen-Einstellungen auch ohne Basis-Notiztypen; Live-Editing auch für Notiztyp-Derivate) + kleine Styling und Einrücken-Verbesserungen
 - 2023-12-27: Fix von 1by1 auf AnkiDroid (→ AnkiDroid-spezifische HTML-ID-Dopplung identifiziert und gehackte Workarounds entfernt)
-- 2023-12-22: XMAS-Update — Fix von Clozes, die nicht richtig auf Taps reagieren, fehlenden Cloze-Hints auf iOS und nicht-unblur-baren Bildern
+- 2023-12-22: XMAS-Update — Fix von Clozes, die nicht richtig auf Taps reagieren, fehlenden Cloze-Hints auf iOS und nicht-un-blur-baren Bildern
 - 2023-12-10: Fix von Linux-Crashes, Fix von dunklen Balken im Notiztyp auf Windows
 - 2023-12-08: Fix von falschen Cloze-Hints auf iOS
 - 2023-12-07: Fix von fehlenden Cloze-Hints, fehlendem Countdown-Timer (der war nur transparent :D), Verbesserung von Bild-Filtern
