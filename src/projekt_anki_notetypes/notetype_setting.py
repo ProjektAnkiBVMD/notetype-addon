@@ -86,7 +86,7 @@ class NotetypeSetting(ABC):
     # can raise NotetypeSettingException
     def setting_value(self, model: "NotetypeDict") -> Any:
         try:
-            section = self._relevant_template_section(model)
+            section = self._relevant_template_sections(model)[0]
             result = self._extract_setting_value(section)
         except NotetypeSettingException as e:
             raise e
@@ -99,7 +99,7 @@ class NotetypeSetting(ABC):
         self, model: "NotetypeDict", notetype_base_name: str, conf: ConfigManager
     ) -> "NotetypeDict":
         result = deepcopy(model)
-        section = self._relevant_template_section(result)
+        sections = self._relevant_template_sections(result)
         key = self.key(notetype_base_name)
 
         # if the setting is not in the config,
@@ -109,27 +109,30 @@ class NotetypeSetting(ABC):
         if setting_value is no_value:
             return result
 
-        try:
-            processed_section = self._set_setting_value(section, setting_value)
-
-            updated_text = self._relevant_template_text(result).replace(
-                section, processed_section, 1
-            )
-        except NotetypeSettingException as e:
-            raise e
-        except Exception as e:
-            raise NotetypeSettingException(e)
-
         templates = result["tmpls"]
-        assert len(templates) == 1
-        template = templates[0]
+        # all the AnKing notetypes have one template each
+        # ProjektAnki notetypes may have multiple templates
+        assert len(templates) >= 1
+        assert len(templates) == len(sections)
 
-        if self.config["file"] == "front":
-            template["qfmt"] = updated_text
-        elif self.config["file"] == "back":
-            template["afmt"] = updated_text
-        else:
-            result["css"] = updated_text
+        for t_idx, (template, section) in enumerate(zip(templates, sections)):
+            try:
+                processed_section = self._set_setting_value(section, setting_value)
+
+                updated_text = self._relevant_template_text(result, t_idx).replace(
+                    section, processed_section, 1
+                )
+            except NotetypeSettingException as e:
+                raise e
+            except Exception as e:
+                raise NotetypeSettingException(e)
+
+            if self.config["file"] == "front":
+                template["qfmt"] = updated_text
+            elif self.config["file"] == "back":
+                template["afmt"] = updated_text
+            else:
+                result["css"] = updated_text
 
         return result
 
@@ -140,16 +143,19 @@ class NotetypeSetting(ABC):
         # returns the config key of this setting for the notetype in the config
         return f"{notetype_base_name}.{self.name()}"
 
-    def _relevant_template_section(self, model: "NotetypeDict"):
-        template_text = self._relevant_template_text(model)
-        section_match = re.search(self.config["regex"], template_text)
-        if not section_match:
-            raise NotetypeSettingException(
-                f"could not find '{self.config['text']}' in {self.config['file']}"
-                "template of notetype '{model['name']}'"
-            )
-        result = section_match.group(0)
-        return result
+    def _relevant_template_sections(self, model: "NotetypeDict"):
+        results = []
+        for t_idx, _ in enumerate(model["tmpls"]):
+            template_text = self._relevant_template_text(model, t_idx)
+            section_match = re.search(self.config["regex"], template_text)
+            if not section_match:
+                raise NotetypeSettingException(
+                    f"could not find '{self.config['text']}' in {self.config['file']}"
+                    "template of notetype '{model['name']}'"
+                )
+            result = section_match.group(0)
+            results.append(result)
+        return results
 
     # raises NotetypeSettingException if the current setting value is
     # not of the expected form and has to be changed for the notetype to work
@@ -162,12 +168,13 @@ class NotetypeSetting(ABC):
     def _set_setting_value(self, section: str, setting_value: Any):
         pass
 
-    def _relevant_template_text(self, model: "NotetypeDict") -> str:
+    def _relevant_template_text(self, model: "NotetypeDict", t_idx: int = 0) -> str:
         templates = model["tmpls"]
 
         # all the AnKing notetypes have one template each
-        assert len(templates) == 1
-        template = templates[0]
+        # ProjektAnki notetypes may have multiple templates
+        assert len(templates) >= 1
+        template = templates[t_idx]
 
         if self.config["file"] == "front":
             result = template["qfmt"]
@@ -430,7 +437,7 @@ class ElementOrderSetting(NotetypeSetting):
         layout.order_widget(
             key=self.key(notetype_base_name),
             items=list(
-                self._name_to_match_odict(self._relevant_template_section(model)).keys()
+                self._name_to_match_odict(self._relevant_template_sections(model)[0]).keys()
             ),
             description=self.config["text"],
             tooltip=self.config.get("tooltip", None),
