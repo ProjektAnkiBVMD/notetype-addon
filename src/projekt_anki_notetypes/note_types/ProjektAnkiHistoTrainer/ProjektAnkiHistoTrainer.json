@@ -1,0 +1,418 @@
+{
+  "id": 160000005,
+  "name": "ProjektAnkiHistoTrainer",
+  "type": 0,
+  "mod": 1600000000,
+  "usn": -1,
+  "sortf": 0,
+  "did": 1,
+  "tmpls": [
+    {
+      "name": "Markierung 1",
+      "ord": 0,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 1}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 2",
+      "ord": 1,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 2}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 3",
+      "ord": 2,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 3}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 4",
+      "ord": 3,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 4}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 5",
+      "ord": 4,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 5}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 6",
+      "ord": 5,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 6}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 7",
+      "ord": 6,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 7}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 8",
+      "ord": 7,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 8}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 9",
+      "ord": 8,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 9}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    },
+    {
+      "name": "Markierung 10",
+      "ord": 9,
+      "qfmt": "",
+      "afmt": "",
+      "bqfmt": "{{Titel}}",
+      "bafmt": "{{Markierung 10}}",
+      "did": null,
+      "bfont": "Helvetica",
+      "bsize": 12
+    }
+  ],
+  "flds": [
+    {
+      "name": "Titel",
+      "ord": 0,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Hint / Hinweis",
+      "ord": 1,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Bild",
+      "ord": 2,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 1",
+      "ord": 3,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 2",
+      "ord": 4,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 3",
+      "ord": 5,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 4",
+      "ord": 6,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 5",
+      "ord": 7,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 6",
+      "ord": 8,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 7",
+      "ord": 9,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 8",
+      "ord": 10,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 9",
+      "ord": 11,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Markierung 10",
+      "ord": 12,
+      "sticky": false,
+      "rtl": false,
+      "size": 16,
+      "font": "Helvetica",
+      "media": []
+    },
+    {
+      "name": "Extra",
+      "ord": 13,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Eigene Notizen & Bilder",
+      "ord": 14,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Eigene Prüfungsfragen",
+      "ord": 15,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Definitionen",
+      "ord": 16,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Merksprüche",
+      "ord": 17,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Klinik",
+      "ord": 18,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Präparat",
+      "ord": 19,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Virtuelle Mikroskopie",
+      "ord": 20,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Smart Zoom",
+      "ord": 21,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "HistoTrainer",
+      "ord": 22,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Memes",
+      "ord": 23,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Meditricks",
+      "ord": 24,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "AMBOSS-Link",
+      "ord": 25,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Thieme via medici-Link",
+      "ord": 26,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "weitere Links",
+      "ord": 27,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Quelle",
+      "ord": 28,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Datum",
+      "ord": 29,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Note ID",
+      "ord": 30,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": [],
+      "meta": "noteid"
+    }
+  ],
+  "css": "",
+  "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+  "latexPost": "\\end{document}",
+  "latexsvg": true,
+  "req": [
+    [
+      0,
+      "any",
+      [
+        0
+      ]
+    ]
+  ],
+  "tags": [],
+  "vers": []
+}
