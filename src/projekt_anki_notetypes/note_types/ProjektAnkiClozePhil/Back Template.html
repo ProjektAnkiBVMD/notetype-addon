@@ -1,4 +1,4 @@
-<!-- version d0c5473 -->
+<!-- version 1b5dce7 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -275,9 +275,9 @@
 
     <!-- Extra field -->
     {{#Extra}}
-    <span id="extra" style="display: none;">
-      <div><br><br>{{edit:Extra}}</div>
-    </span>
+    <div id="extra" style="display: none;">
+      <br><br>{{edit:Extra}}
+    </div>
     {{/Extra}}
 
     <!-- Image field -->
@@ -494,12 +494,18 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 <!-- IMAGE BLUR -->
 <script>
-  for (const image of document.querySelectorAll(".blur")) {
-    image.classList.add("tappable");
-    image.addEventListener("click", () => {
-      image.classList.toggle("blur");
-    });
+  function makeImagesBlur() {
+    for (const image of document.querySelectorAll(".blur")) {
+      image.classList.add("tappable");
+      image.addEventListener("click", () => {
+        setTimeout(function () {
+          image.classList.toggle("blur");
+        }, 200);
+      });
+    }
   }
+
+  makeImagesBlur();
 </script>
 
 <!-- CLICKABLE COLORFUL TAGS -->

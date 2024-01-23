@@ -395,7 +395,7 @@ a.nightMode {
   font-size: var(--extra-font-size);
   margin: auto;
   border-radius: 0.4em;
-  max-width: 100%;
+  max-width: 95%;
   text-align: var(--default-alignment);
 }
 

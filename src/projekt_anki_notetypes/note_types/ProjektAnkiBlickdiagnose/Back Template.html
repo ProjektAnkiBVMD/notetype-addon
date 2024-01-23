@@ -1,4 +1,4 @@
-<!-- version d0c5473 -->
+<!-- version 1b5dce7 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -163,11 +163,12 @@
     <br>
     <br>
 
-    <div class="bild" id="bild" onclick="toggleOverlay(); event.stopPropagation()">
+    <span class="bild" id="bild" ondblclick="toggleOverlay(); event.stopImmediatePropagation()">
       {{Path-Image (Overlay)}}
       {{^Path-Image (Overlay)}} {{Path-Image}} {{/Path-Image (Overlay)}}
-    </div>
+    </span>
 
+    <br>
     <br>
 
     {{edit:Diagnose}}
@@ -251,9 +252,9 @@
 
     <!-- Extra field -->
     {{#Extra}}
-    <span id="extra" style="display: none;">
-      <div><br><br>{{edit:Extra}}</div>
-    </span>
+    <div id="extra" style="display: none;">
+      <br><br>{{edit:Extra}}
+    </div>
     {{/Extra}}
 
     <!-- Image field -->
@@ -391,12 +392,18 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 <!-- IMAGE BLUR -->
 <script>
-  for (const image of document.querySelectorAll(".blur")) {
-    image.classList.add("tappable");
-    image.addEventListener("click", () => {
-      image.classList.toggle("blur");
-    });
+  function makeImagesBlur() {
+    for (const image of document.querySelectorAll(".blur")) {
+      image.classList.add("tappable");
+      image.addEventListener("click", () => {
+        setTimeout(function () {
+          image.classList.toggle("blur");
+        }, 200);
+      });
+    }
   }
+
+  makeImagesBlur();
 </script>
 
 <!-- CLICKABLE COLORFUL TAGS -->
@@ -599,10 +606,13 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 <script>
   function toggleOverlay() {
+    event.stopImmediatePropagation()
     if (document.getElementById("bild").innerHTML == '{{Path-Image}}' && '{{Path-Image (Overlay)}}') {
       document.getElementById("bild").innerHTML = '{{Path-Image (Overlay)}}';
+      makeImagesBlur();
     } else {
       document.getElementById("bild").innerHTML = '{{Path-Image}}';
+      makeImagesBlur();
     };
   }
 </script>
