@@ -200,7 +200,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"var +minNumberOfClozes += +([^ /\n]*);",
             "min": 0,
             "section": "Lücken - erweitert",
-            "default": 2,
+            "default": 3,
         },
         "min_number_clozes_back": {
             "text": "Mindestanzahl an Clozes für OneByOne — Rückseite (muss gleich Vorderseite sein)",
@@ -210,7 +210,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"var +minNumberOfClozes += +([^ /\n]*);",
             "min": 0,
             "section": "Lücken - erweitert",
-            "default": 2,
+            "default": 3,
         },
         "always_one_by_one_front": {
             "text": "immer OneByOne auf der Vorderseite (wenn mindestens Mindestanzahl an Clozes)",

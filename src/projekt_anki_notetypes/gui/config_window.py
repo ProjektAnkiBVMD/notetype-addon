@@ -357,8 +357,8 @@ class NotetypesConfigWindow:
         ):
             return
 
-        for model_version in _note_type_versions(model["name"]):
-            update_notetype_to_newest_version(model_version, model["name"])
+        for model_version in _note_type_versions(_notetype_base_name(model["name"])):
+            update_notetype_to_newest_version(model_version, _notetype_base_name(model["name"]))
             mw.col.models.update_dict(model_version)  # type: ignore
 
         if self.clayout:
