@@ -357,14 +357,15 @@ class NotetypesConfigWindow:
         ):
             return
 
-        for model_version in _note_type_versions(_notetype_base_name(model["name"])):
-            update_notetype_to_newest_version(model_version, _notetype_base_name(model["name"]))
+        notetype_base_name = _notetype_base_name(model["name"])
+        for model_version in _note_type_versions(notetype_base_name):
+            update_notetype_to_newest_version(model_version, notetype_base_name)
             mw.col.models.update_dict(model_version)  # type: ignore
 
         if self.clayout:
             self._update_clayout_model(model)
 
-        self._reload_tab(_notetype_base_name(model["name"]))
+        self._reload_tab(notetype_base_name)
 
         tooltip("Notiztyp wurde zurückgesetzt", parent=self.window, period=1200)
 
