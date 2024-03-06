@@ -61,6 +61,7 @@
 
   --default-alignment: left;
   --button-alignment: center;
+  --content-alignment: center;
 
   --text-font-size: 22px;
   --extra-font-size: 18px;
@@ -98,7 +99,7 @@
 /*~~~~~~~~~FONT STYLE~~~~~~~~~*/
 .card,
 kbd {
-  font-family: Arial Greek, Arial, sans-serif;
+  font-family: Arial Greek, Arial, Arial Unicode MS, sans-serif;
   /* Step exam's font is Arial Greek */
 }
 
@@ -719,6 +720,10 @@ kbd:nth-of-type(10n+0) {
 #nid,
 #tags-container {
   margin-top: 0.3rem;
+}
+
+#container-content {
+  text-align: var(--content-alignment);
 }
 
 /* ~~~~~~~~~BUTTON LAYOUT~~~~~~~~~ */

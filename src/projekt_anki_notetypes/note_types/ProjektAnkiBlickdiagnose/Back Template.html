@@ -1,4 +1,7 @@
-<!-- version 1b5dce7 -->
+<!-- version 0fd8612 -->
+<!-- empty div to make AnkiDroid happy -->
+<div></div>
+
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -274,15 +277,17 @@
       </button>
     </span>
     {{/Bild}}
+
     {{#AMBOSS-Link}}
     <span id="hint-amboss" onclick="event.stopPropagation()" style="display: none;">
       <a href="{{text:AMBOSS-Link}}">
         <button id="button-amboss" class="button-general">
-          <img src="__amboss.svg" style="height: 10px;"> AMBOSS
+          <img src="__amboss.svg" style="height: 10px;"> AMBOSS&#8203;
         </button>
       </a>
     </span>
     {{/AMBOSS-Link}}
+
     {{#Thieme via medici-Link}}
     <span id="hint-thieme" onclick="event.stopPropagation()" style="display: none;">
       <a href="{{text:Thieme via medici-Link}}">
@@ -431,7 +436,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
 
       // improve legibility of tags
-      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1::", "");
+      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
       tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
       tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
       newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
@@ -563,8 +568,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       btn.classList.add('button-general');
       btn.classList.add('expanded-button');
 
-      domain = href.replace(/.+\/\/|(www|flexikon|de).|\..+/g, '');
+      domain = href.replace(/.+\/\/|(www|flexikon|de|next|com).|\..+/g, '');
       domainDict = {
+        "amboss": "__amboss.svg",
         "wikipedia": "__wikipedia.svg",
         "doccheck": "__doccheck.png",
         "notfallguru": "__notfallguru.svg",
