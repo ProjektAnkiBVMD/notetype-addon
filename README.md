@@ -15,9 +15,13 @@ Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("
 Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofollow">hier</a> melden.
 - Heuristisches Einrücken ist inkompatibel mit [Edit Field During Review (Cloze) [ID: 385888438]](https://ankiweb.net/shared/info/385888438)
 
-**Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 23.10.1)!**
+**Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 23.12.1)!**
 
 ## Updates
+- 2024-04-07: MEDITRICKS-AddOn-Support
+- 2024-03-06: Fix für die in AnkiDroid v2.17 eingeführten App-spezifischen Styling-Änderungen
+- 2024-02-03: Fix der Updating-Routine (`Alle zurücksetzen` setzt nun wirklich alle zurück)
+- 2024-01-23: HistoTrainer-Notetype hinzugefügt
 - 2024-01-04: NEW-YEARS-Update — Update zu AnKing v2.9.4 (Anzeige Notiztypen-Einstellungen auch ohne Basis-Notiztypen; Live-Editing auch für Notiztyp-Derivate) + kleine Styling und Einrücken-Verbesserungen
 - 2023-12-27: Fix von 1by1 auf AnkiDroid (→ AnkiDroid-spezifische HTML-ID-Dopplung identifiziert und gehackte Workarounds entfernt)
 - 2023-12-22: XMAS-Update — Fix von Clozes, die nicht richtig auf Taps reagieren, fehlenden Cloze-Hints auf iOS und nicht-un-blur-baren Bildern
