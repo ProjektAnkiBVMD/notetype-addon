@@ -252,15 +252,19 @@ sub {
 table {
   font-size: var(--table-font-size);
   width: 99%;
+  height: auto !important;
   max-width: 99%;
-  border-collapse: collapse;
-  border: 1px solid;
+  border-collapse: collapse !important;
+  border: none;
+  display: block;
+  overflow-x: scroll;
+  white-space: wrap;
 }
 
 td,
 th {
-  padding: 2px;
-  border: 1px solid
+  padding: 2px !important;
+  border: 1px solid !important;
 }
 
 /* COLOR ACCENTS FOR BOLD-ITALICS-UNDERLINE */
@@ -462,7 +466,7 @@ a.nightMode {
 }
 
 #meditricks {
-  border: 2px solid var(--meditricks)
+  border: none; /* 2px solid var(--meditricks) */
 }
 
 
@@ -745,6 +749,7 @@ kbd:nth-of-type(10n+0) {
   display: inline-block;
   font-size: 13px;
   box-shadow: none !important;
+  white-space: nowrap;
 }
 
 .button-general+.hints {
@@ -762,8 +767,9 @@ kbd:nth-of-type(10n+0) {
 
 .button-general:not(.mobile):hover {
   background-color: var(--button-bg-hover);
+  background: none;
   color: var(--button-text-hover);
-  cursor: default;
+  cursor: pointer;
 }
 
 #button-hammer:not(.expanded-button) {
@@ -815,7 +821,6 @@ kbd:nth-of-type(10n+0) {
 .header .button-general:not(.mobile):hover {
   background-color: var(--button-bg-header) !important;
   color: var(--button-text-hover) !important;
-  cursor: default;
 }
 
 
@@ -831,7 +836,6 @@ kbd:nth-of-type(10n+0) {
 .nightMode .header .button-general:hover {
   background-color: var(--button-bg-header) !important;
   color: var(--nm-button-text-hover) !important;
-  cursor: default;
 }
 
 
@@ -847,7 +851,6 @@ kbd:nth-of-type(10n+0) {
   background-image: none;
   background-color: var(--nm-button-bg-hover) !important;
   color: var(--nm-button-text-hover) !important;
-  cursor: default;
 }
 
 .nightMode #button-hammer:not(.mobile):hover {
