@@ -256,13 +256,15 @@ table {
   max-width: 99%;
   border-collapse: collapse !important;
   border: none;
-  display: block;
-  overflow-x: scroll;
-  white-space: wrap;
+}
+
+tr {
+  height: unset !important;
 }
 
 td,
 th {
+  height: unset !important;
   padding: 2px !important;
   border: 1px solid !important;
 }

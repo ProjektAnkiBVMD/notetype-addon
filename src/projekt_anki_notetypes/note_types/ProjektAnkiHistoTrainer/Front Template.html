@@ -1,4 +1,4 @@
-<!-- version 9531b04 -->
+<!-- version 0f437a6 -->
 {{#Markierung 1}}
 <script>
   // ############## USER CONFIGURATION START ##############
@@ -966,6 +966,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   })();
 </script>
 
+
+<!-- table div wrapper -->
+<script>
+  for (let table of document.querySelectorAll("table")) {
+    let tableDiv = document.createElement("div");
+    tableDiv.style.overflowY = "scroll";
+    table.parentNode.insertBefore(tableDiv, table);
+    tableDiv.appendChild(table);
+  };
+</script>
 
 <!-- ANKIMOBILE USER ACTIONS -->
 <script>

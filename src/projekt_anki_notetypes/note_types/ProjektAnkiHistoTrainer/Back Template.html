@@ -1,4 +1,4 @@
-<!-- version 9531b04 -->
+<!-- version 0f437a6 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -290,7 +290,8 @@
     <!-- Extra field -->
     {{#Extra}}
     <div id="extra" style="display: none;">
-      <br><br>{{edit:Extra}}</div>
+      <br><br>{{edit:Extra}}
+    </div>
     {{/Extra}}
 
     {{#AMBOSS-Link}}
@@ -1177,6 +1178,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   })();
 </script>
 
+
+<!-- table div wrapper -->
+<script>
+  for (let table of document.querySelectorAll("table")) {
+    let tableDiv = document.createElement("div");
+    tableDiv.style.overflowY = "scroll";
+    table.parentNode.insertBefore(tableDiv, table);
+    tableDiv.appendChild(table);
+  };
+</script>
 
 <!-- MEDITRICKS SNIPPETS DATA -->
 <div id="meditricks-mtsp-values" style="display:none;">
