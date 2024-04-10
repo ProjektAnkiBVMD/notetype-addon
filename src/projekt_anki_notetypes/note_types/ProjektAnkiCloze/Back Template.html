@@ -438,9 +438,9 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     // set up RegEx to analyze the provided divs
     // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<br>)(?<!cloze=")('
+    var beginning = '(?<=<(br|td)>)(?<!cloze=")('
     var middle = ".*?)((?:<br>)(?=("
-    var end = "))|(?=(<\/indent>|<\/div>|<br><br>)))"
+    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>)))"
 
     const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
     const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
@@ -460,7 +460,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
 
       var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
-      var indentEnd = ';">$1</indent>'
+      var indentEnd = ';">$2</indent>'
 
       // do the indentation
       divHTML = div.outerHTML
