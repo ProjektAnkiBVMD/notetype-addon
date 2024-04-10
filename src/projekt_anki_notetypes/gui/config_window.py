@@ -379,9 +379,10 @@ class NotetypesConfigWindow:
             return
 
         for notetype_base_name in projekt_anki_notetype_names():
-            for model_version in _note_type_versions(notetype_base_name):
-                update_notetype_to_newest_version(model_version, notetype_base_name)
-                mw.col.models.update_dict(model_version)  # type: ignore
+            if _note_type_versions(notetype_base_name):
+                for model_version in _note_type_versions(notetype_base_name):
+                    update_notetype_to_newest_version(model_version, notetype_base_name)
+                    mw.col.models.update_dict(model_version)  # type: ignore
 
         self._reload_tab("Allgemein")
 
