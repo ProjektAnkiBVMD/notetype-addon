@@ -19,6 +19,7 @@ CONDITIONAL_FIELD_RE = r"(?:<!-- ?)?\{\{#.+?\}\}[\w\W]+?\{\{/.+?\}\}(?: ?-->)?"
 CONFIGURABLE_FIELD_HAS_TO_CONTAIN_RE = r'(class="hints"|id="extra")'
 CONFIGURABLE_FIELD_NAME_RE = r"\{\{#(.+?)\}\}"
 DO_NOT_DELETE = r"\/\*############ DO NOT DELETE #############\*\/"
+DO_NOT_DELETE_HTML = r"<!-- ############ DO NOT DELETE ############# -->"
 
 
 # for matching text between double quotes which can contain escaped quotes
@@ -779,7 +780,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "Scripts, die zusätzlich zu den Standardscripts eingefügt werden sollen",
             "type": "text",
             "file": "front",
-            "regex": rf"{DO_NOT_DELETE}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE}",
+            "regex": rf"{DO_NOT_DELETE_HTML}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE_HTML}",
             "section": "ADVANCED",
             "default": "\n",
         },
@@ -788,7 +789,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "tooltip": "Scripts, die zusätzlich zu den Standardscripts eingefügt werden sollen",
             "type": "text",
             "file": "back",
-            "regex": rf"{DO_NOT_DELETE}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE}",
+            "regex": rf"{DO_NOT_DELETE_HTML}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE_HTML}",
             "section": "ADVANCED",
             "default": "\n",
         },
