@@ -774,6 +774,24 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "section": "ADVANCED",
             "default": "\n",
         },
+        "custom_scripts_front": {
+            "text": "Custom Scripts (Front)",
+            "tooltip": "Scripts, die zusätzlich zu den Standardscripts eingefügt werden sollen",
+            "type": "text",
+            "file": "front",
+            "regex": rf"{DO_NOT_DELETE}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE}",
+            "section": "ADVANCED",
+            "default": "\n",
+        },
+        "custom_scripts_back": {
+            "text": "Custom Scripts (Back)",
+            "tooltip": "Scripts, die zusätzlich zu den Standardscripts eingefügt werden sollen",
+            "type": "text",
+            "file": "back",
+            "regex": rf"{DO_NOT_DELETE}\n<!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->\n(((.|\n)*?))\n{DO_NOT_DELETE}",
+            "section": "ADVANCED",
+            "default": "\n",
+        },
         **{
             f"user_action_{i}": {
                 "text": f"Nutzeraktion {i}",
@@ -1008,6 +1026,8 @@ general_settings = [
     "image_occlusion_active_border_color",
     "custom_colors",
     "custom_styles",
+    "custom_scripts_front",
+    "custom_scripts_back",
     *[f"user_action_{i}" for i in range(1, 9)],
 ]
 
