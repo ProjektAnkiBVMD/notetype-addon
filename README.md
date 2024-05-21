@@ -1,24 +1,25 @@
 ## Notiztypen für das [Ankizin Klinik-Deck](https://projekt-anki-bvmd.notion.site/Ankizin-v1-ehemals-Zankiphil-1c9899daf779485ebac8a4da35ce9f80)!
 Aktuellste Version stets auf [AnkiHub](https://app.ankihub.net/decks/b2fa8710-93fc-48f3-ab4a-fd14f4435624)!
 
+## PFLICHT für das Ankizin-Deck! (YouTube-Video)
+<a href="https://www.youtube.com/watch?v=XrEjeMHMA1k&list=PLMgdcZaB5m-ZM3DiKWjLx7yEQO424z8Ga&index=3" style="width: 500px;">![ProjektAnki Notiztyp Addon — Grundlagen & Basisfunktionen](https://i.ytimg.com/vi/XrEjeMHMA1k/mqdefault.jpg)</a>
+
 # Projekt Anki Notetypes AddOn
 <b>Dieses AddOn basiert auf dem [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Schaut gerne dort auch vorbei.</b><br>
 This add-on is based on the [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Please consider checking out their work.
 
 ## <a href="https://projekt-anki-bvmd.notion.site/a1a3eece169441b292f6a4da8d8b5b40?v=483e1b5bf4b540d09f4316e3f8509707" rel="nofollow">WIKI / FAQ / Quick-Fixes</a>
-Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("Alle zurücksetzen").<br>AddOn-Kreuzkompatibilitäten sind nicht garantiert!
-
-**AnkiHub-Nutzer**: Vergesst nicht die Basis-Notiztypen `ProjektAnkiCloze` und `ProjektAnkiBlickdiagnose` zu importieren, damit die AnkiHub-Notiztypen auch editiert werden können!<br>
-**FIXED**: siehe NEW-YEARS-Update
+<b>Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("`Alle zurücksetzen`").</b><br>AddOn-Kreuzkompatibilitäten sind nicht garantiert!
 
 ## sonstige Probleme, Bugs, Fehler, Verbesserungen
 Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofollow">hier</a> melden.
 - Heuristisches Einrücken ist inkompatibel mit [Edit Field During Review (Cloze) [ID: 385888438]](https://ankiweb.net/shared/info/385888438)
 
-**Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 23.12.1)!**
+**Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 24.04.1)!**
 
 ## Updates
-- 2024-04-07: MEDITRICKS-AddOn-Support
+- 2024-05-21: Custom-Script-Insertion hinzugefügt
+- 2024-04-07: MEDITRICKS-AddOn-Support + Fix der meisten Tabellen
 - 2024-03-06: Fix für die in AnkiDroid v2.17 eingeführten App-spezifischen Styling-Änderungen
 - 2024-02-03: Fix der Updating-Routine (`Alle zurücksetzen` setzt nun wirklich alle zurück)
 - 2024-01-23: HistoTrainer-Notetype hinzugefügt
