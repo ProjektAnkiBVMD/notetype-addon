@@ -1,4 +1,4 @@
-<!-- version 1b3f8c0 -->
+<!-- version 6fa4ced -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -672,7 +672,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   Persistence.clear();
 
   // check if OneByOne is generally enabled for this card
-  var oneByOneFieldEmpty = "{{One by one}}" === "";
+  var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
   var clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty;
 
   // avoid flickering. Must unset this in the back.

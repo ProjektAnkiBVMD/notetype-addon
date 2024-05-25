@@ -1,4 +1,4 @@
-<!-- version 1b3f8c0 -->
+<!-- version 6fa4ced -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -922,7 +922,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       const CLOZE_REPLACER_SEP = "<span class='hidden'> </span>"
 
       // --- CHECK IF ONE BY ONE IS GENERALLY ENABLED FOR THIS NOTE ---
-      var oneByOneFieldEmpty = "{{One by one}}" === "";
+      var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
       try {
         clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty
       } catch (exception) {
