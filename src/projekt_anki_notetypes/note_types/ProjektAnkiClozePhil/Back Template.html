@@ -1,4 +1,4 @@
-<!-- version 364e39e -->
+<!-- version 0b1506c -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -959,6 +959,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
             clozeReplacer.innerHTML = clozeHider(cloze) + CLOZE_REPLACER_SEP
           }
           count += 1
+          document.getElementById("button-reveal-next").style.display = null;
           if (initial) {
             cloze.addEventListener("touchend", revealClozeClicked)
             cloze.addEventListener("click", revealClozeClicked)
@@ -1045,12 +1046,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       const revealNextClozeOf = (type) => {
-        const nextHidden = document.querySelector(".cloze-hidden")
-        if (!nextHidden) {
+        const nextHidden = document.querySelectorAll(".cloze-hidden")
+        const nextNextHidden = nextHidden.length > 1 ? true : false
+        if (!nextNextHidden) {
           document.documentElement.removeAttribute("onclick")
+          document.getElementById("button-reveal-next").style.display = "none";
+        }
+        if (!nextHidden) {
           return
         }
-        const cloze = clozeElOfClozeHidden(nextHidden);
+        const cloze = clozeElOfClozeHidden(nextHidden[0]);
         if (type === "word") {
           revealClozeWord(cloze)
         } else if (type === "cloze") {
@@ -1083,6 +1088,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
             revealCloze(cloze)
           }
           document.documentElement.removeAttribute("onclick")
+          document.getElementById("button-reveal-next").style.display = "none"
         } else {
           hideAllCloze(initial = false)
         }
