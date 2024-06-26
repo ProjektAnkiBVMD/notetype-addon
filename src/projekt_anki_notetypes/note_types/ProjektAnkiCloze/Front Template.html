@@ -1,4 +1,4 @@
-<!-- version 1b3f1fb -->
+<!-- version 364e39e -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -696,7 +696,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   Persistence.setItem("clozeHints", clozeHints);
 
   // show frontside if not OneByOne
-  if (!clozeOneByOneEnabled) {
+  if (!clozeOneByOneEnabled || in_web) {
     document.getElementById("qa").style.removeProperty("display");
   }
 
