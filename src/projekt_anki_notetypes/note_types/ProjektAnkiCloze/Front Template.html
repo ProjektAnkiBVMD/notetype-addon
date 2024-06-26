@@ -1,4 +1,4 @@
-<!-- version 6fa4ced -->
+<!-- version 1b3f1fb -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -674,6 +674,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   // check if OneByOne is generally enabled for this card
   var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
   var clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty;
+  var in_web = document.getElementById("qa").className.includes("svelte")
 
   // avoid flickering. Must unset this in the back.
   document.getElementById("qa").style.display = "none";
@@ -736,7 +737,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
 
           // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
-          if ((selectiveOneByOne && !oneByOneFieldEmpty && !cardNumberIsOneByOne) || (!selectiveOneByOne && !alwaysOneByOne && !clozeOneByOneEnabled)) {
+          if ((selectiveOneByOne && !oneByOneFieldEmpty && !cardNumberIsOneByOne) || (!selectiveOneByOne && !alwaysOneByOne && !clozeOneByOneEnabled) || in_web) {
             clozeOneByOneEnabled = false;
             document.getElementById("qa").style.removeProperty("display");
           }
