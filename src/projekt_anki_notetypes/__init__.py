@@ -86,18 +86,13 @@ def maybe_show_notetypes_update_notice():
     models_with_updates = models_with_available_updates()
     if not models_with_updates:
         return
+    
+    # Return early if user was already notified about this version (and didn't choose "Remind me later")
+    latest_version = note_type_version(projekt_anki_notetype_models()[0])
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    latest_notice_version = conf.get("latest_notified_note_type_version")
-    if all(
-        note_type_version(model) == latest_notice_version
-        for model in projekt_anki_notetype_models()
-    ):
+    if latest_version == conf.get("latest_notified_note_type_version"):
         return
-
-    conf["latest_notified_note_type_version"] = note_type_version(
-        models_with_updates[0]
-    )
 
     answer = askUserDialog(
         title="Projekt Anki Notiztyp Update",
@@ -108,11 +103,14 @@ def maybe_show_notetypes_update_notice():
         buttons=reversed(["Ja", "Nein", "Erinnere mich später!"]),
     ).run()
     if answer == "Ja":
+        conf["latest_notified_note_type_version"] = latest_version
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         open_window()
     elif answer == "Nein":
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        conf["latest_notified_note_type_version"] = latest_version
     elif answer == "Erinnere mich später":
+        # Don't update the config, so the user will be asked again next time
         pass
 
 
