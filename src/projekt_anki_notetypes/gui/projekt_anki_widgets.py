@@ -44,7 +44,7 @@ class ProjektAnkiIconsLayout(QHBoxLayout):
     def setup(self) -> None:
         self.addStretch()
         icon_objs = [
-            ("projekt_anki.png", (31, 31), "https://ankizin.de"),
+            ("ankizin.png", (31, 31), "https://ankizin.de"),
             ("instagram.png", (31, 31), "https://www.instagram.com/ankizin_bvmd/"),
             ("discord.png", (31, 31), "https://discord.com/invite/5DMsDg8Rvu"),
         ]
