@@ -8,13 +8,14 @@ addon_name = __name__.split('.')[0]
 
 # Increment this after modifying below options.
 SUBMENU_VER = 2
-MENU_NAME = "&Projekt Anki"
+MENU_NAME = "&Ankizin"
 
-GET_HELP_MENU_NAME = "Projekt Anki + Hilfe"
+GET_HELP_MENU_NAME = "Ankizin + Hilfe"
 GET_HELP_MENU_OPTIONS = [
-    ("Projekt Anki Webseite", "https://anki.bvmd.de"),
+    ("Ankizin Webseite", "https://ankizin.de"),
+    ("Instagram", "https://www.instagram.com/ankizin_bvmd/"),
     ("Linksammlung", "https://linktr.ee/anki_germany"),
-    ("Discord", "https://discord.gg/7vfg8a79e2"),
+    ("Discord", "https://discord.com/invite/5DMsDg8Rvu"),
 ]
 # fmt: on
 

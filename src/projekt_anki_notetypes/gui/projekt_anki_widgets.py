@@ -34,7 +34,7 @@ def icon_button(icon_data: Tuple[str, Tuple[int, int], str]) -> QToolButton:
     return button
 
 
-class AnkingIconsLayout(QHBoxLayout):
+class ProjektAnkiIconsLayout(QHBoxLayout):
     def __init__(self, parent: QWidget) -> None:
         QHBoxLayout.__init__(self, parent)
         self.setContentsMargins(0, 0, 0, 0)
@@ -44,8 +44,8 @@ class AnkingIconsLayout(QHBoxLayout):
     def setup(self) -> None:
         self.addStretch()
         icon_objs = [
-            ("projekt_anki.png", (31, 31), "https://anki.bvmd.de"),
-            ("instagram.png", (31, 31), "https://www.instagram.com/anki_doc/"),
+            ("projekt_anki.png", (31, 31), "https://ankizin.de"),
+            ("instagram.png", (31, 31), "https://www.instagram.com/ankizin_bvmd/"),
             ("discord.png", (31, 31), "https://discord.com/invite/5DMsDg8Rvu"),
         ]
         for obj in icon_objs:

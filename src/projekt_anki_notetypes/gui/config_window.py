@@ -21,7 +21,7 @@ from ..notetype_setting_definitions import (
     setting_configs,
 )
 from ..utils import update_notetype_to_newest_version
-from .projekt_anki_widgets import AnkingIconsLayout, GithubLinkLayout
+from .projekt_anki_widgets import ProjektAnkiIconsLayout, GithubLinkLayout
 from .extra_notetype_versions import handle_extra_notetype_versions
 
 try:
@@ -153,7 +153,7 @@ class NotetypesConfigWindow:
         # add anking links layouts
         widget = QWidget()
         window.main_layout.insertWidget(0, widget)
-        AnkingIconsLayout(widget)
+        ProjektAnkiIconsLayout(widget)
 
         widget = QWidget()
         window.main_layout.addWidget(widget)
