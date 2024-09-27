@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl
+from aqt.qt import QUrl, QAction
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -17,7 +17,7 @@ from aqt.gui_hooks import (
     editor_will_show_context_menu,
 )
 from aqt.qt import QMenu, QPushButton, qtmajor, QAction, qconnect
-from aqt.utils import askUserDialog, tooltip
+from aqt.utils import askUserDialog, tooltip, openLink
 
 from bs4 import BeautifulSoup
 
@@ -51,6 +51,7 @@ def setup():
 def on_profile_did_open():
     copy_resources_into_media_folder()
     maybe_show_notetypes_update_notice()
+    maybe_show_deck_update_notice()
 
 
 def open_window():
@@ -61,7 +62,7 @@ def open_window():
 def add_button_to_clayout(clayout):
     button = QPushButton()
     button.setAutoDefault(False)
-    button.setText("Projekt Anki Notiztypen konfigurieren")
+    button.setText("Ankizin Notiztypen konfigurieren")
 
     def open_window_with_clayout():
         window = NotetypesConfigWindow(clayout)
@@ -88,8 +89,8 @@ def maybe_show_notetypes_update_notice():
         return
 
     answer = askUserDialog(
-        title="Projekt Anki Notiztyp Update",
-        text="Es ist eine neue Version der Projekt Anki Notiztypen verfügbar!<br>"
+        title="Ankizin Notiztyp Update",
+        text="Es ist eine neue Version der Ankizin Notiztypen verfügbar!<br>"
         "Du kannst dich im neuen Fenster gleich entscheiden, ob du sie herunterladen willst.<br>"
         "(Button 'Aktualisiere Notiztypen')<br><br>"
         "Kann ich das Add-On-Fenster öffnen?",
@@ -100,9 +101,41 @@ def maybe_show_notetypes_update_notice():
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         open_window()
     elif answer == "Nein":
-        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         conf["latest_notified_note_type_version"] = latest_version
-    elif answer == "Erinnere mich später":
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+    elif answer == "Erinnere mich später!":
+        # Don't update the config, so the user will be asked again next time
+        pass
+
+
+# NOTE: has to be updated manually each time there is a new major version
+def maybe_show_deck_update_notice():
+    # can happen when restoring data from backup
+    if not mw.col:
+        return
+
+    # Return early if user was already notified about this version (and didn't choose "Remind me later")
+    latest_version = 3
+
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    if latest_version == conf.get("latest_notified_deck_version"):
+        return
+
+    answer = askUserDialog(
+        title="Ankizin Deck Update",
+        text="Es ist eine neue Version von Ankizin verfügbar!<br>"
+        "Wenn du nicht AnkiHub nutzt, solltest du die Webseite zu öffnen, um die neueste Version herunterzuladen.",
+        buttons=reversed(
+            ["Ja, ankizin.de öffnen", "Nein", "Erinnere mich später!"]
+        ),
+    ).run()
+    if answer == "Ja":
+        conf["latest_notified_deck_version"] = latest_version
+        # Connect to ankizin.de
+        openLink("https://ankizin.de")
+    elif answer == "Nein":
+        conf["latest_notified_deck_version"] = latest_version
+    elif answer == "Erinnere mich später!":
         # Don't update the config, so the user will be asked again next time
         pass
 
