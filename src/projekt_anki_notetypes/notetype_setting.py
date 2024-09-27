@@ -48,7 +48,10 @@ class NotetypeSetting(ABC):
 
     @abstractmethod
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         pass
 
@@ -96,7 +99,10 @@ class NotetypeSetting(ABC):
 
     # can raise NotetypeSettingException
     def updated_model(
-        self, model: "NotetypeDict", notetype_base_name: str, conf: ConfigManager
+        self,
+        model: "NotetypeDict",
+        notetype_base_name: str,
+        conf: ConfigManager,
     ) -> "NotetypeDict":
         result = deepcopy(model)
         sections = self._relevant_template_sections(result)
@@ -117,11 +123,13 @@ class NotetypeSetting(ABC):
 
         for t_idx, (template, section) in enumerate(zip(templates, sections)):
             try:
-                processed_section = self._set_setting_value(section, setting_value)
-
-                updated_text = self._relevant_template_text(result, t_idx).replace(
-                    section, processed_section, 1
+                processed_section = self._set_setting_value(
+                    section, setting_value
                 )
+
+                updated_text = self._relevant_template_text(
+                    result, t_idx
+                ).replace(section, processed_section, 1)
             except NotetypeSettingException as e:
                 raise e
             except Exception as e:
@@ -168,7 +176,9 @@ class NotetypeSetting(ABC):
     def _set_setting_value(self, section: str, setting_value: Any):
         pass
 
-    def _relevant_template_text(self, model: "NotetypeDict", t_idx: int = 0) -> str:
+    def _relevant_template_text(
+        self, model: "NotetypeDict", t_idx: int = 0
+    ) -> str:
         templates = model["tmpls"]
 
         # all the AnKing notetypes have one template each
@@ -184,7 +194,9 @@ class NotetypeSetting(ABC):
             result = model["css"]
         return result
 
-    def _replace_first_capture_group(self, section: str, new_value_str: Any) -> str:
+    def _replace_first_capture_group(
+        self, section: str, new_value_str: Any
+    ) -> str:
         m = re.search(self.config["regex"], section)
         start, end = m.span(1)
         result = section[:start] + new_value_str + section[end:]
@@ -197,7 +209,10 @@ class NotetypeSettingException(Exception):
 
 class ReCheckboxSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.checkbox(
             key=self.key(notetype_base_name),
@@ -229,7 +244,10 @@ class ReCheckboxSetting(NotetypeSetting):
 
 class WrapCheckboxSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.checkbox(
             key=self.key(notetype_base_name),
@@ -244,7 +262,9 @@ class WrapCheckboxSetting(NotetypeSetting):
     def _set_setting_value(self, section: str, setting_value: Any) -> str:
         result = section
         start_str, end_str = self.config["wrap_into"]
-        cur_setting = section.startswith(start_str) and section.endswith(end_str)
+        cur_setting = section.startswith(start_str) and section.endswith(
+            end_str
+        )
         if setting_value:
             if not cur_setting:
                 result = start_str + result + end_str
@@ -256,7 +276,10 @@ class WrapCheckboxSetting(NotetypeSetting):
 
 class CheckboxSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.checkbox(
             key=self.key(notetype_base_name),
@@ -279,7 +302,10 @@ class CheckboxSetting(NotetypeSetting):
 
 class LineEditSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.text_input(
             key=self.key(notetype_base_name),
@@ -297,7 +323,10 @@ class LineEditSetting(NotetypeSetting):
 
 class FontFamilySetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.font_family_combobox(
             key=self.key(notetype_base_name),
@@ -315,7 +344,10 @@ class FontFamilySetting(NotetypeSetting):
 
 class DropdownSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.dropdown(
             key=self.key(notetype_base_name),
@@ -353,7 +385,10 @@ class UserActionSetting(DropdownSetting):
 
 class ColorSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.color_input(
             key=self.key(notetype_base_name),
@@ -379,7 +414,10 @@ class ColorSetting(NotetypeSetting):
 
 class ShortcutSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.shortcut_edit(
             key=self.key(notetype_base_name),
@@ -399,7 +437,10 @@ class ShortcutSetting(NotetypeSetting):
 
 class NumberEditSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.number_input(
             key=self.key(notetype_base_name),
@@ -432,12 +473,17 @@ class NumberEditSetting(NotetypeSetting):
 
 class ElementOrderSetting(NotetypeSetting):
     def add_widget_to_config_layout(
-        self, layout: ConfigLayout, notetype_base_name: str, model: "NotetypeDict"
+        self,
+        layout: ConfigLayout,
+        notetype_base_name: str,
+        model: "NotetypeDict",
     ):
         layout.order_widget(
             key=self.key(notetype_base_name),
             items=list(
-                self._name_to_match_odict(self._relevant_template_sections(model)[0]).keys()
+                self._name_to_match_odict(
+                    self._relevant_template_sections(model)[0]
+                ).keys()
             ),
             description=self.config["text"],
             tooltip=self.config.get("tooltip", None),
@@ -459,17 +505,23 @@ class ElementOrderSetting(NotetypeSetting):
             old: re.Match = name_to_match[list(name_to_match.keys())[i]]
             new: re.Match = name_to_match[name]
             start, end = old.span()
-            result = result[: start + offset] + new.group(0) + result[end + offset :]
+            result = (
+                result[: start + offset] + new.group(0) + result[end + offset :]
+            )
             offset += len(new.group(0)) - len(old.group(0))
         return result
 
-    def _name_to_match_odict(self, section_text: str) -> OrderedDict[str, re.Match]:
+    def _name_to_match_odict(
+        self, section_text: str
+    ) -> OrderedDict[str, re.Match]:
         matches = [
             m
             for m in re.finditer(self.config["elem_re"], str(section_text))
             if re.search(self.config["has_to_contain"], m.group(0))
             and "OME"
-            not in m.group(0)  # OME banner has to be excluded from the order setting
+            not in m.group(
+                0
+            )  # OME banner has to be excluded from the order setting
         ]
         result = OrderedDict(
             [

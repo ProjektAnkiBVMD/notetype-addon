@@ -44,7 +44,9 @@ def ntss_for_model(model: "NotetypeDict") -> List[NotetypeSetting]:
 def general_ntss() -> List[NotetypeSetting]:
     result = []
     for setting_name in general_settings:
-        result.append(NotetypeSetting.from_config(setting_configs[setting_name]))
+        result.append(
+            NotetypeSetting.from_config(setting_configs[setting_name])
+        )
     return result
 
 
@@ -144,7 +146,9 @@ class NotetypesConfigWindow:
         window.save_btn.clicked.connect(lambda: on_save(window))  # type: ignore
 
         if self.clayout:
-            self._set_active_tab(_notetype_base_name(self.clayout.model["name"]))
+            self._set_active_tab(
+                _notetype_base_name(self.clayout.model["name"])
+            )
 
         # add anking links layouts
         widget = QWidget()
@@ -166,7 +170,8 @@ class NotetypesConfigWindow:
     ):
         if (
             self.clayout
-            and _notetype_base_name(self.clayout.model["name"]) == notetype_base_name
+            and _notetype_base_name(self.clayout.model["name"])
+            == notetype_base_name
         ):
             model = self.clayout.model
         else:
@@ -257,11 +262,15 @@ class NotetypesConfigWindow:
             if (section_name := nts.config.get("section", None))
         }
 
-        section_to_ntss: Dict[str, List[NotetypeSetting]] = defaultdict(lambda: [])
+        section_to_ntss: Dict[str, List[NotetypeSetting]] = defaultdict(
+            lambda: []
+        )
         for nts, section in nts_to_section.items():
             section_to_ntss[section].append(nts)
 
-        notetype_base_name = _notetype_base_name(model["name"]) if model else None
+        notetype_base_name = (
+            _notetype_base_name(model["name"]) if model else None
+        )
         for section_name, section_ntss in sorted(section_to_ntss.items()):
             section = layout.collapsible_section(section_name)
             for nts in section_ntss:
@@ -269,7 +278,9 @@ class NotetypesConfigWindow:
                     nts.add_widget_to_general_config_layout(section)
                 else:
                     nts.add_widget_to_config_layout(
-                        section, notetype_base_name=notetype_base_name, model=model
+                        section,
+                        notetype_base_name=notetype_base_name,
+                        model=model,
                     )
                 section.space(7)
             layout.hseparator()
@@ -296,9 +307,13 @@ class NotetypesConfigWindow:
         # version of the card, not the original one
 
         field_ntss = [
-            nts for nts in ntss if nts.config.get("configurable_field_name", False)
+            nts
+            for nts in ntss
+            if nts.config.get("configurable_field_name", False)
         ]
-        ordered_field_names = configurable_fields_for_notetype(notetype_base_name)
+        ordered_field_names = configurable_fields_for_notetype(
+            notetype_base_name
+        )
         ordered_field_ntss = sorted(
             field_ntss,
             key=lambda nts: (
@@ -381,12 +396,18 @@ class NotetypesConfigWindow:
         for notetype_base_name in projekt_anki_notetype_names():
             if _note_type_versions(notetype_base_name):
                 for model_version in _note_type_versions(notetype_base_name):
-                    update_notetype_to_newest_version(model_version, notetype_base_name)
+                    update_notetype_to_newest_version(
+                        model_version, notetype_base_name
+                    )
                     mw.col.models.update_dict(model_version)  # type: ignore
 
         self._reload_tab("Allgemein")
 
-        tooltip("Alle Notiztypen wurden zurückgesetzt", parent=self.window, period=1200)
+        tooltip(
+            "Alle Notiztypen wurden zurückgesetzt",
+            parent=self.window,
+            period=1200,
+        )
 
     def _update_all_notetypes_to_newest_version_and_reload_ui(self):
         if not askUser(
@@ -426,14 +447,20 @@ class NotetypesConfigWindow:
 
             self._reload_tab("Allgemein")
             updated_base_models = [
-                m for m in updated_models if m["name"] == _notetype_base_name(m["name"])
+                m
+                for m in updated_models
+                if m["name"] == _notetype_base_name(m["name"])
             ]
             for model in sorted(updated_base_models, key=lambda m: m["name"]):
                 self._reload_tab(_notetype_base_name(model["name"]))
 
             self._set_active_tab("Allgemein")
 
-            tooltip("Notiztypen wurden aktualisiert", parent=self.window, period=1200)
+            tooltip(
+                "Notiztypen wurden aktualisiert",
+                parent=self.window,
+                period=1200,
+            )
 
         mw.taskman.with_progress(
             parent=self.window,
@@ -476,9 +503,13 @@ class NotetypesConfigWindow:
                 continue
             for nts in ntss_for_model(model):
                 try:
-                    self.conf[nts.key(notetype_base_name)] = nts.setting_value(model)
+                    self.conf[nts.key(notetype_base_name)] = nts.setting_value(
+                        model
+                    )
                 except NotetypeSettingException as e:
-                    error_msg += f"failed parsing {notetype_base_name}:\n{str(e)}\n\n"
+                    error_msg += (
+                        f"failed parsing {notetype_base_name}:\n{str(e)}\n\n"
+                    )
 
         if error_msg:
             showInfo(error_msg)
@@ -486,10 +517,14 @@ class NotetypesConfigWindow:
     def _read_in_general_settings(self):
         # read in default values
         for setting_name, value in general_settings_defaults_dict().items():
-            self.conf.set(f"general.{setting_name}", value, on_change_trigger=False)
+            self.conf.set(
+                f"general.{setting_name}", value, on_change_trigger=False
+            )
 
         # if all notetypes that have a nts have the same value set the value to it
-        models_by_nts: Dict[NotetypeSetting, "NotetypeDict"] = defaultdict(lambda: [])
+        models_by_nts: Dict[NotetypeSetting, "NotetypeDict"] = defaultdict(
+            lambda: []
+        )
         for notetype_base_name in projekt_anki_notetype_names():
             model = _most_basic_notetype_version(notetype_base_name)
             if not model:
@@ -502,9 +537,14 @@ class NotetypesConfigWindow:
         for nts, models in models_by_nts.items():
             try:
                 setting_value = nts.setting_value(models[0]) if models else None
-                if all(setting_value == nts.setting_value(model) for model in models):
+                if all(
+                    setting_value == nts.setting_value(model)
+                    for model in models
+                ):
                     self.conf.set(
-                        f"general.{nts.name()}", setting_value, on_change_trigger=False
+                        f"general.{nts.name()}",
+                        setting_value,
+                        on_change_trigger=False,
                     )
             except NotetypeSettingException:
                 pass
@@ -551,7 +591,9 @@ class NotetypesConfigWindow:
                     continue
                 ntss = ntss_for_model(model)
                 self._safe_update_model_settings(
-                    model=model, notetype_base_name=notetype_base_name, ntss=ntss
+                    model=model,
+                    notetype_base_name=notetype_base_name,
+                    ntss=ntss,
                 )
                 mw.col.models.update_dict(model)
 
@@ -604,16 +646,20 @@ def _note_type_versions(notetype_base_name: str) -> List["NotetypeDict"]:
         for x in mw.col.models.all_names_and_ids()
         if x.name == notetype_base_name
         or re.match(
-            ANKIHUB_NOTETYPE_RE.format(notetype_base_name=notetype_base_name), x.name
+            ANKIHUB_NOTETYPE_RE.format(notetype_base_name=notetype_base_name),
+            x.name,
         )
         or re.match(
-            NOTETYPE_COPY_RE.format(notetype_base_name=notetype_base_name), x.name
+            NOTETYPE_COPY_RE.format(notetype_base_name=notetype_base_name),
+            x.name,
         )
     ]
     return models
 
 
-def _most_basic_notetype_version(notetype_base_name: str) -> Optional["NotetypeDict"]:
+def _most_basic_notetype_version(
+    notetype_base_name: str,
+) -> Optional["NotetypeDict"]:
     """Returns the most basic version of a note type, that is the version with the shortest name."""
     model_versions = _note_type_versions(notetype_base_name)
     result = min(

@@ -827,7 +827,9 @@ def projekt_anki_notetype_templates() -> Dict[str, Tuple[str, str, str]]:
         back_template = (x / ("Back Template.html")).read_text(
             encoding="utf-8", errors="ignore"
         )
-        styling = (x / ("Styling.css")).read_text(encoding="utf-8", errors="ignore")
+        styling = (x / ("Styling.css")).read_text(
+            encoding="utf-8", errors="ignore"
+        )
         result[notetype_name] = (front_template, back_template, styling)
 
     return result
@@ -836,7 +838,9 @@ def projekt_anki_notetype_templates() -> Dict[str, Tuple[str, str, str]]:
 def projekt_anki_notetype_model(notetype_name: str) -> "NotetypeDict":
     result = json.loads(
         (
-            PROJEKT_ANKI_NOTETYPES_PATH / notetype_name / f"{notetype_name}.json"
+            PROJEKT_ANKI_NOTETYPES_PATH
+            / notetype_name
+            / f"{notetype_name}.json"
         ).read_text(encoding="utf-8", errors="ignore")
     )
     front, back, styling = projekt_anki_notetype_templates()[notetype_name]
@@ -847,14 +851,19 @@ def projekt_anki_notetype_model(notetype_name: str) -> "NotetypeDict":
 
 
 def projekt_anki_notetype_models() -> List["NotetypeDict"]:
-    return [projekt_anki_notetype_model(name) for name in projekt_anki_notetype_names()]
+    return [
+        projekt_anki_notetype_model(name)
+        for name in projekt_anki_notetype_names()
+    ]
 
 
 def all_btns_setting_configs():
     result = OrderedDict()
     for notetype_name in projekt_anki_notetype_templates().keys():
         for field_name in configurable_fields_for_notetype(notetype_name):
-            shortcut = btn_name_to_shortcut_odict(notetype_name).get(field_name, None)
+            shortcut = btn_name_to_shortcut_odict(notetype_name).get(
+                field_name, None
+            )
             result.update(configurable_field_configs(field_name, shortcut))
     return result
 
@@ -892,7 +901,9 @@ def configurable_field_configs(
     # the configurable field is not a hint button
     name_in_snake_case = name.lower().replace(" ", "_")
     result = {
-        f"disable_{name_in_snake_case}": disable_field_setting_config(name, False),
+        f"disable_{name_in_snake_case}": disable_field_setting_config(
+            name, False
+        ),
     }
 
     if default_shortcut_if_hint_button is not None:

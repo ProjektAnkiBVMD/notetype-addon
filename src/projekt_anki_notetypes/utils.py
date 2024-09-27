@@ -22,7 +22,9 @@ def update_notetype_to_newest_version(
     new_model["usn"] = -1  # triggers full sync
 
     # retain the ankihub_id field if it exists on the old model
-    ankihub_field = next((x for x in model["flds"] if x["name"] == "ankihub_id"), None)
+    ankihub_field = next(
+        (x for x in model["flds"] if x["name"] == "ankihub_id"), None
+    )
     if ankihub_field:
         new_model["flds"].append(ankihub_field)
 
@@ -31,7 +33,9 @@ def update_notetype_to_newest_version(
     # the order is important here
     # the end comment must be added after the ankihub snippet
     retain_ankihub_modifications_to_templates(model, new_model)
-    retain_content_below_ankihub_end_comment_or_add_end_comment(model, new_model)
+    retain_content_below_ankihub_end_comment_or_add_end_comment(
+        model, new_model
+    )
 
     model.update(new_model)
 
@@ -39,9 +43,13 @@ def update_notetype_to_newest_version(
 def retain_ankihub_modifications_to_templates(
     old_model: "NotetypeDict", new_model: "NotetypeDict"
 ) -> "NotetypeDict":
-    for old_template, new_template in zip(old_model["tmpls"], new_model["tmpls"]):
+    for old_template, new_template in zip(
+        old_model["tmpls"], new_model["tmpls"]
+    ):
         for template_type in ["qfmt", "afmt"]:
-            m = re.search(ANKIHUB_TEMPLATE_SNIPPET_RE, old_template[template_type])
+            m = re.search(
+                ANKIHUB_TEMPLATE_SNIPPET_RE, old_template[template_type]
+            )
             if not m:
                 continue
 
@@ -56,7 +64,9 @@ def retain_content_below_ankihub_end_comment_or_add_end_comment(
     old_model: "NotetypeDict", new_model: "NotetypeDict"
 ) -> "NotetypeDict":
     # will add the end comment if it doesn't exist
-    for old_template, new_template in zip(old_model["tmpls"], new_model["tmpls"]):
+    for old_template, new_template in zip(
+        old_model["tmpls"], new_model["tmpls"]
+    ):
         for template_type in ["qfmt", "afmt"]:
             m = re.search(
                 rf"{ANKIHUB_TEMPLATE_END_COMMENT}[\w\W]*",
@@ -64,7 +74,9 @@ def retain_content_below_ankihub_end_comment_or_add_end_comment(
             )
             if m:
                 new_template[template_type] = (
-                    new_template[template_type].rstrip("\n ") + "\n\n" + m.group(0)
+                    new_template[template_type].rstrip("\n ")
+                    + "\n\n"
+                    + m.group(0)
                 )
             else:
                 new_template[template_type] = (

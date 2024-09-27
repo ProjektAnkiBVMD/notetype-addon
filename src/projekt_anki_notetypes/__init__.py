@@ -40,23 +40,16 @@ RESOURCES_PATH = Path(__file__).parent / "resources"
 
 def setup():
     add_compat_aliases()
-
     setup_menu(open_window)
-
     card_layout_will_show.append(add_button_to_clayout)
-
     replace_default_addon_config_action()
-
     profile_did_open.append(on_profile_did_open)
-
     browser_will_show_context_menu.append(on_browser_will_show_context_menu)
-
     editor_will_show_context_menu.append(on_editor_will_show_context_menu)
 
 
 def on_profile_did_open():
     copy_resources_into_media_folder()
-
     maybe_show_notetypes_update_notice()
 
 
@@ -86,7 +79,7 @@ def maybe_show_notetypes_update_notice():
     models_with_updates = models_with_available_updates()
     if not models_with_updates:
         return
-    
+
     # Return early if user was already notified about this version (and didn't choose "Remind me later")
     latest_version = note_type_version(projekt_anki_notetype_models()[0])
 
@@ -143,7 +136,9 @@ def note_autoopen_fields(note: "Note") -> List[str]:
     prefix = "autoopen::"
     for tag in note.tags:
         if tag.startswith(prefix):
-            tags.append(tag[tag.index(prefix) + len(prefix) :].replace("_", " "))
+            tags.append(
+                tag[tag.index(prefix) + len(prefix) :].replace("_", " ")
+            )
     return tags
 
 
@@ -152,7 +147,10 @@ def on_auto_reveal_fields_action(
 ) -> None:
     fields = hint_fields_for_nids(selected_nids)
     if not fields:
-        tooltip("Kein Hinweisfeld in den ausgewählten Karten gefunden.", parent=browser)
+        tooltip(
+            "Kein Hinweisfeld in den ausgewählten Karten gefunden.",
+            parent=browser,
+        )
         return
     current = (
         note_autoopen_fields(mw.col.get_note(selected_nids[0]))
@@ -194,7 +192,9 @@ def on_auto_reveal_fields_action(
     mw.taskman.run_in_background(task, on_done)
 
 
-def on_browser_will_show_context_menu(browser: Browser, context_menu: QMenu) -> None:
+def on_browser_will_show_context_menu(
+    browser: Browser, context_menu: QMenu
+) -> None:
     selected_nids = browser.selectedNotes()
     action = context_menu.addAction(
         "Projekt Anki Notiztypen: Felder automatisch aufdecken",
@@ -205,11 +205,15 @@ def on_browser_will_show_context_menu(browser: Browser, context_menu: QMenu) -> 
         action.setDisabled(True)
 
 
-def on_editor_will_show_context_menu(webview: EditorWebView, menu: QMenu) -> None:
+def on_editor_will_show_context_menu(
+    webview: EditorWebView, menu: QMenu
+) -> None:
     def helper() -> None:
         editor = webview.editor
         url = data.mediaUrl()
-        if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
+        if url.matches(
+            QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath
+        ):
             src = url.path().strip("/")
         else:
             src = url.toString()

@@ -18,7 +18,9 @@ class CollapsibleSection(QWidget):
     def __init__(self, title="", parent=None):
         super(CollapsibleSection, self).__init__(parent)
 
-        self.toggle_button = QToolButton(text=title, checkable=True, checked=False)
+        self.toggle_button = QToolButton(
+            text=title, checkable=True, checked=False
+        )
         self.toggle_button.setToolButtonStyle(
             Qt.ToolButtonStyle.ToolButtonTextBesideIcon
         )
@@ -40,8 +42,12 @@ class CollapsibleSection(QWidget):
         lay.addWidget(self.toggle_button)
         lay.addWidget(self.content_area)
 
-        self.toggle_animation.addAnimation(QPropertyAnimation(self, b"minimumHeight"))
-        self.toggle_animation.addAnimation(QPropertyAnimation(self, b"maximumHeight"))
+        self.toggle_animation.addAnimation(
+            QPropertyAnimation(self, b"minimumHeight")
+        )
+        self.toggle_animation.addAnimation(
+            QPropertyAnimation(self, b"maximumHeight")
+        )
         self.toggle_animation.addAnimation(
             QPropertyAnimation(self.content_area, b"maximumHeight")
         )

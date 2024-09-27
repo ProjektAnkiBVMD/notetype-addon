@@ -22,11 +22,14 @@ def handle_extra_notetype_versions() -> None:
             x.id
             for x in mw.col.models.all_names_and_ids()
             if re.match(
-                NOTETYPE_COPY_RE.format(notetype_base_name=notetype_base_name), x.name
+                NOTETYPE_COPY_RE.format(notetype_base_name=notetype_base_name),
+                x.name,
             )
         ]
         if notetype_copy_mids:
-            copy_mids_by_notetype_base_name[notetype_base_name] = notetype_copy_mids
+            copy_mids_by_notetype_base_name[notetype_base_name] = (
+                notetype_copy_mids
+            )
 
     if not copy_mids_by_notetype_base_name:
         return
@@ -61,7 +64,10 @@ def convert_extra_notetypes(
 
     future.result()  # throws an exception if there was an exception in the background task
 
-    for notetype_base_name, copy_mids in copy_mids_by_notetype_base_name.items():
+    for (
+        notetype_base_name,
+        copy_mids,
+    ) in copy_mids_by_notetype_base_name.items():
         model = mw.col.models.by_name(notetype_base_name)
         for copy_mid in copy_mids:
             model_copy = mw.col.models.get(copy_mid)  # type: ignore

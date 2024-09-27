@@ -88,7 +88,8 @@ def choose_subset(
 
     layout.addSpacing(10)
     button_box = QDialogButtonBox(  # type: ignore
-        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        QDialogButtonBox.StandardButton.Ok
+        | QDialogButtonBox.StandardButton.Cancel
     )
     qconnect(button_box.accepted, dialog.accept)
     qconnect(button_box.rejected, dialog.reject)

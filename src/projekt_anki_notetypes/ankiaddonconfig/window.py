@@ -171,7 +171,9 @@ class ConfigWindow(QDialog):
 
 
 class ConfigLayout(QBoxLayout):
-    def __init__(self, conf_window: ConfigWindow, direction: QBoxLayout.Direction):
+    def __init__(
+        self, conf_window: ConfigWindow, direction: QBoxLayout.Direction
+    ):
         QBoxLayout.__init__(self, direction)
         self.conf = conf_window.conf
         self.config_window = conf_window
@@ -180,7 +182,10 @@ class ConfigLayout(QBoxLayout):
     # Config Input Widgets
 
     def checkbox(
-        self, key: str, description: Optional[str] = None, tooltip: Optional[str] = None
+        self,
+        key: str,
+        description: Optional[str] = None,
+        tooltip: Optional[str] = None,
     ) -> QCheckBox:
         "For boolean config"
         checkbox = QCheckBox()
@@ -299,7 +304,10 @@ class ConfigLayout(QBoxLayout):
         return table
 
     def text_input(
-        self, key: str, description: Optional[str] = None, tooltip: Optional[str] = None
+        self,
+        key: str,
+        description: Optional[str] = None,
+        tooltip: Optional[str] = None,
     ) -> QLineEdit:
         "For string config"
         line_edit = QLineEdit()
@@ -392,7 +400,10 @@ class ConfigLayout(QBoxLayout):
         return spin_box
 
     def color_input(
-        self, key: str, description: Optional[str] = None, tooltip: Optional[str] = None
+        self,
+        key: str,
+        description: Optional[str] = None,
+        tooltip: Optional[str] = None,
     ) -> QPushButton:
         "For hex color config"
         button = QPushButton()
@@ -404,7 +415,9 @@ class ConfigLayout(QBoxLayout):
         color_dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel)
 
         def set_color(rgb: str) -> None:
-            border_style = "none" if rgb != "transparent" else "1px solid #000000"
+            border_style = (
+                "none" if rgb != "transparent" else "1px solid #000000"
+            )
             button.setStyleSheet(
                 f'QPushButton{{ background-color: "{rgb}"; border: {border_style}; border-radius: 3px}}'
             )
@@ -501,7 +514,10 @@ class ConfigLayout(QBoxLayout):
         return (line_edit, button)
 
     def shortcut_edit(
-        self, key, description: Optional[str] = None, tooltip: Optional[str] = None
+        self,
+        key,
+        description: Optional[str] = None,
+        tooltip: Optional[str] = None,
     ) -> Tuple[QKeySequenceEdit, QPushButton]:
         edit = QKeySequenceEdit()
 
@@ -541,7 +557,10 @@ class ConfigLayout(QBoxLayout):
         return edit, shortcut_clear_btn
 
     def font_family_combobox(
-        self, key, description: Optional[str] = None, tooltip: Optional[str] = None
+        self,
+        key,
+        description: Optional[str] = None,
+        tooltip: Optional[str] = None,
     ) -> QFontComboBox:
         combo = QFontComboBox()
 
@@ -671,7 +690,9 @@ class ConfigLayout(QBoxLayout):
     ) -> "ConfigLayout":
         """Adds QScrollArea > QWidget*2 > ConfigLayout, returns the layout."""
         # QScrollArea seems to automatically add a child widget.
-        layout = ConfigLayout(self.config_window, QBoxLayout.Direction.TopToBottom)
+        layout = ConfigLayout(
+            self.config_window, QBoxLayout.Direction.TopToBottom
+        )
         inner_widget = QWidget()
         inner_widget.setLayout(layout)
         scroll = QScrollArea()
@@ -689,9 +710,11 @@ class ConfigLayout(QBoxLayout):
         return self._scroll_layout(
             QSizePolicy.Policy.Expanding,
             QSizePolicy.Policy.Minimum,
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-            if always
-            else Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+            (
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+                if always
+                else Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            ),
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
         )
 
@@ -701,9 +724,11 @@ class ConfigLayout(QBoxLayout):
             QSizePolicy.Policy.Minimum,
             QSizePolicy.Policy.Expanding,
             Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-            if always
-            else Qt.ScrollBarPolicy.ScrollBarAsNeeded,
+            (
+                Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+                if always
+                else Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            ),
         )
 
     def scroll_layout(
@@ -713,14 +738,24 @@ class ConfigLayout(QBoxLayout):
     ) -> "ConfigLayout":
         """Legacy. Adds QScrollArea > QWidget*2 > ConfigLayout, returns the layout."""
         return self._scroll_layout(
-            QSizePolicy.Policy.Expanding if horizontal else QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Expanding if vertical else QSizePolicy.Policy.Minimum,
+            (
+                QSizePolicy.Policy.Expanding
+                if horizontal
+                else QSizePolicy.Policy.Minimum
+            ),
+            (
+                QSizePolicy.Policy.Expanding
+                if vertical
+                else QSizePolicy.Policy.Minimum
+            ),
             Qt.ScrollBarPolicy.ScrollBarAsNeeded,
             Qt.ScrollBarPolicy.ScrollBarAsNeeded,
         )
 
     def collapsible_section(self, title: str) -> "ConfigLayout":
-        layout = ConfigLayout(self.config_window, QBoxLayout.Direction.TopToBottom)
+        layout = ConfigLayout(
+            self.config_window, QBoxLayout.Direction.TopToBottom
+        )
         section = CollapsibleSection(title)
         section.setContentLayout(layout)
         self.addWidget(section)
