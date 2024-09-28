@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl, QAction
+from aqt.qt import QUrl, QAction, QDesktopServices
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -17,7 +17,7 @@ from aqt.gui_hooks import (
     editor_will_show_context_menu,
 )
 from aqt.qt import QMenu, QPushButton, qtmajor, QAction, qconnect
-from aqt.utils import askUserDialog, tooltip, openLink
+from aqt.utils import askUserDialog, tooltip, no_bundled_libs
 
 from bs4 import BeautifulSoup
 
@@ -132,7 +132,8 @@ def maybe_show_deck_update_notice():
     if answer == "Ja":
         conf["latest_notified_deck_version"] = latest_version
         # Connect to ankizin.de
-        openLink("https://ankizin.de")
+        with no_bundled_libs():
+            QDesktopServices.openUrl(QUrl("https://ankizin.de"))
     elif answer == "Nein":
         conf["latest_notified_deck_version"] = latest_version
     elif answer == "Erinnere mich später!":
