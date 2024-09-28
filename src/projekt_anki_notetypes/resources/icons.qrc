@@ -1,8 +1,8 @@
 <RCC>
     <qresource prefix="AnKing">
         <file>ankizin.png</file>
+        <file>ankizin_logotype.png</file>
         <file>instagram.png</file>
         <file>discord.png</file>
-        <file>anking.png</file>
     </qresource>
 </RCC>
