@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl, QAction, QMessageBox
+from aqt.qt import QUrl, QAction, QMessageBox, QSize, QIcon, QPixmap
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -92,7 +92,7 @@ def maybe_show_notetypes_update_notice():
         title="Ankizin Notiztyp Update",
         text="Es ist eine neue Version der Ankizin Notiztypen verfügbar!<br>"
         "Du kannst dich im neuen Fenster gleich entscheiden, ob du sie herunterladen willst.<br>"
-        "(Button 'Aktualisiere Notiztypen')<br><br>"
+        "(Button '<code>Aktualisiere Notiztypen</code>')<br><br>"
         "Kann ich das Add-On-Fenster öffnen?",
         buttons=reversed(["Ja", "Nein", "Erinnere mich später!"]),
     ).run()
@@ -123,17 +123,33 @@ def maybe_show_deck_update_notice():
 
     update_dialog = askUserDialog(
         title="Ankizin Deck Update",
-        text="Es ist eine neue Version von Ankizin verfügbar!<br>"
-        "Wenn du kein AnkiHub-Nutzer bist, solltest du die Webseite zu öffnen, um die neueste Version herunterzuladen.",
+        text="<h1>Ankizin V3 ist da!</h1>"
+        "<h2>Es ist ein neuer Major Release von Ankizin verfügbar!</h2>"
+        "<h3>Kein AnkiHub?</h3>"
+        "Wenn du kein AnkiHub nutzt, solltest du die Ankizin-Webseite öffnen, um die neueste Version herunterzuladen."
+        "<h3>AnkiHub-Nutzer*in?</h3>"
+        "Wenn du AnkiHub nutzt, brauchst du nichts weiter machen. Die Karten hast du bereits in den letzten Wochen automatisch erhalten.<br>"
+        "Um sicherzugehen, führe einen manuellen AnkiHub-Sync durch via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'.",
         buttons=reversed(
-            ["Nein", "Erinnere mich später!"]
+            [
+                "Nein, ich habe schon die neueste Version",
+                "Erinnere mich später!",
+            ]
         ),
     )
-    link_button = update_dialog.addButton("Ja, ankizin.de öffnen", QMessageBox.ButtonRole.AcceptRole)
-    link_button.clicked.connect(lambda _, url="https://ankizin.de": openLink(url))
+    update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
+    # update_dialog.setIconSize(QSize(62, 62))
+    link_button = update_dialog.addButton(
+        "Ja, ankizin.de öffnen", QMessageBox.ButtonRole.AcceptRole
+    )
+    link_button_url = "https://www.ankizin.de/wiki/howto-update-deck/"
+    link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
-    if answer == "Ja, ankizin.de öffnen" or answer == "Nein":
+    if (
+        answer == "Ja, ankizin.de öffnen"
+        or answer == "Nein, ich habe schon die neueste Version"
+    ):
         conf["latest_notified_deck_version"] = latest_version
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     elif answer == "Erinnere mich später!":
