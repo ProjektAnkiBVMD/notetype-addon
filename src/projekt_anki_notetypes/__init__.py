@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl, QAction, QDesktopServices
+from aqt.qt import QUrl, QAction, QMessageBox
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -17,7 +17,7 @@ from aqt.gui_hooks import (
     editor_will_show_context_menu,
 )
 from aqt.qt import QMenu, QPushButton, qtmajor, QAction, qconnect
-from aqt.utils import askUserDialog, tooltip, no_bundled_libs
+from aqt.utils import askUserDialog, tooltip, openLink
 
 from bs4 import BeautifulSoup
 
@@ -121,21 +121,21 @@ def maybe_show_deck_update_notice():
     if latest_version == conf.get("latest_notified_deck_version"):
         return
 
-    answer = askUserDialog(
+    update_dialog = askUserDialog(
         title="Ankizin Deck Update",
         text="Es ist eine neue Version von Ankizin verfügbar!<br>"
-        "Wenn du nicht AnkiHub nutzt, solltest du die Webseite zu öffnen, um die neueste Version herunterzuladen.",
+        "Wenn du kein AnkiHub-Nutzer bist, solltest du die Webseite zu öffnen, um die neueste Version herunterzuladen.",
         buttons=reversed(
-            ["Ja, ankizin.de öffnen", "Nein", "Erinnere mich später!"]
+            ["Nein", "Erinnere mich später!"]
         ),
-    ).run()
-    if answer == "Ja":
+    )
+    link_button = update_dialog.addButton("Ja, ankizin.de öffnen", QMessageBox.ButtonRole.AcceptRole)
+    link_button.clicked.connect(lambda _, url="https://ankizin.de": openLink(url))
+
+    answer = update_dialog.run()
+    if answer == "Ja, ankizin.de öffnen" or answer == "Nein":
         conf["latest_notified_deck_version"] = latest_version
-        # Connect to ankizin.de
-        with no_bundled_libs():
-            QDesktopServices.openUrl(QUrl("https://ankizin.de"))
-    elif answer == "Nein":
-        conf["latest_notified_deck_version"] = latest_version
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     elif answer == "Erinnere mich später!":
         # Don't update the config, so the user will be asked again next time
         pass
