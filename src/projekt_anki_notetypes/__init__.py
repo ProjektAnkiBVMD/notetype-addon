@@ -231,7 +231,7 @@ def on_browser_will_show_context_menu(
 ) -> None:
     selected_nids = browser.selectedNotes()
     action = context_menu.addAction(
-        "Projekt Anki Notiztypen: Felder automatisch aufdecken",
+        "Ankizin Notiztypen: Felder automatisch aufdecken",
         lambda: on_auto_reveal_fields_action(browser, selected_nids),
     )
     context_menu.addAction(action)
@@ -316,12 +316,12 @@ def on_editor_will_show_context_menu(
     if data.mediaUrl().isValid():
         blur_image_action = (
             QAction(
-                "Projekt Anki Notiztypen: Bild nicht mehr weichzeichnen",
+                "Ankizin Notiztypen: Bild nicht mehr weichzeichnen",
                 menu,
             )
             if is_blur_image()
             else QAction(
-                "Projekt Anki Notiztypen: Bild weichzeichnen",
+                "Ankizin Notiztypen: Bild weichzeichnen",
                 menu,
             )
         )
@@ -330,12 +330,12 @@ def on_editor_will_show_context_menu(
 
         invert_image_action = (
             QAction(
-                "Projekt Anki Notiztypen: Bild nicht mehr invertieren",
+                "Ankizin Notiztypen: Bild nicht mehr invertieren",
                 menu,
             )
             if is_invert_image()
             else QAction(
-                "Projekt Anki Notiztypen: Bild invertieren",
+                "Ankizin Notiztypen: Bild invertieren",
                 menu,
             )
         )

@@ -1,9 +1,9 @@
 {
-    "display_name": "Projekt Anki Notetypes",
+    "display_name": "Ankizin Notetypes",
     "module_name": "projekt_anki_notetypes",
     "repo_name": "projekt-anki-notetypes-addon",
     "ankiweb_id": "2058530482",
-    "author": "Projekt Anki",
+    "author": "Ankizin",
     "conflicts": [],
     "targets": [
         "anki21"

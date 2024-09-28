@@ -46,7 +46,7 @@ def maybe_add_get_help_submenu(menu: QMenu) -> None:
         # This is for older anking addons that doesn't set submenu_property
         if (
             act.property(submenu_property)
-            or act.text() == "Projekt Anki + Hilfe"
+            or act.text() == "Ankizin + Hilfe"
         ):
             ver = act.property("version")
             if ver and ver >= SUBMENU_VER:

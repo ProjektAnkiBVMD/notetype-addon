@@ -133,7 +133,7 @@ class NotetypesConfigWindow:
 
     def _setup_window_settings(self, window: ConfigWindow):
         self.__class__.window = window
-        window.setWindowTitle("Projekt Anki Notiztypen")
+        window.setWindowTitle("Ankizin Notiztypen")
         window.setMinimumHeight(500)
         window.setMinimumWidth(500)
 
