@@ -1,23 +1,27 @@
-## Notiztypen für das [Ankizin Klinik-Deck](https://projekt-anki-bvmd.notion.site/Ankizin-v1-ehemals-Zankiphil-1c9899daf779485ebac8a4da35ce9f80)!
+## Notiztypen für das [Ankizin Klinik-Deck](https://www.ankizin.de/)!
 Aktuellste Version stets auf [AnkiHub](https://app.ankihub.net/decks/b2fa8710-93fc-48f3-ab4a-fd14f4435624)!
 
 ## PFLICHT für das Ankizin-Deck! (YouTube-Video)
 <a href="https://www.youtube.com/watch?v=XrEjeMHMA1k&list=PLMgdcZaB5m-ZM3DiKWjLx7yEQO424z8Ga&index=3" style="width: 500px;">![ProjektAnki Notiztyp Addon — Grundlagen & Basisfunktionen](https://i.ytimg.com/vi/XrEjeMHMA1k/mqdefault.jpg)</a>
 
-# Projekt Anki Notetypes AddOn
+# Ankizin Notetypes AddOn
 <b>Dieses AddOn basiert auf dem [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Schaut gerne dort auch vorbei.</b><br>
 This add-on is based on the [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Please consider checking out their work.
 
-## <a href="https://projekt-anki-bvmd.notion.site/a1a3eece169441b292f6a4da8d8b5b40?v=483e1b5bf4b540d09f4316e3f8509707" rel="nofollow">WIKI / FAQ / Quick-Fixes</a>
+## <a href="https://www.ankizin.de/wiki/" rel="nofollow">WIKI / FAQ / Quick-Fixes</a>
 <b>Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("`Alle zurücksetzen`").</b><br>AddOn-Kreuzkompatibilitäten sind nicht garantiert!
 
 ## sonstige Probleme, Bugs, Fehler, Verbesserungen
 Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofollow">hier</a> melden.
 - Heuristisches Einrücken ist inkompatibel mit [Edit Field During Review (Cloze) [ID: 385888438]](https://ankiweb.net/shared/info/385888438)
+- AddOns, die den Karten-Screen scrollen wollen (e.g. Contanki, _scroll with vim-like keys_, etc.) benötigen eine kleine Styling-Änderung unter _ADVANCED_ → _Custom Styles_: `#qa #container { overflow-y: unset !important; }` 
 
 **Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 24.04.1)!**
 
 ## Updates
+- 2024-09-30: Kleine Styling-Fixes, PopUp-Fenster für neue Deck-Versionen
+- 2024-06-26: Fix von AnkiWeb
+- 2024-05-25: Fix von `Selective One By One`-Verhalten
 - 2024-05-21: Custom-Script-Insertion hinzugefügt
 - 2024-04-07: MEDITRICKS-AddOn-Support + Fix der meisten Tabellen
 - 2024-03-06: Fix für die in AnkiDroid v2.17 eingeführten App-spezifischen Styling-Änderungen
@@ -32,7 +36,7 @@ Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofoll
 - 2023-12-06: Nikolaus-Update — Fix von nicht funktionierenden Karten auf AnkiDroid, sowie fehlenden Buttons auf der Blickdiagnose-Rückseite + große Veränderungen des 1by1-Handlings under the hood
 
 ## Schaut gerne hier vorbei:
-- <a href="https://anki.bvmd.de" rel="nofollow">Projekt Webseite</a> — <i>Weitere Infos zum Projekt Anki und wie Ihr mitwirken könnt!</i>
+- <a href="https://ankizin.de" rel="nofollow">Ankizin Projekt-Webseite</a> — <i>Weitere Infos zu Ankizin und wie Ihr mitwirken könnt!</i>
 - <a href="https://discord.com/invite/5DMsDg8Rvu" rel="nofollow">Discord-Server</a> — <i>Tipps, Tricks und weitere Hilfestellungen</i>
-- <a href="https://www.instagram.com/anki_doc" rel="nofollow">Instagram</a>: <i>@anki_doc</i>
+- <a href="https://www.instagram.com/ankizin_bvmd/" rel="nofollow">Instagram</a>: <i>@ankizin_bvmd</i>
 - <a href="https://linktr.ee/anki_germany" rel="nofollow">Linktree mit weiteren Links</a>
