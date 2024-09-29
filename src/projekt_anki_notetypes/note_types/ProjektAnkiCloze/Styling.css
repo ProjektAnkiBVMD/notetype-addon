@@ -39,6 +39,7 @@
   --nm-text-bold: MediumSeaGreen;
   --nm-text-italics: #44C1D2;
   --nm-text-underline: #FAB763;
+  --nm-text-cloze: var(--text-cloze);
   --nm-button-bg: #424242;
   --nm-button-border: var(--nm-text-header);
   --nm-button-text: #AFAFAF;
@@ -251,6 +252,7 @@ sub {
 
 table {
   font-size: var(--table-font-size);
+  text-align: left;
   width: 99%;
   height: auto !important;
   max-width: 99%;
@@ -300,24 +302,24 @@ a {
 
 /* NIGHT MODE */
 /* BOLD STYLE */
-b.nightMode {
+.nightMode b {
   color: var(--nm-text-bold) !important;
 }
 
 /* UNDERLINE STYLE */
-u.nightMode {
+.nightMode u {
   color: var(--nm-text-underline) !important;
   text-decoration: none;
 }
 
 /* ITALICS STYLE */
-i.nightMode {
+.nightMode i {
   color: var(--nm-text-italics) !important;
   font-style: inherit;
 }
 
 /* ITALICS STYLE */
-a.nightMode {
+.nightMode a {
   color: var(--nm-text-link) !important;
   text-decoration: none;
   font-style: normal;
@@ -347,7 +349,7 @@ a.nightMode {
 .nightMode .cloze i,
 .nightMode .cloze[data-content][data-hint] {
   font-weight: bold;
-  color: var(--text-cloze) !important;
+  color: var(--nm-text-cloze) !important;
 }
 
 #text {
@@ -468,7 +470,8 @@ a.nightMode {
 }
 
 #meditricks {
-  border: none; /* 2px solid var(--meditricks) */
+  border: none;
+  /* 2px solid var(--meditricks) */
 }
 
 
@@ -522,6 +525,10 @@ img {
   font-size: .6em;
   max-width: 800px;
   margin: 0 auto;
+  text-align: left;
+}
+
+#image img {
   text-align: center;
 }
 
