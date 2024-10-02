@@ -525,7 +525,7 @@ img {
   font-size: .6em;
   max-width: 800px;
   margin: 0 auto;
-  text-align: left;
+  text-align: var(--content-alignment);
 }
 
 #image img {
