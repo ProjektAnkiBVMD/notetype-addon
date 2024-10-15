@@ -8,6 +8,9 @@ Aktuellste Version stets auf [AnkiHub](https://app.ankihub.net/decks/b2fa8710-93
 <b>Dieses AddOn basiert auf dem [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Schaut gerne dort auch vorbei.</b><br>
 This add-on is based on the [AnKing Notes AddOn](https://github.com/AnKing-VIP/anking_notes_addon). Please consider checking out their work.
 
+## One-by-one Clozes
+![One-by-one Clozes](1b1.gif)
+
 ## <a href="https://www.ankizin.de/wiki/" rel="nofollow">WIKI / FAQ / Quick-Fixes</a>
 <b>Viele Probleme lassen sich direkt durch einen globalen Notiztyp-Reset beheben ("`Alle zurücksetzen`").</b><br>AddOn-Kreuzkompatibilitäten sind nicht garantiert!
 
