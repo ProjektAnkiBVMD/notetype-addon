@@ -1,4 +1,4 @@
-<!-- version 4e7f71b -->
+<!-- version 313f82a -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -34,91 +34,91 @@
   var ScrollToButton = false;
 
   // ##############  TAG SHORTCUT  ##############
-  var toggleTagsShortcut = "C";
+var toggleTagsShortcut = "C";
 
-  // ENTER THE TAG TERM WHICH, WHEN PRESENT, WILL TRIGGER A RED BACKGROUND
-  var tagID = "XXXYYYZZZ"
+// ENTER THE TAG TERM WHICH, WHEN PRESENT, WILL TRIGGER A RED BACKGROUND
+var tagID = "XXXYYYZZZ"
 
-  // WHETHER THE WHOLE TAG OR ONLY THE LAST PART SHOULD BE SHOWN
-  var numTagLevelsToShow = 0;
+// WHETHER THE WHOLE TAG OR ONLY THE LAST PART SHOULD BE SHOWN
+var numTagLevelsToShow = 0;
 
-  // ENTER THE UNIVERSITY FOR WHICH CURRICULUM SPECIFIC TAGS SHOULD BE SHOWN
-  var tagUniversity = "XXXYYYZZZ"
+// ENTER THE UNIVERSITY FOR WHICH CURRICULUM SPECIFIC TAGS SHOULD BE SHOWN
+var tagUniversity = "XXXYYYZZZ"
 
   // ##############  INDENTATION  ##############
-  // Enable experimental heuristic indentation feature
-  var indentation = true;
+// Enable experimental heuristic indentation feature
+var indentation = true;
 
   // ##############  DIVI FORMAT  ##############
-  // Enable experimental DIVI medication formatting feature
-  var formattingDIVI = false;
+// Enable experimental DIVI medication formatting feature
+var formattingDIVI = false;
 
   // ##############  CONFOUNDER FORMAT  ##############
-  // Enable experimental confounder formatting feature
-  var formattingConfounders = false;
+// Enable experimental confounder formatting feature
+var formattingConfounders = false;
 
   // ############  BIONIC READING  ############
-  // Enable bionic reading feature (based on AnKing add-on)
-  var bionicReading = false;
+// Enable bionic reading feature (based on AnKing add-on)
+var bionicReading = false;
 
   // ##############  TWO COLUMN  ##############
-  // Enable experimental two column layout feature
-  // Will work on Save
-  var twoColumnLayout = false;
-  var columnRatio = "1fr 1.5fr"; // variable for grid-template-columns
+// Enable experimental two column layout feature
+// Will work on Save
+var twoColumnLayout = false;
+var columnRatio = "1fr 1.5fr"; // variable for grid-template-columns
 
   // ##############  CLOZE ONE BY ONE  ##############
-  var revealNextShortcut = "N"
-  var revealNextWordShortcut = "Shift + N"
-  var toggleAllShortcut = ","
+var revealNextShortcut = "N"
+var revealNextWordShortcut = "Shift + N"
+var toggleAllShortcut = ","
 
-  // Enables revealing of next Cloze by simply clicking / tapping anywhere on the card (except the buttons)
-  var revealAnywhere = true;
+// Enables revealing of next Cloze by simply clicking / tapping anywhere on the card (except the buttons)
+var revealAnywhere = true;
 
-  // INFO ----------------------
-  // to make a card behave like normal clozes without one-by-one, set:
-  // selectiveOneByOne = false, minNumberOfClozes = Infinity, alwaysOneByOne = false
-  // ---------------------------
-  // THIS NEEDS TO BE SET ON THE BACK AS WELL
-  // enables selective cloze one-by-one (e.g. only c1 and c3)
-  // seperate wanted numbers by "," in one-by-one field
-  var selectiveOneByOne = false;
+// INFO ----------------------
+// to make a card behave like normal clozes without one-by-one, set:
+// selectiveOneByOne = false, minNumberOfClozes = Infinity, alwaysOneByOne = false
+// ---------------------------
+// THIS NEEDS TO BE SET ON THE BACK AS WELL
+// enables selective cloze one-by-one (e.g. only c1 and c3)
+// seperate wanted numbers by "," in one-by-one field
+var selectiveOneByOne = false;
 
-  // THIS NEEDS TO BE SET ON THE BACK AS WELL
-  // if selective one-by-one is disabled, set this to select a min number of clozes necessary to activate 1b1
-  // can be set to any number to set lower bound, any falsy value (e.g. 0 or null) disables this setting
-  var minNumberOfClozes = 3;
+// THIS NEEDS TO BE SET ON THE BACK AS WELL
+// if selective one-by-one is disabled, set this to select a min number of clozes necessary to activate 1b1
+// can be set to any number to set lower bound, any falsy value (e.g. 0 or null) disables this setting
+var minNumberOfClozes = 3;
 
-  // THIS NEEDS TO BE SET ON THE BACK AS WELL
-  // enables cloze one-by-one even when one-by-one field is empty
-  // minNumberOfClozes is still considered in this case
-  // overridden in importance by selectiveOneByOne
-  var alwaysOneByOne = true;
-  // ----------------------------
+// THIS NEEDS TO BE SET ON THE BACK AS WELL
+// enables cloze one-by-one even when one-by-one field is empty
+// minNumberOfClozes is still considered in this case
+// overridden in importance by selectiveOneByOne
+var alwaysOneByOne = true;
+// ----------------------------
 
-  // Changes how "Reveal Next" and clicking behaves. Either "cloze" or "word".
-  // "word" reveals word by word. 
-  var revealNextClozeMode = "cloze"
+// Changes how "Reveal Next" and clicking behaves. Either "cloze" or "word".
+// "word" reveals word by word. 
+var revealNextClozeMode = "cloze"
 
-  // Changes how fields with additional information are displayed.
-  // true displays fields with additional information only if all clozes are revealed.
-  var hideAdditional = true;
-  var hideAdditionalButtons = true;
+// Changes how fields with additional information are displayed.
+// true displays fields with additional information only if all clozes are revealed.
+var hideAdditional = true;
+var hideAdditionalButtons = true;
 
-  // What cloze is hidden with
-  var clozeHider = (elem) => "[__]"
-  /*
-  You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
-  
-  // Fixed length:
-  var clozeHider = (elem) => "███"
-  // Replace each character with "█":
-  var clozeHider = (elem) => "█".repeat(elem.textContent.length)
-  // Show whitespaces:
-  var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
-  // Color-filled box (doesn't hide images):
-  var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
-  */
+// What cloze is hidden with
+var clozeHider = (elem) => "[__]"
+/* 
+You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
+
+// Fixed length:
+var clozeHider = (elem) => "███"
+// Replace each character with "█":
+var clozeHider = (elem) => "█".repeat(elem.textContent.length)
+// Show whitespaces:
+var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
+// Color-filled box (doesn't hide images):
+var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
+*/
 
   // ############### USER CONFIGURATION END ###############
 </script>
@@ -136,24 +136,33 @@
     <div class="head-flex-mid">
       <!-- TAGS FIELD -->
       {{#Tags}}
-      <button id="button-tags" class="button-general headhov"
-        onclick="toggleHintBtn('hint-tags'); event.stopPropagation()">
+      <button
+        id="button-tags"
+        class="button-general headhov"
+        onclick="toggleHintBtn('hint-tags'); event.stopPropagation()"
+      >
         Tags
       </button> |
       {{/Tags}}
 
       <!-- SOURCE FIELD -->
       {{#Quelle}}
-      <button id="button-src" class="button-general headhov"
-        onclick="toggleHintBtn('hint-src'); event.stopPropagation()">
+      <button
+        id="button-src"
+        class="button-general headhov"
+        onclick="toggleHintBtn('hint-src'); event.stopPropagation()"
+      >
         Quelle
       </button>
       {{/Quelle}}
 
       <!-- NOTE ID FIELD -->
       {{#Note ID}} |
-      <button id="button-nid" class="button-general headhov"
-        onclick="toggleHintBtn('hint-nid'); event.stopPropagation()">
+      <button
+        id="button-nid"
+        class="button-general headhov"
+        onclick="toggleHintBtn('hint-nid'); event.stopPropagation()"
+      >
         Note ID
       </button>
       {{/Note ID}}
@@ -162,7 +171,11 @@
     <!-- ERRATA BUTTON -->
     <div class="head-flex-right" onclick="event.stopPropagation()">
       <a id="link-ankihub" href="https://app.ankihub.net/">
-        <button id="button-ankihub" class="button-general" title="Karte in AnkiHub">
+        <button
+          id="button-ankihub"
+          class="button-general"
+          title="Karte in AnkiHub"
+        >
           <strong>AnkiHub</strong>
         </button>
       </a>
@@ -170,7 +183,7 @@
         try {
           document.getElementById("link-ankihub").href =
             document.getElementsByClassName("ankihub-view-note")[0].href
-        } catch (e) { }
+        } catch (e) {}
       </script>
     </div>
   </div>
@@ -178,8 +191,11 @@
   <!-- CLICKABLE COLORFUL TAGS -->
   {{#Tags}}
   <span id="hint-tags" class="hintBtn" data-name="Tags" style="display: flex">
-    <button id="button-tags" style="all: unset !important; display: none"
-      onclick="toggleHintBtn('hint-tags'); event.stopPropagation()"></button>
+    <button
+      id="button-tags"
+      style="all: unset !important; display: none"
+      onclick="toggleHintBtn('hint-tags'); event.stopPropagation()"
+    ></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
     <div id="tags-container" class="hints" style="display: none">
       {{clickable::Tags}}
@@ -187,15 +203,21 @@
   </span>
   {{/Tags}} {{#Quelle}}
   <span id="hint-src" class="hintBtn" data-name="Quelle" style="display: flex">
-    <button id="button-src" style="all: unset !important; display: none"
-      onclick="toggleHintBtn('hint-src'); event.stopPropagation()"></button>
+    <button
+      id="button-src"
+      style="all: unset !important; display: none"
+      onclick="toggleHintBtn('hint-src'); event.stopPropagation()"
+    ></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
     <div id="src" class="hints" style="display: none">Quelle: {{Quelle}}</div>
   </span>
   {{/Quelle}} {{#Note ID}}
   <span id="hint-nid" class="hintBtn" data-name="Note ID" style="display: flex">
-    <button id="button-nid" style="all: unset !important; display: none"
-      onclick="toggleHintBtn('hint-nid'); event.stopPropagation()"></button>
+    <button
+      id="button-nid"
+      style="all: unset !important; display: none"
+      onclick="toggleHintBtn('hint-nid'); event.stopPropagation()"
+    ></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
     <div id="nid" class="hints" style="display: none">ID: {{Note ID}}</div>
   </span>
@@ -224,12 +246,12 @@
 
     <!-- BUTTON FIELDS -->
     <!-- ClOZE ONE BY ONE BUTTONS -->
-    <div id="onebyone-buttons" class="onebyone">
-      <button id="button-reveal-next" class="button-general button-one-by-one"
-        onclick="revealNextCloze(); event.stopPropagation()">Reveal Next</button>
-      <button id="button-toggle-all" class="button-general button-one-by-one"
-        onclick="toggleAllCloze(); event.stopPropagation()">Toggle All</button>
-    </div>
+<div id="onebyone-buttons" class="onebyone">
+  <button id="button-reveal-next" class="button-general button-one-by-one" onclick="revealNextCloze(); event.stopPropagation()">Reveal Next</button>
+  <button id="button-toggle-all" class="button-general button-one-by-one" onclick="toggleAllCloze(); event.stopPropagation()">Toggle All</button>
+</div>
+
+    <br>
 
   </div>
 
@@ -240,86 +262,91 @@
     <!-- ####################################### -->
     <!-- BUTTON FIELDS -->
     {{#Zusatzinfos}}
-    <span id="hint-zusatz" class="hintBtn" data-name="Zusatzinfos" style="display: none;">
-      <button id="button-zusatz" class="button-general" onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()">
-        <img src="__zusatz.svg" style="height: 10px;"> Zusatzinfos
-      </button>
-      <div id="zusatz" class="hints" style="display: none;">{{edit:Zusatzinfos}}</div>
-    </span>
-    {{/Zusatzinfos}}
+  <span id="hint-zusatz" class="hintBtn" data-name="Zusatzinfos" style="display: none;">
+    <button id="button-zusatz" class="button-general" onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()">
+      <img src="__zusatz.svg" style="height: 10px;"> Zusatzinfos
+    </button>
+    <div id="zusatz" class="hints" style="display: none;">{{edit:Zusatzinfos}}</div>
+  </span>
+{{/Zusatzinfos}}
 
     {{#Hammer}}
-    <span id="hint-hammer" class="hintBtn" data-name="Hammer" style="display: none;">
-      <button id="button-hammer" class="button-general" onclick="toggleHintBtn('hint-hammer'); event.stopPropagation()">
-        <img src="__hammer.svg" style="height: 10px;"> Hammer
-      </button>
-      <div id="hammer" class="hints" style="display: none;">{{edit:Hammer}}</div>
-    </span>
-    {{/Hammer}}
+  <span id="hint-hammer" class="hintBtn" data-name="Hammer" style="display: none;">
+    <button id="button-hammer" class="button-general" onclick="toggleHintBtn('hint-hammer'); event.stopPropagation()">
+      <img src="__hammer.svg" style="height: 10px;"> Hammer
+    </button>
+    <div id="hammer" class="hints" style="display: none;">{{edit:Hammer}}</div>
+  </span>
+{{/Hammer}}
 
     {{#Klinik}}
-    <span id="hint-klinik" class="hintBtn" data-name="Klinik" style="display: none;">
-      <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
-        <img src="__stethoscope.svg" style="height: 10px;"> Klinik
-      </button>
-      <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
-    </span>
-    {{/Klinik}}
+  <span id="hint-klinik" class="hintBtn" data-name="Klinik" style="display: none;">
+    <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
+      <img src="__stethoscope.svg" style="height: 10px;"> Klinik
+    </button>
+    <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
+  </span>
+{{/Klinik}}
 
     {{#Präparat}}
-    <span id="hint-praeparat" class="hintBtn" data-name="Präparat" style="display: none;">
-      <button id="button-praeparat" class="button-general"
-        onclick="toggleHintBtn('hint-praeparat'); event.stopPropagation()">
-        <img src="__microscope.svg" style="height: 10px;"> Präparat
-      </button>
-      <div id="praeparat" class="hints" style="display: none;">{{edit:Präparat}}</div>
-    </span>
-    {{/Präparat}}
+  <span id="hint-praeparat" class="hintBtn" data-name="Präparat" style="display: none;">
+    <button id="button-praeparat" class="button-general" onclick="toggleHintBtn('hint-praeparat'); event.stopPropagation()">
+      <img src="__microscope.svg" style="height: 10px;"> Präparat
+    </button>
+    <div id="praeparat" class="hints" style="display: none;">{{edit:Präparat}}</div>
+  </span>
+{{/Präparat}}
+
+    <!-- LINEBREAKS IF BUTTONS EXIST -->
+    <script>
+      var array = [`{{text:Eigene Notizen & Bilder}}`, `{{text:Eigene Prüfungsfragen}}`, `{{text:Definitionen}}`, `{{text:Merksprüche}}`, `{{text:Klinik}}`, `{{text:Präparat}}`, `{{text:Memes}}`];
+      var anyistrue = (element) => element;
+      if (array.some(anyistrue)) {
+          document.getElementById("linebreaksIfButtons").innerHTML = "<br>";
+      }
+    </script>
+    <div id="linebreaksIfButtons"></div>
 
     <!-- Extra field -->
     {{#Extra}}
-    <div id="extra" style="display: none;">
-      <br><br>{{edit:Extra}}</div>
+      <div id="extra" style="display: none;">
+        {{edit:Extra}}<br><br></div>
     {{/Extra}}
 
     <!-- Image field -->
     {{#Bild}}
-    <div id="image" style="display: none;">
-      <br><br>{{edit:Bild}}
-    </div>
+      <div id="image" style="display: none;">
+        {{edit:Bild}}<br><br></div>
     {{/Bild}}
     {{^Bild}}
-    <span id="image" style="display: none;"></span>
+      <span id="image" style="display: none;"></span>
     {{/Bild}}
-    <br>
     {{#Bild}}
-    <span id="hint-image" style="display: none;">
-      <button id="button-image" class="button-general"
-        onclick="var image = document.getElementById('image'); if (image.style.display == 'none') { image.style.display = 'block' } else { image.style.display = 'none' }; event.stopPropagation()">
-        <img src="__image.svg" style="height: 10px;"> Abbildung
-      </button>
-    </span>
-    {{/Bild}}
-
-    {{#AMBOSS-Link}}
-    <span id="hint-amboss" onclick="event.stopPropagation()" style="display: none;">
-      <a href="{{text:AMBOSS-Link}}">
-        <button id="button-amboss" class="button-general">
-          <img src="__amboss.svg" style="height: 10px;"> AMBOSS&#8203;
+      <span id="hint-image" style="display: none;">
+        <button id="button-image" class="button-general" onclick="var image = document.getElementById('image'); if (image.style.display == 'none') { image.style.display = 'block' } else { image.style.display = 'none' }; event.stopPropagation()">
+          <img src="__image.svg" style="height: 10px;"> Abbildung
         </button>
-      </a>
-    </span>
+      </span>
+    {{/Bild}}
+    
+    {{#AMBOSS-Link}}
+      <span id="hint-amboss" onclick="event.stopPropagation()" style="display: none;">
+        <a href="{{text:AMBOSS-Link}}">
+          <button id="button-amboss" class="button-general">
+            <img src="__amboss.svg" style="height: 10px;"> AMBOSS&#8203;
+          </button>
+        </a>
+      </span>
     {{/AMBOSS-Link}}
 
     {{#Meditricks}}
-    <span id="hint-meditricks" class="hintBtn" data-name="Meditricks" style="display: none;">
-      <button id="button-meditricks" class="button-general"
-        onclick="toggleHintBtn('hint-meditricks'); event.stopPropagation()">
-        <img src="__meditricks.svg" style="height: 10px;"> Meditricks
-      </button>
-      <div id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
-    </span>
-    {{/Meditricks}}
+  <span id="hint-meditricks" class="hintBtn" data-name="Meditricks" style="display: none;">
+    <button id="button-meditricks" class="button-general" onclick="toggleHintBtn('hint-meditricks'); event.stopPropagation()">
+      <img src="__meditricks.svg" style="height: 10px;"> Meditricks
+    </button>
+    <div id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
+  </span>
+{{/Meditricks}}
 
   </div>
 </div>
@@ -346,88 +373,88 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 * 
 * @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
 */
-  function getTextWidth(text, font) {
-    // re-use canvas object for better performance
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    const context = canvas.getContext("2d");
-    context.font = font;
-    const metrics = context.measureText(text);
-    return metrics.width;
+function getTextWidth(text, font) {
+  // re-use canvas object for better performance
+  const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+  context.font = font;
+  const metrics = context.measureText(text);
+  return metrics.width;
+}
+
+function getCSSStyle(element, prop) {
+  return window.getComputedStyle(element, null).getPropertyValue(prop);
+}
+
+function getCanvasFont(el = document.body) {
+  const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
+  const fontSize = getCSSStyle(el, 'font-size') || '16px';
+  const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
+
+  return `${fontWeight} ${fontSize} ${fontFamily}`;
+}
+
+/**
+* Iterates over a list of divs containing text to be indented
+*
+* @param {HTMLCollection} divs: The divs to be iterated over.
+*/
+function indentText(divs) {
+  // setup the indentation markers
+  var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
+  var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
+  var bulletP = "•"
+  var minus = "– "
+  var enter = "↳(?!( ↳|↳))"
+  var arrow = "→"
+
+  // heuristic indentation hierarchy
+  hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
+
+  // set up RegEx to analyze the provided divs
+  // negative lookbehinds unfortunately do not work yet on iPad / Android
+  var beginning = '(?<=<(br|td)>)(?<!cloze=")('
+  var middle = ".*?)((?:<br>)(?=("
+  var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
+
+  const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+  const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
+  const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
+  const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
+  const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
+  const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
+
+  // iterate over divs
+  for (const div of divs) {
+    // calculate indentation depths
+    var canvasFont = getCanvasFont(div)
+    var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
+    var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
+    var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
+    var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
+    var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
+
+    var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
+    var indentEnd = ';">$2</indent>'
+
+    // do the indentation
+    divHTML = div.outerHTML
+    divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
+    divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+    divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+    divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
+    divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
+
+    divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+    divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
+    divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+    divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
+    divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+    //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
+
+    div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>").replaceAll("</indent><br><img", "</indent><img")
   }
-
-  function getCSSStyle(element, prop) {
-    return window.getComputedStyle(element, null).getPropertyValue(prop);
-  }
-
-  function getCanvasFont(el = document.body) {
-    const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
-    const fontSize = getCSSStyle(el, 'font-size') || '16px';
-    const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
-
-    return `${fontWeight} ${fontSize} ${fontFamily}`;
-  }
-
-  /**
-  * Iterates over a list of divs containing text to be indented
-  *
-  * @param {HTMLCollection} divs: The divs to be iterated over.
-  */
-  function indentText(divs) {
-    // setup the indentation markers
-    var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
-    var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
-    var bulletP = "•"
-    var minus = "– "
-    var enter = "↳(?!( ↳|↳))"
-    var arrow = "→"
-
-    // heuristic indentation hierarchy
-    hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
-
-    // set up RegEx to analyze the provided divs
-    // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<(br|td)>)(?<!cloze=")('
-    var middle = ".*?)((?:<br>)(?=("
-    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>)))"
-
-    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
-    const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
-    const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
-    const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
-    const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
-    const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
-
-    // iterate over divs
-    for (const div of divs) {
-      // calculate indentation depths
-      var canvasFont = getCanvasFont(div)
-      var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
-      var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
-      var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
-      var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
-      var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
-
-      var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
-      var indentEnd = ';">$2</indent>'
-
-      // do the indentation
-      divHTML = div.outerHTML
-      divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
-      divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
-
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
-
-      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>")
-    }
-  }
+}
 
   // do the indentation if wanted
   if (indentation) {
@@ -447,7 +474,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
   window.ankingEventListeners = []
 
-  window.ankingAddEventListener = function (type, handler) {
+  window.ankingAddEventListener = function(type, handler) {
     document.addEventListener(type, handler)
     window.ankingEventListeners.push([type, handler])
   }
@@ -489,7 +516,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     let shift = shortcutKeys.includes("shift")
     let alt = shortcutKeys.includes("alt")
 
-    let matchShortcut = function (ctrl, shift, alt, mainKey, event) {
+    let matchShortcut = function(ctrl, shift, alt, mainKey, event) {
       if (mainKey !== event.code.toLowerCase()) return false
       if (ctrl !== (event.ctrlKey || event.metaKey)) return false
       if (shift !== event.shiftKey) return false
@@ -519,68 +546,68 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 <!-- CLICKABLE COLORFUL TAGS -->
 {{#Tags}}
-<script>
-  var tagContainer = document.getElementById("tags-container")
+  <script>
+    var tagContainer = document.getElementById("tags-container")
 
-  if (tagContainer.childElementCount == 0) {
-    var tagList = tagContainer.innerHTML.trim().split(" ");
-    var kbdList = [];
-    var newTagContent = document.createElement("div");
+    if (tagContainer.childElementCount == 0) {
+      var tagList = tagContainer.innerHTML.trim().split(" ");
+      var kbdList = [];
+      var newTagContent = document.createElement("div");
 
-    for (var i = 0; i < tagList.length; i++) {
-      var newTag = document.createElement("kbd");
-      var tag = tagList[i];
-      // numTagLevelsToShow == 0 means the whole tag should be shown
-      if (numTagLevelsToShow != 0) {
-        tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
+      for (var i = 0; i < tagList.length; i++) {
+        var newTag = document.createElement("kbd");
+        var tag = tagList[i];
+        // numTagLevelsToShow == 0 means the whole tag should be shown
+        if (numTagLevelsToShow != 0) {
+          tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
+        }
+
+        // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
+        if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
+        if (tag.split("::")[1] == "!NEW_CARDS") continue;
+        if (tag.split("::")[1] == "§Projekt_Anki") continue;
+        if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
+
+        // improve legibility of tags
+        tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_vAnkihub::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
+        tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
+        tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
+        newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
+        newTagContent.append(newTag)
       }
 
-      // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
-      if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
-      if (tag.split("::")[1] == "!NEW_CARDS") continue;
-      if (tag.split("::")[1] == "§Projekt_Anki") continue;
-      if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
-
-      // improve legibility of tags
-      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_vAnkihub::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
-      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
-      tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
-      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
-      newTagContent.append(newTag)
+      tagContainer.innerHTML = newTagContent.innerHTML;
+      tagContainer.style.cursor = "default";
     }
 
-    tagContainer.innerHTML = newTagContent.innerHTML;
-    tagContainer.style.cursor = "default";
-  }
-
-  if (tagContainer.innerHTML.indexOf(tagID) != -1) {
-    tagContainer.style.backgroundColor = "rgba(251,11,11,.15)";
-  }
-
-  function showtags() {
-    var tagContainerShortcut = document.getElementById("tags-container");
-
-    if (tagContainerShortcut.style.display === "none") {
-      tagContainerShortcut.style.display = "inline";
-    } else {
-      tagContainerShortcut.style.display = "none";
+    if (tagContainer.innerHTML.indexOf(tagID) != -1) {
+      tagContainer.style.backgroundColor = "rgba(251,11,11,.15)";
     }
-  }
 
-  var isShortcut = shortcutMatcher(toggleTagsShortcut)
+    function showtags() {
+      var tagContainerShortcut = document.getElementById("tags-container");
 
-  ankingAddEventListener('keyup', function (e) {
-    if (isShortcut(e)) {
-      toggleHintBtn('hint-tags');
-      showtags();
+      if (tagContainerShortcut.style.display === "none") {
+        tagContainerShortcut.style.display = "inline";
+      } else {
+        tagContainerShortcut.style.display = "none";
+      }
     }
-  });
-</script>
-<script>
-  for (const tag of document.getElementsByTagName('kbd')) {
-    tag.innerHTML = tag.innerHTML.replace(/::/g, '::<wbr>')
-  }
-</script>
+
+    var isShortcut = shortcutMatcher(toggleTagsShortcut)
+
+    ankingAddEventListener('keyup', function (e) {
+      if (isShortcut(e)) {
+        toggleHintBtn('hint-tags');
+        showtags();
+      }
+    });
+  </script>
+  <script>
+    for (const tag of document.getElementsByTagName('kbd')) {
+      tag.innerHTML = tag.innerHTML.replace(/::/g, '::<wbr>')
+    }
+  </script>
 {{/Tags}}
 
 <!-- HINT BUTTONS SETUP -->
@@ -664,122 +691,122 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <!-- Credit: Anki Persistence, MIT: https://github.com/SimonLammer/anki-persistence/blob/8190116c95df202773aa692c5e9ae704fb407bc9/script.js -->
 
 <script>
-  if (typeof (window.Persistence) === 'undefined') {
-    var _persistenceKey = 'github.com/SimonLammer/anki-persistence/';
-    var _defaultKey = '_default';
-    window.Persistence_sessionStorage = function () { // used in android, iOS, web
-      var isAvailable = false;
-      try {
-        if (typeof (window.sessionStorage) === 'object') {
-          isAvailable = true;
-          this.clear = function () {
-            for (var i = 0; i < sessionStorage.length; i++) {
-              var k = sessionStorage.key(i);
-              if (k.indexOf(_persistenceKey) == 0) {
-                sessionStorage.removeItem(k);
-                i--;
-              }
+    if (typeof (window.Persistence) === 'undefined') {
+        var _persistenceKey = 'github.com/SimonLammer/anki-persistence/';
+        var _defaultKey = '_default';
+        window.Persistence_sessionStorage = function () { // used in android, iOS, web
+            var isAvailable = false;
+            try {
+                if (typeof (window.sessionStorage) === 'object') {
+                    isAvailable = true;
+                    this.clear = function () {
+                        for (var i = 0; i < sessionStorage.length; i++) {
+                            var k = sessionStorage.key(i);
+                            if (k.indexOf(_persistenceKey) == 0) {
+                                sessionStorage.removeItem(k);
+                                i--;
+                            }
+                        };
+                    };
+                    this.setItem = function (key, value) {
+                        if (value == undefined) {
+                            value = key;
+                            key = _defaultKey;
+                        }
+                        sessionStorage.setItem(_persistenceKey + key, JSON.stringify(value));
+                    };
+                    this.getItem = function (key) {
+                        if (key == undefined) {
+                            key = _defaultKey;
+                        }
+                        return JSON.parse(sessionStorage.getItem(_persistenceKey + key));
+                    };
+                    this.removeItem = function (key) {
+                        if (key == undefined) {
+                            key = _defaultKey;
+                        }
+                        sessionStorage.removeItem(_persistenceKey + key);
+                    };
+                    this.getAllKeys = function () {
+                        var keys = [];
+                        var prefixedKeys = Object.keys(sessionStorage);
+                        for (var i = 0; i < prefixedKeys.length; i++) {
+                            var k = prefixedKeys[i];
+                            if (k.indexOf(_persistenceKey) == 0) {
+                                keys.push(k.substring(_persistenceKey.length, k.length));
+                            }
+                        };
+                        return keys.sort()
+                    }
+                }
+            } catch (err) { }
+            this.isAvailable = function () {
+                return isAvailable;
             };
-          };
-          this.setItem = function (key, value) {
-            if (value == undefined) {
-              value = key;
-              key = _defaultKey;
-            }
-            sessionStorage.setItem(_persistenceKey + key, JSON.stringify(value));
-          };
-          this.getItem = function (key) {
-            if (key == undefined) {
-              key = _defaultKey;
-            }
-            return JSON.parse(sessionStorage.getItem(_persistenceKey + key));
-          };
-          this.removeItem = function (key) {
-            if (key == undefined) {
-              key = _defaultKey;
-            }
-            sessionStorage.removeItem(_persistenceKey + key);
-          };
-          this.getAllKeys = function () {
-            var keys = [];
-            var prefixedKeys = Object.keys(sessionStorage);
-            for (var i = 0; i < prefixedKeys.length; i++) {
-              var k = prefixedKeys[i];
-              if (k.indexOf(_persistenceKey) == 0) {
-                keys.push(k.substring(_persistenceKey.length, k.length));
-              }
-            };
-            return keys.sort()
-          }
-        }
-      } catch (err) { }
-      this.isAvailable = function () {
-        return isAvailable;
-      };
-    };
-    window.Persistence_windowKey = function (persistentKey) { // used in windows, linux, mac
-      var obj = window[persistentKey];
-      var isAvailable = false;
-      if (typeof (obj) === 'object') {
-        isAvailable = true;
-        this.clear = function () {
-          obj[_persistenceKey] = {};
         };
-        this.setItem = function (key, value) {
-          if (value == undefined) {
-            value = key;
-            key = _defaultKey;
-          }
-          obj[_persistenceKey][key] = value;
-        };
-        this.getItem = function (key) {
-          if (key == undefined) {
-            key = _defaultKey;
-          }
-          return obj[_persistenceKey][key] == undefined ? null : obj[_persistenceKey][key];
-        };
-        this.removeItem = function (key) {
-          if (key == undefined) {
-            key = _defaultKey;
-          }
-          delete obj[_persistenceKey][key];
-        };
-        this.getAllKeys = function () {
-          return Object.keys(obj[_persistenceKey]);
-        }
+        window.Persistence_windowKey = function (persistentKey) { // used in windows, linux, mac
+            var obj = window[persistentKey];
+            var isAvailable = false;
+            if (typeof (obj) === 'object') {
+                isAvailable = true;
+                this.clear = function () {
+                    obj[_persistenceKey] = {};
+                };
+                this.setItem = function (key, value) {
+                    if (value == undefined) {
+                        value = key;
+                        key = _defaultKey;
+                    }
+                    obj[_persistenceKey][key] = value;
+                };
+                this.getItem = function (key) {
+                    if (key == undefined) {
+                        key = _defaultKey;
+                    }
+                    return obj[_persistenceKey][key] == undefined ? null : obj[_persistenceKey][key];
+                };
+                this.removeItem = function (key) {
+                    if (key == undefined) {
+                        key = _defaultKey;
+                    }
+                    delete obj[_persistenceKey][key];
+                };
+                this.getAllKeys = function () {
+                    return Object.keys(obj[_persistenceKey]);
+                }
 
-        if (obj[_persistenceKey] == undefined) {
-          this.clear();
+                if (obj[_persistenceKey] == undefined) {
+                    this.clear();
+                }
+            }
+            this.isAvailable = function () {
+                return isAvailable;
+            };
+        };
+        /*
+         *   client  | sessionStorage | persistentKey | useful location |
+         * ----------|----------------|---------------|-----------------|
+         * web       |       YES      |       -       |       NO        |
+         * windows   |       NO       |       py      |       NO        |
+         * android   |       YES      |       -       |       NO        |
+         * linux 2.0 |       NO       |       qt      |       YES       |
+         * linux 2.1 |       NO       |       qt      |       YES       |
+         * mac 2.0   |       NO       |       py      |       NO        |
+         * mac 2.1   |       NO       |       qt      |       YES       |
+         * iOS       |       YES      |       -       |       NO        |
+         */
+        window.Persistence = new Persistence_sessionStorage(); // android, iOS, web
+        if (!Persistence.isAvailable()) {
+            window.Persistence = new Persistence_windowKey("py"); // windows, mac (2.0)
         }
-      }
-      this.isAvailable = function () {
-        return isAvailable;
-      };
-    };
-    /*
-     *   client  | sessionStorage | persistentKey | useful location |
-     * ----------|----------------|---------------|-----------------|
-     * web       |       YES      |       -       |       NO        |
-     * windows   |       NO       |       py      |       NO        |
-     * android   |       YES      |       -       |       NO        |
-     * linux 2.0 |       NO       |       qt      |       YES       |
-     * linux 2.1 |       NO       |       qt      |       YES       |
-     * mac 2.0   |       NO       |       py      |       NO        |
-     * mac 2.1   |       NO       |       qt      |       YES       |
-     * iOS       |       YES      |       -       |       NO        |
-     */
-    window.Persistence = new Persistence_sessionStorage(); // android, iOS, web
-    if (!Persistence.isAvailable()) {
-      window.Persistence = new Persistence_windowKey("py"); // windows, mac (2.0)
+        if (!Persistence.isAvailable()) {
+            var titleStartIndex = window.location.toString().indexOf('title'); // if titleStartIndex > 0, window.location is useful
+            var titleContentIndex = window.location.toString().indexOf('main', titleStartIndex);
+            if (titleStartIndex > 0 && titleContentIndex > 0 && (titleContentIndex - titleStartIndex) < 10) {
+                window.Persistence = new Persistence_windowKey("qt"); // linux, mac (2.1)
+            }
+        }
     }
-    if (!Persistence.isAvailable()) {
-      var titleStartIndex = window.location.toString().indexOf('title'); // if titleStartIndex > 0, window.location is useful
-      var titleContentIndex = window.location.toString().indexOf('main', titleStartIndex);
-      if (titleStartIndex > 0 && titleContentIndex > 0 && (titleContentIndex - titleStartIndex) < 10) {
-        window.Persistence = new Persistence_windowKey("qt"); // linux, mac (2.1)
-      }
-    }
-  }
 </script>
 
 <!-- CLOZE ONE BY ONE SCRIPT -->
@@ -791,7 +818,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   .cloze-hidden {
     display: none;
   }
-
   .cloze-replacer .hidden {
     display: none;
   }
@@ -804,183 +830,316 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 </script>
 
 <script>
-    /**
-     * Based on the AnKing Notetype, but expanded and modified by phyn.
-     * Credit to the original authors, except where modified or otherwise indicated.
-     */
-
-    (function () {
-      var clozeOneByOneEnabled = true;
-
-      const clozeHints = Persistence.getItem("clozeHints");
-      Persistence.clear();
-
-      // remove the clickAnywhere function from global scope
-      document.documentElement.removeAttribute("onclick")
-
-      // needed for amboss to recognize first word in .cloze-hidden
-      const CLOZE_REPLACER_SEP = "<span class='hidden'> </span>"
-
-      // --- CHECK IF ONE BY ONE IS GENERALLY ENABLED FOR THIS NOTE ---
-      var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
-      try {
-        clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty
-      } catch (exception) {
-        console.log(exception)
-      }
-
-      /**
-   * helper functions to show / hide fields containing additional information
+  /**
+   * Based on the AnKing Notetype, but expanded and modified by phyn.
+   * Credit to the original authors, except where modified or otherwise indicated.
    */
-      const showExtra = function () {
-        try {
-          document.getElementById("extra").style.removeProperty("display");
-        } catch (exception) {
-          console.log(exception);
+
+  (function() {
+    var clozeOneByOneEnabled = true;
+
+    const clozeHints = Persistence.getItem("clozeHints");
+    Persistence.clear();
+
+    // remove the clickAnywhere function from global scope
+    document.documentElement.removeAttribute("onclick")
+
+    // needed for amboss to recognize first word in .cloze-hidden
+    const CLOZE_REPLACER_SEP = "<span class='hidden'> </span>"
+
+    // --- CHECK IF ONE BY ONE IS GENERALLY ENABLED FOR THIS NOTE ---
+    var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
+    try {
+      clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty
+    } catch (exception) {
+      console.log(exception)
+    }
+
+    /**
+ * helper functions to show / hide fields containing additional information
+ */
+const showExtra = function () {
+  try {
+    document.getElementById("extra").style.removeProperty("display");
+  } catch (exception) {
+    console.log(exception);
+  }
+  try {
+    document.getElementById("image").style.removeProperty("display");
+  } catch (exception) {
+    console.log(exception);
+  }
+};
+
+const hideExtra = function () {
+  try {
+    document.getElementById("extra").style.display = "none";
+  } catch (exception) {
+    console.log(exception);
+  }
+  try {
+    document.getElementById("image").style.display = "none";
+  } catch (exception) {
+    console.log(exception);
+  }
+};
+
+const buttonIds = [
+  "hint-zusatz",
+  "hint-definition",
+  "hint-hammer",
+  "hint-klinik",
+  "hint-praeparat",
+  "hint-merksprueche",
+  "hint-memes",
+  "hint-image",
+  "hint-amboss",
+  "hint-thieme",
+  "hint-meditricks",
+  "hint-linkcontainer",
+];
+
+const showExtraButtons = function () {
+  for (const button in buttonIds) {
+    try {
+      document
+        .getElementById(buttonIds[button])
+        .style.removeProperty("display");
+    } catch (exception) {
+      console.log(exception);
+    }
+  }
+};
+
+const hideExtraButtons = function () {
+  for (const button in buttonIds) {
+    try {
+      document.getElementById(buttonIds[button]).style.display = "none";
+    } catch (exception) {
+      console.log(exception);
+    }
+  }
+};
+
+
+    // --- CHECK IF ONE BY ONE SHOULD BE ENABLED FOR THIS SPECIFIC CARD ---
+    /**
+     * Credit for the getCardNumber function goes to foenixx (GitHub) / ollevolle (AnkiWeb Forum)
+     */
+    const getCardNumber = function() {
+      clz = document.body.className;
+      const regex = /card(\d+)/gm;
+      let m;
+
+      if ((m = regex.exec(clz)) !== null) {
+        return m[1];
+      } else {
+        // Should only fire if card is not cloze
+        console.error("Cannot find cardN class of body element!");
+        return "0";
+      }
+    }
+
+    // parse the cloze numbers for which selectiveOneByOne is enabled
+    cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
+
+    // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
+    numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+
+    // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
+    // -> show normal backside
+    if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes))) {
+      clozeOneByOneEnabled = false
+      showExtra()
+      showExtraButtons()
+      document.getElementById("onebyone-buttons").style.display = "none"
+      document.getElementById("qa").style.removeProperty("display")
+      return
+    }
+
+    const hideAllCloze = function (initial) {
+      let clozes = document.getElementsByClassName("cloze")
+      let count = 0 // hidden cloze count
+      for (const cloze of clozes) {
+        const existingHidden = cloze.getElementsByClassName("cloze-hidden")[0]
+        if (existingHidden) {
+          revealCloze(cloze);
         }
-        try {
-          document.getElementById("image").style.removeProperty("display");
-        } catch (exception) {
-          console.log(exception);
+        if (cloze.offsetWidth === 0) {
+          continue
         }
-      };
-
-      const hideExtra = function () {
-        try {
-          document.getElementById("extra").style.display = "none";
-        } catch (exception) {
-          console.log(exception);
+        const clozeReplacer = document.createElement("span")
+        const clozeHidden = document.createElement("span")
+        clozeReplacer.classList.add("cloze-replacer")
+        clozeHidden.classList.add("cloze-hidden")
+        while (cloze.childNodes.length > 0) {
+          clozeHidden.appendChild(cloze.childNodes[0])
         }
-        try {
-          document.getElementById("image").style.display = "none";
-        } catch (exception) {
-          console.log(exception);
-        }
-      };
+        cloze.appendChild(clozeReplacer)
+        cloze.appendChild(clozeHidden)
 
-      const buttonIds = [
-        "hint-zusatz",
-        "hint-definition",
-        "hint-hammer",
-        "hint-klinik",
-        "hint-praeparat",
-        "hint-merksprueche",
-        "hint-memes",
-        "hint-image",
-        "hint-amboss",
-        "hint-thieme",
-        "hint-meditricks",
-        "hint-linkcontainer",
-      ];
-
-      const showExtraButtons = function () {
-        for (const button in buttonIds) {
-          try {
-            document
-              .getElementById(buttonIds[button])
-              .style.removeProperty("display");
-          } catch (exception) {
-            console.log(exception);
-          }
-        }
-      };
-
-      const hideExtraButtons = function () {
-        for (const button in buttonIds) {
-          try {
-            document.getElementById(buttonIds[button]).style.display = "none";
-          } catch (exception) {
-            console.log(exception);
-          }
-        }
-      };
-
-
-      // --- CHECK IF ONE BY ONE SHOULD BE ENABLED FOR THIS SPECIFIC CARD ---
-      /**
-       * Credit for the getCardNumber function goes to foenixx (GitHub) / ollevolle (AnkiWeb Forum)
-       */
-      const getCardNumber = function () {
-        clz = document.body.className;
-        const regex = /card(\d+)/gm;
-        let m;
-
-        if ((m = regex.exec(clz)) !== null) {
-          return m[1];
+        if (clozeHints && clozeHints[count]) {
+          clozeReplacer.classList.add("cloze-hint")
+          clozeReplacer.innerHTML = clozeHints[count] + CLOZE_REPLACER_SEP
         } else {
-          // Should only fire if card is not cloze
-          console.error("Cannot find cardN class of body element!");
-          return "0";
+          clozeReplacer.innerHTML = clozeHider(cloze) + CLOZE_REPLACER_SEP
+        }
+        count += 1
+        document.getElementById("button-reveal-next").style.display = null;
+        if (initial) {
+          cloze.addEventListener("touchend", revealClozeClicked)
+          cloze.addEventListener("click", revealClozeClicked)
+          cloze.classList.add("one-by-one");
         }
       }
 
-      // parse the cloze numbers for which selectiveOneByOne is enabled
-      cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
+      // Hide #extra until all clozes are shown
+      const extra = document.getElementById("extra");
+      if (extra) {
+        extra.classList.add("hidden");
+      }
 
-      // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
-      numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+      hideExtra();
+      hideExtraButtons();
+      if (revealAnywhere) {
+        document.documentElement.setAttribute("onclick", "revealNextCloze(); event.stopPropagation()")
+      }
+      
 
-      // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
-      // -> show normal backside
-      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes))) {
-        clozeOneByOneEnabled = false
-        showExtra()
-        showExtraButtons()
-        document.getElementById("onebyone-buttons").style.display = "none"
-        document.getElementById("qa").style.removeProperty("display")
+      // Also hide autoReveal fields
+      for (const [field, autoReveal] of Object.entries(ButtonAutoReveal)) {
+        const container = document.querySelector(`[data-name="${field}"]`)
+        if (container) {
+          const tag = `autoopen::${field.toLowerCase().replace(' ', '_')}`
+          if (autoReveal || (globalThis.tagList && globalThis.tagList.includes(tag))) {
+            // const link = container.getElementsByTagName("a")[0]
+            const button = container.getElementsByTagName("button")[0]
+            const hint = container.getElementsByTagName("div")[0]
+            button.classList.remove("expanded-button")
+            hint.style.display = "none"
+            // link.style.display = ""
+          }
+        }
+      }
+    }
+
+    const revealCloze = function (cloze) {
+      const clozeReplacer = cloze.getElementsByClassName("cloze-replacer")[0]
+      const clozeHidden = cloze.getElementsByClassName("cloze-hidden")[0]
+      if (!clozeReplacer || !clozeHidden) return;
+
+      cloze.removeChild(clozeReplacer)
+      cloze.removeChild(clozeHidden)
+      while (clozeHidden.childNodes.length > 0) {
+        cloze.appendChild(clozeHidden.childNodes[0])
+      }
+      maybeRevealExtraField()
+    }
+
+    const revealClozeWord = function (cloze) {
+      const clozeReplacer = cloze.getElementsByClassName("cloze-replacer")[0]
+      const clozeHidden = cloze.getElementsByClassName("cloze-hidden")[0]
+      if (!clozeReplacer || !clozeHidden) return;
+
+      let range = new Range()
+      range.setStart(clozeHidden, 0)
+      const foundSpace = setRangeEnd(range, clozeHidden, "beforeFirstSpace")
+      if (!foundSpace) {
+        range.setEnd(clozeHidden, clozeHidden.childNodes.length)
+      }
+      let fragment = range.extractContents()
+      cloze.insertBefore(fragment, clozeReplacer)
+      // Extract whitespaces after word
+      range = new Range()
+      range.setStart(clozeHidden, 0)
+      const foundWord = setRangeEnd(range, clozeHidden, "beforeFirstChar")
+      if (!foundWord) {
+        range.setEnd(clozeHidden, clozeHidden.childNodes.length)
+      }
+      fragment = range.extractContents();
+      cloze.insertBefore(fragment, clozeReplacer)
+      if (!foundWord) {
+        cloze.removeChild(clozeHidden)
+        cloze.removeChild(clozeReplacer)
+        maybeRevealExtraField()
         return
       }
+      clozeReplacer.innerHTML = clozeHider(clozeHidden) + CLOZE_REPLACER_SEP
+      if (clozeReplacer.classList.contains("cloze-hint")) [
+        clozeReplacer.classList.remove("cloze-hint")
+      ]
+      maybeRevealExtraField()
+    }
 
-      const hideAllCloze = function (initial) {
-        let clozes = document.getElementsByClassName("cloze")
-        let count = 0 // hidden cloze count
-        for (const cloze of clozes) {
-          const existingHidden = cloze.getElementsByClassName("cloze-hidden")[0]
-          if (existingHidden) {
-            revealCloze(cloze);
-          }
-          if (cloze.offsetWidth === 0) {
-            continue
-          }
-          const clozeReplacer = document.createElement("span")
-          const clozeHidden = document.createElement("span")
-          clozeReplacer.classList.add("cloze-replacer")
-          clozeHidden.classList.add("cloze-hidden")
-          while (cloze.childNodes.length > 0) {
-            clozeHidden.appendChild(cloze.childNodes[0])
-          }
-          cloze.appendChild(clozeReplacer)
-          cloze.appendChild(clozeHidden)
+    const revealNextClozeOf = (type) => {
+      const nextHidden = document.querySelectorAll(".cloze-hidden")
+      const nextNextHidden = nextHidden.length > 1 ? true : false
+      if (!nextNextHidden) {
+        document.documentElement.removeAttribute("onclick")
+        document.getElementById("button-reveal-next").style.display = "none";
+      }
+      if (!nextHidden) {
+        return
+      }
+      const cloze = clozeElOfClozeHidden(nextHidden[0]);
+      if (type === "word") {
+        revealClozeWord(cloze)
+      } else if (type === "cloze") {
+        revealCloze(cloze)
+      } else {
+        console.error("Invalid type: " + type)
+      }
+    }
 
-          if (clozeHints && clozeHints[count]) {
-            clozeReplacer.classList.add("cloze-hint")
-            clozeReplacer.innerHTML = clozeHints[count] + CLOZE_REPLACER_SEP
-          } else {
-            clozeReplacer.innerHTML = clozeHider(cloze) + CLOZE_REPLACER_SEP
-          }
-          count += 1
-          document.getElementById("button-reveal-next").style.display = null;
-          if (initial) {
-            cloze.addEventListener("touchend", revealClozeClicked)
-            cloze.addEventListener("click", revealClozeClicked)
-            cloze.classList.add("one-by-one");
-          }
+    const revealClozeClicked = function (ev) {
+      let elem = ev.currentTarget
+      if (!ev.altKey && (revealNextClozeMode !== "word")) {
+        revealCloze(elem)
+      } else {
+        revealClozeWord(elem)
+      }
+      ev.stopPropagation()
+      ev.preventDefault()
+    }
+
+    window.revealNextCloze = function () {
+      revealNextClozeOf(revealNextClozeMode)
+    }
+
+    window.toggleAllCloze = function () {
+      let elems = document.querySelectorAll(".cloze-hidden")
+      if (elems.length > 0) {
+        for (const elem of elems) {
+          const cloze = clozeElOfClozeHidden(elem)
+          revealCloze(cloze)
         }
+        document.documentElement.removeAttribute("onclick")
+        document.getElementById("button-reveal-next").style.display = "none"
+      } else {
+        hideAllCloze(initial = false)
+      }
+    }
 
-        // Hide #extra until all clozes are shown
-        const extra = document.getElementById("extra");
+    const clozeElOfClozeHidden = (cloze) => {
+      while (!cloze.classList.contains("cloze")) {
+        cloze = cloze.parentElement;
+      }
+      return cloze;
+    }
+
+    const maybeRevealExtraField = () => {
+      let elems = document.querySelectorAll(".cloze-hidden")
+      if (elems.length == 0) {
+        const extra = document.getElementById("extra")
         if (extra) {
-          extra.classList.add("hidden");
+          extra.classList.remove("hidden")
         }
 
-        hideExtra();
-        hideExtraButtons();
-        if (revealAnywhere) {
-          document.documentElement.setAttribute("onclick", "revealNextCloze(); event.stopPropagation()")
-        }
+        showExtra();
+        showExtraButtons();
+        document.documentElement.removeAttribute("onclick")
 
-
-        // Also hide autoReveal fields
+        // Also reveal autoReveal fields
         for (const [field, autoReveal] of Object.entries(ButtonAutoReveal)) {
           const container = document.querySelector(`[data-name="${field}"]`)
           if (container) {
@@ -989,212 +1148,79 @@ replace the arrows/dashes from the statement below with double curly brackets-->
               // const link = container.getElementsByTagName("a")[0]
               const button = container.getElementsByTagName("button")[0]
               const hint = container.getElementsByTagName("div")[0]
-              button.classList.remove("expanded-button")
-              hint.style.display = "none"
-              // link.style.display = ""
+              button.classList.add("expanded-button")
+              hint.style.display = "block"
+              // link.style.display = "none"
             }
           }
         }
       }
+    }
 
-      const revealCloze = function (cloze) {
-        const clozeReplacer = cloze.getElementsByClassName("cloze-replacer")[0]
-        const clozeHidden = cloze.getElementsByClassName("cloze-hidden")[0]
-        if (!clozeReplacer || !clozeHidden) return;
-
-        cloze.removeChild(clozeReplacer)
-        cloze.removeChild(clozeHidden)
-        while (clozeHidden.childNodes.length > 0) {
-          cloze.appendChild(clozeHidden.childNodes[0])
-        }
-        maybeRevealExtraField()
-      }
-
-      const revealClozeWord = function (cloze) {
-        const clozeReplacer = cloze.getElementsByClassName("cloze-replacer")[0]
-        const clozeHidden = cloze.getElementsByClassName("cloze-hidden")[0]
-        if (!clozeReplacer || !clozeHidden) return;
-
-        let range = new Range()
-        range.setStart(clozeHidden, 0)
-        const foundSpace = setRangeEnd(range, clozeHidden, "beforeFirstSpace")
-        if (!foundSpace) {
-          range.setEnd(clozeHidden, clozeHidden.childNodes.length)
-        }
-        let fragment = range.extractContents()
-        cloze.insertBefore(fragment, clozeReplacer)
-        // Extract whitespaces after word
-        range = new Range()
-        range.setStart(clozeHidden, 0)
-        const foundWord = setRangeEnd(range, clozeHidden, "beforeFirstChar")
-        if (!foundWord) {
-          range.setEnd(clozeHidden, clozeHidden.childNodes.length)
-        }
-        fragment = range.extractContents();
-        cloze.insertBefore(fragment, clozeReplacer)
-        if (!foundWord) {
-          cloze.removeChild(clozeHidden)
-          cloze.removeChild(clozeReplacer)
-          maybeRevealExtraField()
-          return
-        }
-        clozeReplacer.innerHTML = clozeHider(clozeHidden) + CLOZE_REPLACER_SEP
-        if (clozeReplacer.classList.contains("cloze-hint")) [
-          clozeReplacer.classList.remove("cloze-hint")
-        ]
-        maybeRevealExtraField()
-      }
-
-      const revealNextClozeOf = (type) => {
-        const nextHidden = document.querySelectorAll(".cloze-hidden")
-        const nextNextHidden = nextHidden.length > 1 ? true : false
-        if (!nextNextHidden) {
-          document.documentElement.removeAttribute("onclick")
-          document.getElementById("button-reveal-next").style.display = "none";
-        }
-        if (!nextHidden) {
-          return
-        }
-        const cloze = clozeElOfClozeHidden(nextHidden[0]);
-        if (type === "word") {
-          revealClozeWord(cloze)
-        } else if (type === "cloze") {
-          revealCloze(cloze)
-        } else {
-          console.error("Invalid type: " + type)
-        }
-      }
-
-      const revealClozeClicked = function (ev) {
-        let elem = ev.currentTarget
-        if (!ev.altKey && (revealNextClozeMode !== "word")) {
-          revealCloze(elem)
-        } else {
-          revealClozeWord(elem)
-        }
-        ev.stopPropagation()
-        ev.preventDefault()
-      }
-
-      window.revealNextCloze = function () {
-        revealNextClozeOf(revealNextClozeMode)
-      }
-
-      window.toggleAllCloze = function () {
-        let elems = document.querySelectorAll(".cloze-hidden")
-        if (elems.length > 0) {
-          for (const elem of elems) {
-            const cloze = clozeElOfClozeHidden(elem)
-            revealCloze(cloze)
-          }
-          document.documentElement.removeAttribute("onclick")
-          document.getElementById("button-reveal-next").style.display = "none"
-        } else {
-          hideAllCloze(initial = false)
-        }
-      }
-
-      const clozeElOfClozeHidden = (cloze) => {
-        while (!cloze.classList.contains("cloze")) {
-          cloze = cloze.parentElement;
-        }
-        return cloze;
-      }
-
-      const maybeRevealExtraField = () => {
-        let elems = document.querySelectorAll(".cloze-hidden")
-        if (elems.length == 0) {
-          const extra = document.getElementById("extra")
-          if (extra) {
-            extra.classList.remove("hidden")
-          }
-
-          showExtra();
-          showExtraButtons();
-          document.documentElement.removeAttribute("onclick")
-
-          // Also reveal autoReveal fields
-          for (const [field, autoReveal] of Object.entries(ButtonAutoReveal)) {
-            const container = document.querySelector(`[data-name="${field}"]`)
-            if (container) {
-              const tag = `autoopen::${field.toLowerCase().replace(' ', '_')}`
-              if (autoReveal || (globalThis.tagList && globalThis.tagList.includes(tag))) {
-                // const link = container.getElementsByTagName("a")[0]
-                const button = container.getElementsByTagName("button")[0]
-                const hint = container.getElementsByTagName("div")[0]
-                button.classList.add("expanded-button")
-                hint.style.display = "block"
-                // link.style.display = "none"
-              }
+    /**
+     * mode: 'beforeFirstSpace' or 'beforeFirstChar'
+     * Return `true` if it exists and setEnd() was called, otherwise `false`
+     */
+    const setRangeEnd = function (range, node, mode) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const regex = mode === 'beforeFirstSpace' ? /\s/ : /\S/
+        const match = node.textContent.match(regex)
+        if (match) {
+          if (match.index === 0) {
+            while (node.previousSibling === null) {
+              node = node.parentElement
             }
-          }
-        }
-      }
-
-      /**
-       * mode: 'beforeFirstSpace' or 'beforeFirstChar'
-       * Return `true` if it exists and setEnd() was called, otherwise `false`
-       */
-      const setRangeEnd = function (range, node, mode) {
-        if (node.nodeType === Node.TEXT_NODE) {
-          const regex = mode === 'beforeFirstSpace' ? /\s/ : /\S/
-          const match = node.textContent.match(regex)
-          if (match) {
-            if (match.index === 0) {
-              while (node.previousSibling === null) {
-                node = node.parentElement
-              }
-              range.setEndBefore(node)
-            } else {
-              range.setEnd(node, match.index);
-            }
-            return true;
+            range.setEndBefore(node)
           } else {
-            return false;
+            range.setEnd(node, match.index);
           }
-        } else if (mode === 'beforeFirstChar' && isCharNode(node)) {
-          range.setEndBefore(node)
-          return true
-        } else if (!ignoreSpaceInNode(node)) {
-          for (const child of node.childNodes) {
-            if (setRangeEnd(range, child, mode)) {
-              return true;
-            }
-          }
+          return true;
+        } else {
           return false;
         }
-      }
-
-      const ignoreSpaceInNode = function (node) {
-        return node.tagName === "MJX-ASSISTIVE-MML"
-      }
-
-      const isCharNode = function (node) {
-        return ["IMG", "MJX-CONTAINER"].includes(node.tagName)
-      }
-
-      hideAllCloze(initial = true)
-
-      let isShowNextShortcut = shortcutMatcher(window.revealNextShortcut)
-      let isShowWordShortcut = shortcutMatcher(window.revealNextWordShortcut)
-      let isToggleAllShortcut = shortcutMatcher(window.toggleAllShortcut)
-      ankingAddEventListener("keydown", (ev) => {
-        let next = isShowNextShortcut(ev)
-        let word = isShowWordShortcut(ev)
-        let all = isToggleAllShortcut(ev)
-        if (next) {
-          revealNextClozeOf("cloze")
-        } else if (word) {
-          revealNextClozeOf("word")
-        } else if (all) {
-          toggleAllCloze()
-        } else {
-          return;
+      } else if (mode === 'beforeFirstChar' && isCharNode(node)) {
+        range.setEndBefore(node)
+        return true
+      } else if (!ignoreSpaceInNode(node)) {
+        for (const child of node.childNodes) {
+          if (setRangeEnd(range, child, mode)) {
+            return true;
+          }
         }
-        ev.stopPropagation()
-        ev.preventDefault()
-      });
-    })()
+        return false;
+      }
+    }
+
+    const ignoreSpaceInNode = function (node) {
+      return node.tagName === "MJX-ASSISTIVE-MML"
+    }
+
+    const isCharNode = function (node) {
+      return ["IMG", "MJX-CONTAINER"].includes(node.tagName)
+    }
+
+    hideAllCloze(initial = true)
+
+    let isShowNextShortcut = shortcutMatcher(window.revealNextShortcut)
+    let isShowWordShortcut = shortcutMatcher(window.revealNextWordShortcut)
+    let isToggleAllShortcut = shortcutMatcher(window.toggleAllShortcut)
+    ankingAddEventListener("keydown", (ev) => {
+      let next = isShowNextShortcut(ev)
+      let word = isShowWordShortcut(ev)
+      let all = isToggleAllShortcut(ev)
+      if (next) {
+        revealNextClozeOf("cloze")
+      } else if (word) {
+        revealNextClozeOf("word")
+      } else if (all) {
+        toggleAllCloze()
+      } else {
+        return;
+      }
+      ev.stopPropagation()
+      ev.preventDefault()
+    });
+  })()
 </script>
 
 <!-- TWO COLUMN LAYOUT -->
@@ -1273,26 +1299,26 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <script>
   function countdown(elementName, minutes, seconds) {
     var element, endTime, mins, msLeft, time;
-    function twoDigits(n) {
-      return (n <= 9 ? "0" + n : n);
+    function twoDigits( n ) {
+      return (n <= 9 ? "0" + n : n); 
     }
     function updateTimer() {
       msLeft = endTime - (+new Date);
-
-      if (msLeft < 1000) {
+      
+      if ( msLeft < 1000 ) {
         element.innerHTML = timeOverMsg;
       } else {
-        time = new Date(msLeft);
+        time = new Date( msLeft );
         mins = time.getUTCMinutes();
         element.innerHTML = mins + ':' + twoDigits(time.getUTCSeconds());
-        setTimeout(updateTimer, time.getUTCMilliseconds() + 500);
+        setTimeout( updateTimer, time.getUTCMilliseconds() + 500 );
       }
     }
     element = document.getElementById(elementName);
-    endTime = (+new Date) + 1000 * (60 * minutes + seconds) + 500;
+    endTime = (+new Date) + 1000 * (60*minutes + seconds) + 500;
     updateTimer();
   }
-  countdown("timer", minutes, seconds); //2nd value is the minute, 3rd is the seconds
+  countdown("timer", minutes, seconds ); //2nd value is the minute, 3rd is the seconds
 </script>
 
 <script>
@@ -1310,11 +1336,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   function replaceUsingDictionary(dictionary, content, replacehandler) {
     if (typeof replacehandler != "function") {
       // Default replacehandler function.
-      replacehandler = function (key, dictionary) {
+      replacehandler = function(key, dictionary){
         return dictionary[key];
       }
     }
-
+    
     var patterns = [], // \b is used to mark boundaries "foo" doesn't match food
       patternHash = {},
       oldkey, key, index = 0,
@@ -1323,11 +1349,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       // Case-insensitivity:
       key = (oldkey = key).toLowerCase();
       dictionary[key] = dictionary[oldkey];
-
+      
       // Sanitize the key, and push it in the list
       // patterns.push('\\b(?:' + key.replace(/([[^$.|?*+(){}])/g, '\\$1') + ')\\b');
       patterns.push('(?:' + key.replace(/([[^$.|?*+(){}])/g, '\\$1') + ')');
-
+      
       // Add entry to hash variable, for an optimized backtracking at the next loop
       patternHash[key] = index++;
     }
@@ -1477,270 +1503,270 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
 
 <script>
+/**
+ * Based on the AnKing Bionic Reading AddOn, but slightly expanded and modified by phyn.
+ * Full credit to the original authors, except where modified or otherwise indicated.
+ */
+
+/**
+ *
+ * We try to respect that people use various note types
+ * which may do 'weird' stuff.
+ * Elements may have event listeners that can be removed if we just innerHTML stuff
+ * <i> may be styled 'i { display: block }', etc.
+ *
+ * Another problem that complicate the design of this script is that
+ * a word may not be cleanly separated by html tags.
+ * e.g. "A<i>long</i>word"
+ *
+ */
+
+(function () {
   /**
-   * Based on the AnKing Bionic Reading AddOn, but slightly expanded and modified by phyn.
-   * Full credit to the original authors, except where modified or otherwise indicated.
+   * @param {String} text
+   * @returns {number}
    */
+  function getBoldLength(text) {
+    return Math.floor(text.length / 2);
+  }
 
-  /**
-   *
-   * We try to respect that people use various note types
-   * which may do 'weird' stuff.
-   * Elements may have event listeners that can be removed if we just innerHTML stuff
-   * <i> may be styled 'i { display: block }', etc.
-   *
-   * Another problem that complicate the design of this script is that
-   * a word may not be cleanly separated by html tags.
-   * e.g. "A<i>long</i>word"
-   *
-   */
+  // Ignore node if any of the filters return true
+  const excludeFilters = [
+    (elem) => elem.tagName === "SCRIPT",
+    (elem) => elem.tagName === "STYLE",
+    (elem) => elem.classList.contains("cloze"),
+  ];
 
-  (function () {
-    /**
-     * @param {String} text
-     * @returns {number}
-     */
-    function getBoldLength(text) {
-      return Math.floor(text.length / 2);
-    }
+  function newBoldElement(text) {
+    const elem = document.createElement("strong");
+    elem.innerText = text;
+    return elem;
+  }
 
-    // Ignore node if any of the filters return true
-    const excludeFilters = [
-      (elem) => elem.tagName === "SCRIPT",
-      (elem) => elem.tagName === "STYLE",
-      (elem) => elem.classList.contains("cloze"),
+  function indexOfWhitespace(text, startPos) {
+    const whitespaces = [
+      " ",
+      "\n",
+      "\t",
+      " ",
+      "&nbsp;",
+      "‑",
+      "-",
+      "/",
+      "(",
+      ")",
     ];
-
-    function newBoldElement(text) {
-      const elem = document.createElement("strong");
-      elem.innerText = text;
-      return elem;
+    let nextPos = text.length;
+    for (const whitespace of whitespaces) {
+      const next = text.indexOf(whitespace, startPos);
+      if (next !== -1 && next < nextPos) {
+        nextPos = next;
+      }
     }
-
-    function indexOfWhitespace(text, startPos) {
-      const whitespaces = [
-        " ",
-        "\n",
-        "\t",
-        " ",
-        "&nbsp;",
-        "‑",
-        "-",
-        "/",
-        "(",
-        ")",
-      ];
-      let nextPos = text.length;
-      for (const whitespace of whitespaces) {
-        const next = text.indexOf(whitespace, startPos);
-        if (next !== -1 && next < nextPos) {
-          nextPos = next;
-        }
-      }
-      if (nextPos === text.length) {
-        nextPos = -1;
-      }
-      return nextPos;
+    if (nextPos === text.length) {
+      nextPos = -1;
     }
+    return nextPos;
+  }
 
-    // Bolds a line of words
-    class BionicReaderBolder {
-      constructor(nodes) {
-        this.nodes = nodes;
-        this.startNodeIndex = 0;
-        this.startPos = 0;
-        this.replaceNodes = [];
-        while (!this.isFinished()) {
-          this.runWithinNode();
-          this.runInterNode();
-        }
-      }
-
-      static run(nodes) {
-        new BionicReaderBolder(nodes);
-      }
-
-      isFinished() {
-        return this.startNodeIndex === this.nodes.length;
-      }
-
-      replaceNode() {
-        const node = this.nodes[this.startNodeIndex];
-        const parent = node.parentNode;
-        for (let add of this.replaceNodes) {
-          parent.insertBefore(add, node);
-        }
-        parent.removeChild(node);
-        this.replaceNodes = [];
-      }
-
-      runWithinNode() {
-        const textContent = this.nodes[this.startNodeIndex].textContent;
-        let nextPos = indexOfWhitespace(textContent, this.startPos);
-        while (nextPos !== -1) {
-          const word = textContent.substring(this.startPos, nextPos);
-          const boldLength = getBoldLength(word);
-          this.replaceNodes.push(newBoldElement(word.substring(0, boldLength)));
-          this.replaceNodes.push(
-            document.createTextNode(
-              word.substring(boldLength, nextPos) + textContent[nextPos]
-            )
-          );
-          this.startPos = nextPos + 1;
-          nextPos = indexOfWhitespace(textContent, this.startPos);
-        }
-      }
-
-      // after this, startPos is likely to be at whitespace char
-      runInterNode() {
-        let word = "";
-        let endNodeIndex = this.startNodeIndex;
-        let endPos = this.startPos; // last word char pos + 1
-
-        // Find word boundary
-        while (endNodeIndex < this.nodes.length) {
-          const textContent = this.nodes[endNodeIndex].textContent;
-          let nextPos = indexOfWhitespace(textContent, endPos);
-          if (nextPos === -1) {
-            word += textContent.substring(endPos);
-            endNodeIndex += 1;
-            endPos = 0;
-          } else {
-            word += textContent.substring(endPos, nextPos);
-            endPos = nextPos;
-            break;
-          }
-        }
-        // Calculate bold length
-        let remainingBoldLength = getBoldLength(word);
-
-        // Bold part of word
-        while (remainingBoldLength > 0) {
-          const textContent = this.nodes[this.startNodeIndex].textContent;
-          if (remainingBoldLength > textContent.length - this.startPos) {
-            const wordPart = textContent.substring(this.startPos);
-            remainingBoldLength -= wordPart.length;
-            this.replaceNodes.push(newBoldElement(wordPart));
-            this.replaceNode();
-            this.startNodeIndex += 1;
-            this.startPos = 0;
-          } else {
-            const wordPart = textContent.substring(
-              this.startPos,
-              this.startPos + remainingBoldLength
-            );
-            this.startPos += remainingBoldLength;
-            this.replaceNodes.push(newBoldElement(wordPart));
-            remainingBoldLength -= wordPart.length;
-          }
-        }
-
-        // Add non-bolded part of words
-        while (this.startNodeIndex < endNodeIndex) {
-          const textContent = this.nodes[this.startNodeIndex].textContent;
-          const wordPart = textContent.substring(this.startPos);
-          if (wordPart.length > 0) {
-            this.replaceNodes.push(document.createTextNode(wordPart));
-          }
-          this.replaceNode();
-          this.startNodeIndex += 1;
-          this.startPos = 0;
-        }
-
-        if (this.startPos < endPos) {
-          const textContent = this.nodes[this.startNodeIndex].textContent;
-          const wordPart = textContent.substring(this.startPos, endPos);
-          if (wordPart.length > 0) {
-            this.replaceNodes.push(document.createTextNode(wordPart));
-          }
-          this.startPos = endPos;
-        }
+  // Bolds a line of words
+  class BionicReaderBolder {
+    constructor(nodes) {
+      this.nodes = nodes;
+      this.startNodeIndex = 0;
+      this.startPos = 0;
+      this.replaceNodes = [];
+      while (!this.isFinished()) {
+        this.runWithinNode();
+        this.runInterNode();
       }
     }
 
-    /**
-     * Builds a list of (list of nodes that makes up one non-line-broken line)
-     * @param {Node} elem
-     * @param {Node[][]} - list of list of text nodes. Must not be empty, last element must be a list.
-     * @returns {void}
-     */
-    function forTextNodesInTree(elem, nodes, exclude = false) {
-      const children = elem.childNodes;
-      for (const filter of excludeFilters) {
-        if (filter(elem)) {
-          exclude = true;
+    static run(nodes) {
+      new BionicReaderBolder(nodes);
+    }
+
+    isFinished() {
+      return this.startNodeIndex === this.nodes.length;
+    }
+
+    replaceNode() {
+      const node = this.nodes[this.startNodeIndex];
+      const parent = node.parentNode;
+      for (let add of this.replaceNodes) {
+        parent.insertBefore(add, node);
+      }
+      parent.removeChild(node);
+      this.replaceNodes = [];
+    }
+
+    runWithinNode() {
+      const textContent = this.nodes[this.startNodeIndex].textContent;
+      let nextPos = indexOfWhitespace(textContent, this.startPos);
+      while (nextPos !== -1) {
+        const word = textContent.substring(this.startPos, nextPos);
+        const boldLength = getBoldLength(word);
+        this.replaceNodes.push(newBoldElement(word.substring(0, boldLength)));
+        this.replaceNodes.push(
+          document.createTextNode(
+            word.substring(boldLength, nextPos) + textContent[nextPos]
+          )
+        );
+        this.startPos = nextPos + 1;
+        nextPos = indexOfWhitespace(textContent, this.startPos);
+      }
+    }
+
+    // after this, startPos is likely to be at whitespace char
+    runInterNode() {
+      let word = "";
+      let endNodeIndex = this.startNodeIndex;
+      let endPos = this.startPos; // last word char pos + 1
+
+      // Find word boundary
+      while (endNodeIndex < this.nodes.length) {
+        const textContent = this.nodes[endNodeIndex].textContent;
+        let nextPos = indexOfWhitespace(textContent, endPos);
+        if (nextPos === -1) {
+          word += textContent.substring(endPos);
+          endNodeIndex += 1;
+          endPos = 0;
+        } else {
+          word += textContent.substring(endPos, nextPos);
+          endPos = nextPos;
           break;
         }
       }
-      for (const child of children) {
-        if (child.nodeType === Node.ELEMENT_NODE) {
-          const style = window.getComputedStyle(child);
-          if (
-            child.tagName !== "BR" &&
-            (style === "inline" || style === "inline-block")
-          ) {
-            forTextNodesInTree(child, nodes, exclude);
-          } else {
-            if (nodes[nodes.length - 1].length > 0) {
-              nodes.push([]);
-            }
-            forTextNodesInTree(child, nodes, exclude);
-          }
-        } else if (
-          !exclude &&
-          child.nodeType === Node.TEXT_NODE &&
-          child.textContent.length > 0
-        ) {
-          nodes[nodes.length - 1].push(child);
+      // Calculate bold length
+      let remainingBoldLength = getBoldLength(word);
+
+      // Bold part of word
+      while (remainingBoldLength > 0) {
+        const textContent = this.nodes[this.startNodeIndex].textContent;
+        if (remainingBoldLength > textContent.length - this.startPos) {
+          const wordPart = textContent.substring(this.startPos);
+          remainingBoldLength -= wordPart.length;
+          this.replaceNodes.push(newBoldElement(wordPart));
+          this.replaceNode();
+          this.startNodeIndex += 1;
+          this.startPos = 0;
+        } else {
+          const wordPart = textContent.substring(
+            this.startPos,
+            this.startPos + remainingBoldLength
+          );
+          this.startPos += remainingBoldLength;
+          this.replaceNodes.push(newBoldElement(wordPart));
+          remainingBoldLength -= wordPart.length;
         }
       }
-    }
 
-    function makeBionic() {
-      const cardContainer = document.getElementById("container");
-      cardContainer.normalize();
-
-      let nodesLines = [[]];
-      forTextNodesInTree(cardContainer, nodesLines);
-      for (const nodes of nodesLines) {
-        BionicReaderBolder.run(nodes);
+      // Add non-bolded part of words
+      while (this.startNodeIndex < endNodeIndex) {
+        const textContent = this.nodes[this.startNodeIndex].textContent;
+        const wordPart = textContent.substring(this.startPos);
+        if (wordPart.length > 0) {
+          this.replaceNodes.push(document.createTextNode(wordPart));
+        }
+        this.replaceNode();
+        this.startNodeIndex += 1;
+        this.startPos = 0;
       }
 
-      cardContainer.innerHTML = cardContainer.innerHTML.replaceAll(
-        "<strong></strong>",
-        ""
-      );
-      cardContainer.normalize();
+      if (this.startPos < endPos) {
+        const textContent = this.nodes[this.startNodeIndex].textContent;
+        const wordPart = textContent.substring(this.startPos, endPos);
+        if (wordPart.length > 0) {
+          this.replaceNodes.push(document.createTextNode(wordPart));
+        }
+        this.startPos = endPos;
+      }
+    }
+  }
+
+  /**
+   * Builds a list of (list of nodes that makes up one non-line-broken line)
+   * @param {Node} elem
+   * @param {Node[][]} - list of list of text nodes. Must not be empty, last element must be a list.
+   * @returns {void}
+   */
+  function forTextNodesInTree(elem, nodes, exclude = false) {
+    const children = elem.childNodes;
+    for (const filter of excludeFilters) {
+      if (filter(elem)) {
+        exclude = true;
+        break;
+      }
+    }
+    for (const child of children) {
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        const style = window.getComputedStyle(child);
+        if (
+          child.tagName !== "BR" &&
+          (style === "inline" || style === "inline-block")
+        ) {
+          forTextNodesInTree(child, nodes, exclude);
+        } else {
+          if (nodes[nodes.length - 1].length > 0) {
+            nodes.push([]);
+          }
+          forTextNodesInTree(child, nodes, exclude);
+        }
+      } else if (
+        !exclude &&
+        child.nodeType === Node.TEXT_NODE &&
+        child.textContent.length > 0
+      ) {
+        nodes[nodes.length - 1].push(child);
+      }
+    }
+  }
+
+  function makeBionic() {
+    const cardContainer = document.getElementById("container");
+    cardContainer.normalize();
+
+    let nodesLines = [[]];
+    forTextNodesInTree(cardContainer, nodesLines);
+    for (const nodes of nodesLines) {
+      BionicReaderBolder.run(nodes);
     }
 
-    let start = performance.now();
-    if (bionicReading) {
-      makeBionic();
-    }
-    let end = performance.now();
-    console.log(`Initialized bionic reading: ${end - start}ms`);
-  })();
+    cardContainer.innerHTML = cardContainer.innerHTML.replaceAll(
+      "<strong></strong>",
+      ""
+    );
+    cardContainer.normalize();
+  }
+
+  let start = performance.now();
+  if (bionicReading) {
+    makeBionic();
+  }
+  let end = performance.now();
+  console.log(`Initialized bionic reading: ${end - start}ms`);
+})();
 </script>
 
 
 <!-- table div wrapper -->
 <script>
-  for (let table of document.querySelectorAll("table")) {
-    let tableDiv = document.createElement("div");
-    tableDiv.style.overflowY = "scroll";
-    table.parentNode.insertBefore(tableDiv, table);
-    tableDiv.appendChild(table);
-  };
+    for (let table of document.querySelectorAll("table")) {
+        let tableDiv = document.createElement("div");
+        tableDiv.style.overflowY = "scroll";
+        table.parentNode.insertBefore(tableDiv, table);
+        tableDiv.appendChild(table);
+    };
 </script>
 
 <!-- ANKIMOBILE USER ACTIONS -->
 <script>
-  var userJs1 = undefined
-  var userJs2 = undefined
-  var userJs3 = undefined
-  var userJs4 = undefined
-  var userJs5 = undefined
-  var userJs6 = undefined
-  var userJs7 = undefined
-  var userJs8 = undefined
+var userJs1 = undefined
+var userJs2 = undefined
+var userJs3 = undefined
+var userJs4 = undefined
+var userJs5 = undefined
+var userJs6 = undefined
+var userJs7 = undefined
+var userJs8 = undefined
 </script>

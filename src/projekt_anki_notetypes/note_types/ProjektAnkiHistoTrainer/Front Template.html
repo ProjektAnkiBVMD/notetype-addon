@@ -1,4 +1,4 @@
-<!-- version 4e7f71b -->
+<!-- version 313f82a -->
 {{#Markierung 1}}
 <script>
   // ############## USER CONFIGURATION START ##############
@@ -237,7 +237,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     // negative lookbehinds unfortunately do not work yet on iPad / Android
     var beginning = '(?<=<(br|td)>)(?<!cloze=")('
     var middle = ".*?)((?:<br>)(?=("
-    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>)))"
+    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
 
     const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
     const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
@@ -274,7 +274,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
       //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
 
-      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>")
+      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>").replaceAll("</indent><br><img", "</indent><img")
     }
   }
 

@@ -16,7 +16,7 @@
   --text-bold: #339961;
   --text-italics: #30B4C5;
   --text-underline: #F89925;
-  --text-link: #7C7C7C;
+  --text-link: #808080;
   --text-cloze: IndianRed;
 
   --zusatz: #2A9BCB;
@@ -39,6 +39,7 @@
   --nm-text-bold: MediumSeaGreen;
   --nm-text-italics: #44C1D2;
   --nm-text-underline: #FAB763;
+  --nm-text-link: var(--text-link);
   --nm-text-cloze: var(--text-cloze);
   --nm-button-bg: #424242;
   --nm-button-border: var(--nm-text-header);
@@ -393,6 +394,7 @@ a {
 
 #zusatz,
 #definition,
+#uafi,
 #hammer,
 #klinik,
 #praeparat,
@@ -408,14 +410,10 @@ a {
   text-align: var(--default-alignment);
 }
 
-#praeparat,
-#meditricks {
-  text-align: center;
-}
-
 .nightMode #extra,
 .nightMode #zusatz,
 .nightMode #definition,
+.nightMode #uafi,
 .nightMode #hammer,
 .nightMode #klinik,
 .nightMode #praeparat,
@@ -428,6 +426,7 @@ a {
 
 #zusatz,
 #definition,
+#uafi,
 #hammer,
 #klinik,
 #praeparat,
@@ -443,6 +442,7 @@ a {
 }
 
 #definition,
+#uafi,
 #memes {
   border: 2px solid var(--definition);
 }
@@ -472,6 +472,12 @@ a {
 #meditricks {
   border: none;
   /* 2px solid var(--meditricks) */
+}
+
+.mobile #meditricks,
+.mobile #button-meditricks {
+  display: none !important;
+  /* Add-On funktioniert eh nur auf dem Desktop, Browser aktuell nicht eingeschlossen */
 }
 
 
@@ -767,6 +773,10 @@ kbd:nth-of-type(10n+0) {
 
 .mobile .button-general {
   padding: 5px 7px;
+}
+
+#linkcontainer .button-general {
+  white-space: unset;
 }
 
 .mobile .button-one-by-one {
