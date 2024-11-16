@@ -10,56 +10,56 @@
   /* #################################### */
   /* COMBINED COLORS ANKING & ANKIPHIL */
 
-  --bg: #F8F8F8;
+  --bg: #f8f8f8;
   --text: #363638;
-  --text-header: #CBCBCA;
+  --text-header: #cbcbca;
   --text-bold: #339961;
-  --text-italics: #30B4C5;
-  --text-underline: #F89925;
+  --text-italics: #30b4c5;
+  --text-underline: #f89925;
   --text-link: #808080;
   --text-cloze: IndianRed;
 
-  --zusatz: #2A9BCB;
+  --zusatz: #2a9bcb;
   --definition: #99a7b3;
   --klinik: #0fa980;
-  --meditricks: #E19166;
-  --hammer: #FA8072;
+  --meditricks: #e19166;
+  --hammer: #fa8072;
   --praeparat: var(--zusatz);
   --merksprueche: #295dae;
 
-  --button-bg: #EBEBEB;
+  --button-bg: #ebebeb;
   --button-border: var(--text-header);
   --button-text: #505050;
   --button-text-hover: var(--bg);
   --button-bg-header: #b296cf;
 
   --nm-bg: #363638;
-  --nm-text: #E9E9E9;
+  --nm-text: #e9e9e9;
   --nm-text-header: #525253;
   --nm-text-bold: MediumSeaGreen;
-  --nm-text-italics: #44C1D2;
-  --nm-text-underline: #FAB763;
+  --nm-text-italics: #44c1d2;
+  --nm-text-underline: #fab763;
   --nm-text-link: var(--text-link);
   --nm-text-cloze: var(--text-cloze);
   --nm-button-bg: #424242;
   --nm-button-border: var(--nm-text-header);
-  --nm-button-text: #AFAFAF;
-  --nm-button-bg-hover: #AFAFAF;
+  --nm-button-text: #afafaf;
+  --nm-button-bg-hover: #afafaf;
   --nm-button-text-hover: var(--nm-bg);
 
-  --expanded-button-bg: #ABABAB;
+  --expanded-button-bg: #ababab;
   --expanded-button-text: black;
 
-  --tag-1: #F44336;
-  --tag-2: #9C27B0;
-  --tag-3: #3F51B5;
-  --tag-4: #03A9F4;
+  --tag-1: #f44336;
+  --tag-2: #9c27b0;
+  --tag-3: #3f51b5;
+  --tag-4: #03a9f4;
   --tag-5: #009688;
-  --tag-6: #C0CA33;
-  --tag-7: #FF9800;
-  --tag-8: #FF5722;
-  --tag-9: #9E9E9E;
-  --tag-10: #607D8B;
+  --tag-6: #c0ca33;
+  --tag-7: #ff9800;
+  --tag-8: #ff5722;
+  --tag-9: #9e9e9e;
+  --tag-10: #607d8b;
 
   --default-alignment: left;
   --button-alignment: center;
@@ -78,7 +78,7 @@
   --canvas: transparent;
 }
 
-:root[class*=night-mode] {
+:root[class*="night-mode"] {
   --canvas: transparent;
 }
 
@@ -95,7 +95,7 @@
 
 /*Revealed Hints Font Size*/
 .hints {
-  font-size: .85rem;
+  font-size: 0.85rem;
 }
 
 /*~~~~~~~~~FONT STYLE~~~~~~~~~*/
@@ -112,7 +112,6 @@ a[href^="javascript:"] {
   text-decoration: none;
   color: inherit;
 }
-
 
 /*~~~~~~~~NIGHT MODE COLORS~~~~~~~~*/
 /* NM Default Text Color */
@@ -206,7 +205,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C1C1C1;
+  background: #c1c1c1;
   border-radius: 8px;
 }
 
@@ -216,12 +215,12 @@ html {
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #7D7D7D;
+  background: #7d7d7d;
 }
 
 /* Style the horizontal line */
 hr {
-  opacity: .7
+  opacity: 0.7;
 }
 
 /* Style other HTML tags */
@@ -332,7 +331,6 @@ a {
   margin: 12em auto auto auto;
 } */
 
-
 /* ~~~~~~~~~ FIELDS ~~~~~~~~~ */
 /* Cloze format */
 .cloze,
@@ -376,7 +374,7 @@ a {
 }
 
 /*add spacing between hints and extra field*/
-.hints+#extra {
+.hints + #extra {
   margin-top: 1rem;
 }
 
@@ -476,10 +474,8 @@ a {
 
 .mobile #meditricks,
 .mobile #button-meditricks {
-  display: none !important;
-  /* Add-On funktioniert eh nur auf dem Desktop, Browser aktuell nicht eingeschlossen */
+  display: none !important; /* Add-On funktioniert eh nur auf dem Desktop, Browser aktuell nicht eingeschlossen */
 }
-
 
 /* ~~~~~~~~~DETAILS FOR IMAGES~~~~~~~~~ */
 img {
@@ -528,7 +524,7 @@ img {
 } */
 
 #image {
-  font-size: .6em;
+  font-size: 0.6em;
   max-width: 800px;
   margin: 0 auto;
   text-align: var(--content-alignment);
@@ -541,7 +537,6 @@ img {
 .ipad #image {
   max-width: none;
 }
-
 
 /* ~~~~~~~MNEMONICS LEFT JUSTIFIED~~~~~~~ */
 .mnemonics {
@@ -565,7 +560,7 @@ img {
 }
 
 /*Max image width for resize images in editor add-on */
-.card [class^=ui-] img {
+.card [class^="ui-"] img {
   max-width: 100% !important;
 }
 
@@ -592,15 +587,15 @@ img {
 #tags-container {
   text-align: center;
   width: 100%;
-  margin-top: .5rem;
-  line-height: .8rem;
+  margin-top: 0.5rem;
+  line-height: 0.8rem;
   background-color: transparent;
 }
 
 /* Clickable Tags (need to download the add-on) */
 kbd {
   display: inline-block;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
   font-weight: bold;
   font-style: normal;
   font-size: 12px !important;
@@ -625,59 +620,59 @@ kbd:hover {
 }
 
 /* Tag Colors */
-kbd:nth-of-type(1n+0) {
+kbd:nth-of-type(1n + 0) {
   border-color: var(--tag-1);
   color: var(--tag-1) !important;
 }
 
-kbd:nth-of-type(2n+0) {
+kbd:nth-of-type(2n + 0) {
   border-color: var(--tag-2);
   color: var(--tag-2) !important;
 }
 
-kbd:nth-of-type(3n+0) {
+kbd:nth-of-type(3n + 0) {
   border-color: var(--tag-3);
   color: var(--tag-3) !important;
 }
 
-kbd:nth-of-type(4n+0) {
+kbd:nth-of-type(4n + 0) {
   border-color: var(--tag-4);
   color: var(--tag-4) !important;
 }
 
-kbd:nth-of-type(5n+0) {
+kbd:nth-of-type(5n + 0) {
   border-color: var(--tag-5);
   color: var(--tag-5) !important;
 }
 
-kbd:nth-of-type(6n+0) {
+kbd:nth-of-type(6n + 0) {
   border-color: var(--tag-6);
   color: var(--tag-6) !important;
 }
 
-kbd:nth-of-type(7n+0) {
+kbd:nth-of-type(7n + 0) {
   border-color: var(--tag-7);
   color: var(--tag-7) !important;
 }
 
-kbd:nth-of-type(8n+0) {
+kbd:nth-of-type(8n + 0) {
   border-color: var(--tag-8);
   color: var(--tag-8) !important;
 }
 
-kbd:nth-of-type(9n+0) {
+kbd:nth-of-type(9n + 0) {
   border-color: var(--tag-9);
   color: var(--tag-9) !important;
 }
 
-kbd:nth-of-type(10n+0) {
+kbd:nth-of-type(10n + 0) {
   border-color: var(--tag-10);
   color: var(--tag-10) !important;
 }
 
 /* Tag Mobile Adjustments */
 .mobile kbd {
-  opacity: .9;
+  opacity: 0.9;
   margin: 1px !important;
   display: inline-block;
   font-size: 10px !important;
@@ -767,7 +762,7 @@ kbd:nth-of-type(10n+0) {
   white-space: nowrap;
 }
 
-.button-general+.hints {
+.button-general + .hints {
   margin-bottom: 0;
 }
 
@@ -842,7 +837,6 @@ kbd:nth-of-type(10n+0) {
   color: var(--button-text-hover) !important;
 }
 
-
 /* ########## NIGHT MODE BUTTONS ########## */
 /* BUTTONS IN TOP ROW */
 .nightMode .header .button-general {
@@ -856,7 +850,6 @@ kbd:nth-of-type(10n+0) {
   background-color: var(--button-bg-header) !important;
   color: var(--nm-button-text-hover) !important;
 }
-
 
 /* BUTTONS IN BOTTOM ROW */
 .nightMode .button-general {
