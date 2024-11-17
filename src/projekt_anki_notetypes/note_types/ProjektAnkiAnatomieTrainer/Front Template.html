@@ -1,5 +1,9 @@
-<!-- version 97e6dd6 -->
+<!-- version 9bf1a13 -->
 {{#Ursprung}}
+{{^UrsprungCloze1}}{{^UrsprungCloze2}}{{^UrsprungCloze3}}
+<!-- include cloze_anything -->
+<script defer src="_cloze_anything_3.1.js"></script>
+
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -148,6 +152,11 @@
     <!-- ####################################### -->
 
     Wo liegt der <i>Ursprung</i> von <span style="color:IndianRed; font-weight: bold;">{{Muskel / Leitungsbahn}}</span>?
+
+    <br>
+
+    <!-- has to be <div> to allow for indentation -->
+    <div id="cloze" data-card="{{Card}}"><br>{{Ursprung}}</div>
 
     <br>
     <br>
@@ -986,4 +995,5 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 </script>
 
 
+{{/UrsprungCloze3}}{{/UrsprungCloze2}}{{/UrsprungCloze1}}
 {{/Ursprung}}

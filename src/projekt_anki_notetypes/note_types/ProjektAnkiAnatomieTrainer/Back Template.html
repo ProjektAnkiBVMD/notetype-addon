@@ -1,6 +1,9 @@
-<!-- version 97e6dd6 -->
+<!-- version 9bf1a13 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
+
+<!-- include cloze_anything -->
+<script defer src="_cloze_anything_3.1.js"></script>
 
 <script>
   // ############## USER CONFIGURATION START ##############
@@ -164,15 +167,11 @@
     Wo liegt der <i>Ursprung</i> von <span style="color:IndianRed; font-weight: bold;">{{Muskel / Leitungsbahn}}</span>?
 
     <br>
-    <br>
 
     <!-- has to be <div> to allow for indentation -->
-    <div class="cloze">{{Ursprung}}</div>
+    <div id="cloze" data-card="{{Card}}"><br>{{Ursprung}}</div>
 
-    <br>
-    <br>
-
-    {{Bild}}
+    {{#Bild}}<br><br>{{Bild}}{{/Bild}}
 
     <br>
     <br>
