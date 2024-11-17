@@ -1,9 +1,9 @@
-<!-- version e0ff584 -->
+<!-- version cab0be7 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
 <!-- include cloze_anything -->
-<script defer src="_cloze_anything_3.1.js"></script>
+<script defer src="_cloze_anything_0.3.1.js"></script>
 <div id="back"></div>
 
 <script>
@@ -303,14 +303,8 @@
       <button id="button-uafi" class="button-general" onclick="toggleHintBtn('hint-uafi'); event.stopPropagation()">
         <img src="__explanation.svg" style="height: 10px;"> Ursprung, Ansatz, Funktion, Innervation
       </button>
-
       <div id="uafi" class="hints" style="display: none;">
-        <style>
-          uafi td:first-child {
-            font-variant: small-caps;
-          }
-        </style>
-        <table>
+        <table class="uncloze">
           {{#Ursprung}}
           <tr class="uafi-element" id="Ursprung">
             <td><i>Ursprung</i></td>

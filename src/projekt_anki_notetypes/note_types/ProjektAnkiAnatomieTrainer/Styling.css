@@ -271,6 +271,24 @@ th {
   border: 1px solid !important;
 }
 
+#uafi table,
+#uafi td,
+#uafi th,
+#uafi tr {
+  border: none !important;
+}
+#uafi td:first-child {
+  font-variant: small-caps;
+  white-space: nowrap;
+  vertical-align: top;
+}
+#uafi tr {
+  border-bottom: 1px solid !important;
+}
+#uafi tr:last-child {
+  border-bottom: none !important;
+}
+
 /* COLOR ACCENTS FOR BOLD-ITALICS-UNDERLINE */
 emu {
   text-decoration: underline;
