@@ -356,6 +356,9 @@ a {
 .cloze u,
 .cloze i,
 .current-cloze,
+.current-cloze b,
+.current-cloze u,
+.current-cloze i,
 .cloze[data-content][data-hint] {
   font-weight: bold;
   color: var(--text-cloze) !important;
