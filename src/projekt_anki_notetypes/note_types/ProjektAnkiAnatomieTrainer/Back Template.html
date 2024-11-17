@@ -1,4 +1,4 @@
-<!-- version 38adff3 -->
+<!-- version 22b761d -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -301,10 +301,11 @@
 
     <span id="hint-uafi" class="hintBtn" data-name="Ursprung, Ansatz, Verlauf, Funktion, Innervation, Äste"
       style="display: none;">
-      <button id="button-uafi" class="button-general" onclick="toggleHintBtn('hint-uafi'); event.stopPropagation()">
-        <img src="__explanation.svg" style="height: 10px;"> Ursprung, Ansatz, Funktion, Innervation
+      <button id="button-uafi" class="button-general expanded-button"
+        onclick="toggleHintBtn('hint-uafi'); event.stopPropagation()">
+        <img src="__explanation.svg" style="height: 10px;"> Weitere Informationen
       </button>
-      <div id="uafi" class="hints" style="display: none;">
+      <div id="uafi" class="hints" style="display: block;">
         <table class="uncloze">
           {{#Ursprung}}
           <tr class="uafi-element" id="Ursprung">
@@ -350,7 +351,7 @@
         // that is equal to the card's answer (i.e., value of {{Card}})
         var uafiElements = document.getElementsByClassName("uafi-element");
         for (var i = 0; i < uafiElements.length; i++) {
-          if (uafiElements[i].id == "{{Card}}") {
+          if ((("{{Card}}").startsWith(uafiElements[i].id))) {
             uafiElements[i].style.display = "none";
           }
         }
