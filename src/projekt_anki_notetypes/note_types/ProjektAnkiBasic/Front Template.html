@@ -1,4 +1,4 @@
-<!-- version 22b761d -->
+<!-- version 3492125 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -188,11 +188,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     // set up RegEx to analyze the provided divs
     // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<(br|td)>)(?<!cloze=")('
+    var beginning = '(?<=<(br|td|td rowspan="\\d"|td colspan="\\d"|hr|div)>)(?<!cloze=")('
     var middle = ".*?)((?:<br>)(?=("
     var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
 
-    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    // const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + end, "g")
     const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
     const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
     const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
@@ -345,17 +346,23 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
       }
 
-      // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
+      // Ankizin / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
       if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
-      if (tag.split("::")[1] == "!NEW_CARDS") continue;
+      if (tag.split("::")[1] == "§NEW_CARDS") continue;
       if (tag.split("::")[1] == "§Projekt_Anki") continue;
       if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
 
       // improve legibility of tags
-      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_vAnkihub::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
-      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
-      tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
-      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
+      // remove unnecessary prefixes
+      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "")
+      tag = tag.replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
+      // clean duplicated prefixes
+      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Vorklinik::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::").replaceAll("#M1_Vorklinik_(work_in_progress)::", "Vorklinik::");
+      // clean unncessarily long "Lernplan" tags
+      tag = tag.replaceAll("M1-50-Tage-Lernplan_Intensiv", "M1_50_Tage_Intensiv").replaceAll("M1-30-Tage-Lernplan_Turbo", "M1_30_Tage_Turbo").replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
+      tag = tag.replaceAll("M1-30-T_", "").replaceAll("M1-50-I_", "").replaceAll("M2_Lerntag", "Lerntag")
+      // change HTML symbols
+      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("-", "&#8209;").replaceAll("_", " ");
       newTagContent.append(newTag)
     }
 

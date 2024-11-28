@@ -1,5 +1,7 @@
 /*
 Copyright 2019-2021 Matthew Hayes
+Copyright 2024 Ankizin
+(made compatible with one-by-one, i.e. changed current-cloze to cloze)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -201,7 +203,7 @@ function render() {
         // For the back card we need to strip out the surrounding characters used to mark those
         // we are keeping.  We also wrap in a span in case we want to add styling.
         if (clozeNum == currentClozeNum) {
-          result = wrap_span(strip_keep_chars(content), "current-cloze");
+          result = wrap_span(strip_keep_chars(content), "cloze");
         }
         else {
           result = strip_keep_chars(content);
@@ -209,7 +211,7 @@ function render() {
       }
       else {
         if (clozeNum == currentClozeNum) {
-          result = replace_content(content, contentHint, "current-cloze");
+          result = replace_content(content, contentHint, "cloze");
         }
         else if (clozeNum < currentClozeNum) {
           if (showBeforeValue == "all") {
@@ -276,5 +278,7 @@ function render() {
 
   clozeEl.classList.add("show");
 }
+
+console.log("Cloze Anything 0.4");
 
 render();

@@ -1,8 +1,9 @@
-<!-- version 22b761d -->
+<!-- version 3492125 -->
 {{#Ursprung}}
 {{^UrsprungCloze1}}{{^UrsprungCloze2}}{{^UrsprungCloze3}}
 <!-- include cloze_anything -->
-<script defer src="_cloze_anything_0.3.1.js"></script>
+<script defer src="_cloze_anything_0.4.js"></script>
+<div id="cloze" data-card="{{Card}}"></div>
 
 <script>
   // ############## USER CONFIGURATION START ##############
@@ -58,6 +59,31 @@
   // ############  BIONIC READING  ############
   // Enable bionic reading feature (based on AnKing add-on)
   var bionicReading = false;
+
+  // ##############  CLOZE ONE BY ONE  ##############
+  // Auto flip to back when One by one mode.
+  var autoflip = true;
+
+  // INFO ----------------------
+  // to make a card behave like normal clozes without one-by-one, set:
+  // selectiveOneByOne = false, minNumberOfClozes = Infinity, alwaysOneByOne = false
+  // ---------------------------
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // enables selective cloze one-by-one (e.g. only c1 and c3)
+  // seperate wanted numbers by "," in one-by-one field
+  var selectiveOneByOne = false;
+
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // if selective one-by-one is disabled, set this to select a min number of clozes necessary to activate 1b1
+  // can be set to any number to set lower bound, any falsy value (e.g. 0 or null) disables this setting
+  var minNumberOfClozes = 3;
+
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // enables cloze one-by-one even when one-by-one field is empty
+  // minNumberOfClozes is still considered in this case
+  // overridden in importance by selectiveOneByOne
+  var alwaysOneByOne = true;
+  // ----------------------------
 
   // ############### USER CONFIGURATION END ###############
 </script>
@@ -144,7 +170,7 @@
 </div>
 
 
-<div id="container">
+<div id="container" class="anatomietrainer">
   <div class="col" id="container-content">
 
     <!-- ####################################### -->
@@ -230,11 +256,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     // set up RegEx to analyze the provided divs
     // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<(br|td)>)(?<!cloze=")('
+    var beginning = '(?<=<(br|td|td rowspan="\\d"|td colspan="\\d"|hr|div)>)(?<!cloze=")('
     var middle = ".*?)((?:<br>)(?=("
     var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
 
-    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    // const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + end, "g")
     const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
     const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
     const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
@@ -387,17 +414,23 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
       }
 
-      // Zankiphil / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
+      // Ankizin / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
       if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
-      if (tag.split("::")[1] == "!NEW_CARDS") continue;
+      if (tag.split("::")[1] == "§NEW_CARDS") continue;
       if (tag.split("::")[1] == "§Projekt_Anki") continue;
       if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
 
       // improve legibility of tags
-      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_vAnkihub::", "").replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
-      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::");
-      tag = tag.replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
-      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("_", " ");
+      // remove unnecessary prefixes
+      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "")
+      tag = tag.replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
+      // clean duplicated prefixes
+      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Vorklinik::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::").replaceAll("#M1_Vorklinik_(work_in_progress)::", "Vorklinik::");
+      // clean unncessarily long "Lernplan" tags
+      tag = tag.replaceAll("M1-50-Tage-Lernplan_Intensiv", "M1_50_Tage_Intensiv").replaceAll("M1-30-Tage-Lernplan_Turbo", "M1_30_Tage_Turbo").replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
+      tag = tag.replaceAll("M1-30-T_", "").replaceAll("M1-50-I_", "").replaceAll("M2_Lerntag", "Lerntag")
+      // change HTML symbols
+      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("-", "&#8209;").replaceAll("_", " ");
       newTagContent.append(newTag)
     }
 
@@ -511,6 +544,254 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       setupHintBtn(hints[i])
     }
   })()
+</script>
+
+<!-- Credit: Anki Persistence, MIT: https://github.com/SimonLammer/anki-persistence/blob/8190116c95df202773aa692c5e9ae704fb407bc9/script.js -->
+
+<script>
+  if (typeof (window.Persistence) === 'undefined') {
+    var _persistenceKey = 'github.com/SimonLammer/anki-persistence/';
+    var _defaultKey = '_default';
+    window.Persistence_sessionStorage = function () { // used in android, iOS, web
+      var isAvailable = false;
+      try {
+        if (typeof (window.sessionStorage) === 'object') {
+          isAvailable = true;
+          this.clear = function () {
+            for (var i = 0; i < sessionStorage.length; i++) {
+              var k = sessionStorage.key(i);
+              if (k.indexOf(_persistenceKey) == 0) {
+                sessionStorage.removeItem(k);
+                i--;
+              }
+            };
+          };
+          this.setItem = function (key, value) {
+            if (value == undefined) {
+              value = key;
+              key = _defaultKey;
+            }
+            sessionStorage.setItem(_persistenceKey + key, JSON.stringify(value));
+          };
+          this.getItem = function (key) {
+            if (key == undefined) {
+              key = _defaultKey;
+            }
+            return JSON.parse(sessionStorage.getItem(_persistenceKey + key));
+          };
+          this.removeItem = function (key) {
+            if (key == undefined) {
+              key = _defaultKey;
+            }
+            sessionStorage.removeItem(_persistenceKey + key);
+          };
+          this.getAllKeys = function () {
+            var keys = [];
+            var prefixedKeys = Object.keys(sessionStorage);
+            for (var i = 0; i < prefixedKeys.length; i++) {
+              var k = prefixedKeys[i];
+              if (k.indexOf(_persistenceKey) == 0) {
+                keys.push(k.substring(_persistenceKey.length, k.length));
+              }
+            };
+            return keys.sort()
+          }
+        }
+      } catch (err) { }
+      this.isAvailable = function () {
+        return isAvailable;
+      };
+    };
+    window.Persistence_windowKey = function (persistentKey) { // used in windows, linux, mac
+      var obj = window[persistentKey];
+      var isAvailable = false;
+      if (typeof (obj) === 'object') {
+        isAvailable = true;
+        this.clear = function () {
+          obj[_persistenceKey] = {};
+        };
+        this.setItem = function (key, value) {
+          if (value == undefined) {
+            value = key;
+            key = _defaultKey;
+          }
+          obj[_persistenceKey][key] = value;
+        };
+        this.getItem = function (key) {
+          if (key == undefined) {
+            key = _defaultKey;
+          }
+          return obj[_persistenceKey][key] == undefined ? null : obj[_persistenceKey][key];
+        };
+        this.removeItem = function (key) {
+          if (key == undefined) {
+            key = _defaultKey;
+          }
+          delete obj[_persistenceKey][key];
+        };
+        this.getAllKeys = function () {
+          return Object.keys(obj[_persistenceKey]);
+        }
+
+        if (obj[_persistenceKey] == undefined) {
+          this.clear();
+        }
+      }
+      this.isAvailable = function () {
+        return isAvailable;
+      };
+    };
+    /*
+     *   client  | sessionStorage | persistentKey | useful location |
+     * ----------|----------------|---------------|-----------------|
+     * web       |       YES      |       -       |       NO        |
+     * windows   |       NO       |       py      |       NO        |
+     * android   |       YES      |       -       |       NO        |
+     * linux 2.0 |       NO       |       qt      |       YES       |
+     * linux 2.1 |       NO       |       qt      |       YES       |
+     * mac 2.0   |       NO       |       py      |       NO        |
+     * mac 2.1   |       NO       |       qt      |       YES       |
+     * iOS       |       YES      |       -       |       NO        |
+     */
+    window.Persistence = new Persistence_sessionStorage(); // android, iOS, web
+    if (!Persistence.isAvailable()) {
+      window.Persistence = new Persistence_windowKey("py"); // windows, mac (2.0)
+    }
+    if (!Persistence.isAvailable()) {
+      var titleStartIndex = window.location.toString().indexOf('title'); // if titleStartIndex > 0, window.location is useful
+      var titleContentIndex = window.location.toString().indexOf('main', titleStartIndex);
+      if (titleStartIndex > 0 && titleContentIndex > 0 && (titleContentIndex - titleStartIndex) < 10) {
+        window.Persistence = new Persistence_windowKey("qt"); // linux, mac (2.1)
+      }
+    }
+  }
+</script>
+
+<!-- CLOZE ONE BY ONE FRONT -->
+<div id="one-by-one" style="display: none;"></div>
+
+<script>
+  /**
+   * Based on the AnKing Notetype, but expanded and modified by phyn.
+   * Credit to the original authors, except where modified or otherwise indicated.
+   */
+
+  Persistence.clear();
+
+  // check if OneByOne is generally enabled for this card
+  var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
+  var clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty;
+  var in_web = document.getElementById("qa").className.includes("svelte")
+
+  // avoid flickering. Must unset this in the back.
+  document.getElementById("qa").style.display = "none";
+  var clozeHints = [];
+
+  // collect hints from front side (independent of whether or not OneByOne is enabled)
+  document.getElementById("qa").classList.add('one-by-one');
+  // Save cloze hints to display in the back
+  var clozes = document.getElementsByClassName("cloze")
+  for (var i = 0; i < clozes.length; i++) {
+    clozes[i].classList.add("one-by-one");
+    if (clozes[i].innerHTML === "[...]") {
+      clozeHints.push("")
+    } else {
+      clozeHints.push(clozes[i].innerHTML)
+    }
+  }
+
+  Persistence.setItem("clozeHints", clozeHints);
+
+  // show frontside if not OneByOne
+  if (!clozeOneByOneEnabled || in_web) {
+    document.getElementById("qa").style.removeProperty("display");
+  }
+
+  /**
+   * Detecting the card number of the cloze card (i.e. Cloze 1 / Cloze 2 / etc.)
+   * Necessary for selectiveOneByOne, which is based on these numbers
+   */
+
+  // using a mutationObserver to look at the HTML class names of the card,
+  // which change after the content has loaded and the cloze number has been determined by Anki
+  var mutationTarget = document.body;
+  var mutationObserverConfig = {
+    attributes: true
+  };
+  var callback = function (mutations, observer) {
+    for (var mutation of mutations) {
+      if (mutation.attributeName === 'class') {
+        if (/card(\d+)/gm.test(mutation.target.classList)) {
+
+          /**
+           * Credit for the getCardNumber function goes to foenixx (GitHub) / ollevolle (AnkiWeb Forum)
+           */
+          let getCardNumber = function () {
+            clz = document.body.className;
+            const regex = /card(\d+)/gm;
+
+            clz2 = document.getElementById("cloze").getAttribute("data-card");
+            const regex2 = /.*?Cloze(\d+)/gm;
+
+            let m;
+
+            if ((m = regex2.exec(clz2)) !== null) {
+              return m[1];
+            } else if ((m = regex.exec(clz)) !== null) {
+              return m[1];
+            } else {
+              // Should only fire if Card is not Cloze
+              console.error("Cannot find cardN class of body element!");
+              return "0";
+            }
+          };
+
+          // parse the cloze numbers for which selectiveOneByOne is enabled
+          cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
+
+          // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
+          if ((selectiveOneByOne && !oneByOneFieldEmpty && !cardNumberIsOneByOne) || (!selectiveOneByOne && !alwaysOneByOne && !clozeOneByOneEnabled) || in_web) {
+            clozeOneByOneEnabled = false;
+            document.getElementById("qa").style.removeProperty("display");
+          }
+
+          if (clozeOneByOneEnabled) {
+            // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
+            numClozesForNumber = (minNumberOfClozes) ? clozes.length : 0
+            if (oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes)) {
+              clozeOneByOneEnabled = false;
+              document.getElementById("qa").style.removeProperty("display");
+              observer.disconnect();
+              return
+            }
+
+            in_web = document.getElementById("qa").className.includes("svelte")
+            on_ios =
+              document.documentElement.className.includes("iphone") ||
+              document.documentElement.className.includes("ipad");
+
+            if (autoflip && !on_ios && !in_web) {
+              // avoid flickering. Must unset this in the back.
+              document.getElementById("qa").style.display = "none";
+
+              if (window.pycmd) {
+                pycmd("ans");
+              } else if (window.showAnswer) {
+                showAnswer();
+              }
+            }
+            // AnkiMobile JS API doesn't have one for show answer.
+            // Best alternative is to use Taps/Swipes to show answer.
+
+
+          }
+          observer.disconnect();
+        }
+      }
+    }
+  };
+  var observer = new MutationObserver(callback);
+  observer.observe(mutationTarget, mutationObserverConfig);
 </script>
 
 <!-- COUNTDOWN TIMER -->

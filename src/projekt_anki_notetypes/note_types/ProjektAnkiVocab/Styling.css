@@ -368,6 +368,10 @@ a {
 .nightMode .cloze b,
 .nightMode .cloze u,
 .nightMode .cloze i,
+.nightMode .current-cloze,
+.nightMode .current-cloze b,
+.nightMode .current-cloze u,
+.nightMode .current-cloze i,
 .nightMode .cloze[data-content][data-hint] {
   font-weight: bold;
   color: var(--nm-text-cloze) !important;
@@ -394,7 +398,8 @@ a {
 }
 
 .editcloze,
-.mobile .clozefield {
+.mobile .clozefield,
+.anatomietrainer .clozefield {
   display: block;
 }
 
@@ -723,6 +728,7 @@ kbd:nth-of-type(10n + 0) {
   display: flex;
   align-items: center;
   word-break: break-word;
+  border-radius: 0.4em;
 }
 
 .headhov {
