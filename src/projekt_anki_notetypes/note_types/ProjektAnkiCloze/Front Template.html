@@ -1,4 +1,4 @@
-<!-- version 3492125 -->
+<!-- version 2068518 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -730,7 +730,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
             clz = document.body.className;
             const regex = /card(\d+)/gm;
 
-            clz2 = document.getElementById("cloze").getAttribute("data-card");
+            let clz2;
+            try {
+              clz2 = document.getElementById("cloze").getAttribute("data-card");
+            } catch (e) {
+              clz2 = "";
+            }
             const regex2 = /.*?Cloze(\d+)/gm;
 
             let m;

@@ -1,4 +1,4 @@
-<!-- version 3492125 -->
+<!-- version 2068518 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -114,7 +114,7 @@
   var hideAdditionalButtons = true;
 
   // What cloze is hidden with
-  var clozeHider = (elem) => "[__]"
+  var clozeHider = (elem) => "[ _ ]"
   /*
   You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
   
@@ -1027,7 +1027,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         clz = document.body.className;
         const regex = /card(\d+)/gm;
 
-        clz2 = document.getElementById("cloze").getAttribute("data-card");
+        let clz2;
+        try {
+          clz2 = document.getElementById("cloze").getAttribute("data-card");
+        } catch (e) {
+          clz2 = "";
+        }
         const regex2 = /.*?Cloze(\d+)/gm;
 
         let m;

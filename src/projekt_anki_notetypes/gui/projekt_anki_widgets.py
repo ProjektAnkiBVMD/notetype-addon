@@ -48,6 +48,7 @@ class ProjektAnkiIconsLayout(QHBoxLayout):
             ("ankizin_logotype.png", (186, 31), "https://ankizin.de"),
             ("instagram.png", (31, 31), "https://www.instagram.com/ankizin_bvmd/"),
             ("discord.png", (31, 31), "https://discord.com/invite/5DMsDg8Rvu"),
+            ("bvmd.png", (93, 31), "https://bvmd.de"),
         ]
         for obj in icon_objs:
             btn = icon_button(obj)
