@@ -18,6 +18,7 @@
   --text-underline: #f89925;
   --text-link: #808080;
   --text-cloze: IndianRed;
+  --text-frage: rebeccapurple;
 
   --zusatz: #2a9bcb;
   --definition: #99a7b3;
@@ -41,6 +42,7 @@
   --nm-text-underline: #fab763;
   --nm-text-link: var(--text-link);
   --nm-text-cloze: var(--text-cloze);
+  --nm-text-frage: #9381ff;
   --nm-button-bg: #424242;
   --nm-button-border: var(--nm-text-header);
   --nm-button-text: #afafaf;
@@ -271,6 +273,12 @@ th {
   border: 1px solid !important;
 }
 
+iframe {
+  border: 0;
+  width: 100%;
+  aspect-ratio: 1.77;
+}
+
 #uafi table,
 #uafi td,
 #uafi th,
@@ -350,6 +358,15 @@ a {
 } */
 
 /* ~~~~~~~~~ FIELDS ~~~~~~~~~ */
+.frage {
+  color: var(--text-frage);
+  font-weight: bold;
+}
+
+.nightMode .frage {
+  color: var(--nm-text-frage);
+}
+
 /* Cloze format */
 .cloze,
 .cloze b,

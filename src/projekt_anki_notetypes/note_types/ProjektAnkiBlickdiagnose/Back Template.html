@@ -1,4 +1,4 @@
-<!-- version 2068518 -->
+<!-- version fea1cf3 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -161,7 +161,7 @@
     <!-- ##############  CONTENT  ############## -->
     <!-- ####################################### -->
 
-    <span style="color:IndianRed; font-weight: bold;">Blickdiagnose?</span>
+    <span class="frage">Blickdiagnose?</span>
 
     <br>
     <br>
@@ -576,12 +576,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       btn.classList.add('button-general');
       btn.classList.add('expanded-button');
 
-      domain = href.replace(/.+\/\/|(www|flexikon|de|next|com).|\..+/g, '');
+      domain = href.replace(/.+\/\/|(www|flexikon|register|de|next|com).|\..+/g, '');
       domainDict = {
         "amboss": "__amboss.svg",
         "wikipedia": "__wikipedia.svg",
         "doccheck": "__doccheck.png",
         "notfallguru": "__notfallguru.svg",
+        "awmf": "__awmf.svg",
+        "gelbe-liste": "__gelbe-liste.png",
       }
       if (domain in domainDict) {
         icon = domainDict[domain]

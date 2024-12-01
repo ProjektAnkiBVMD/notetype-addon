@@ -1,4 +1,4 @@
-<!-- version 2068518 -->
+<!-- version fea1cf3 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -219,7 +219,7 @@
     <!-- ##############  CONTENT  ############## -->
     <!-- ####################################### -->
 
-    Wo liegt der <i>Ursprung</i> von <span style="color:IndianRed; font-weight: bold;">{{Muskel / Leitungsbahn}}</span>?
+    Wo liegt der <i>Ursprung</i> von <span class="frage">{{Muskel / Leitungsbahn}}</span>?
 
     <br>
 
@@ -234,8 +234,6 @@
       <button id="button-toggle-all" class="button-general button-one-by-one"
         onclick="toggleAllCloze(); event.stopPropagation()">Toggle All</button>
     </div>
-
-    {{#Bild}}<br><br>{{Bild}}{{/Bild}}
 
     <br>
     <br>
@@ -360,6 +358,23 @@
       <br>{{edit:Extra}}<br><br>
     </div>
     {{/Extra}}
+
+    <!-- Image field -->
+    {{#Bild}}
+    <div id="image" style="display: none;">
+      {{edit:Bild}}<br><br></div>
+    {{/Bild}}
+    {{^Bild}}
+    <span id="image" style="display: none;"></span>
+    {{/Bild}}
+    {{#Bild}}
+    <span id="hint-image" style="display: none;">
+      <button id="button-image" class="button-general"
+        onclick="var image = document.getElementById('image'); if (image.style.display == 'none') { image.style.display = 'block' } else { image.style.display = 'none' }; event.stopPropagation()">
+        <img src="__image.svg" style="height: 10px;"> Abbildung
+      </button>
+    </span>
+    {{/Bild}}
 
     <span id="hint-uafi" class="hintBtn" data-name="Ursprung, Ansatz, Verlauf, Funktion, Innervation, Äste"
       style="display: none;">
@@ -821,12 +836,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       btn.classList.add('button-general');
       btn.classList.add('expanded-button');
 
-      domain = href.replace(/.+\/\/|(www|flexikon|de|next|com).|\..+/g, '');
+      domain = href.replace(/.+\/\/|(www|flexikon|register|de|next|com).|\..+/g, '');
       domainDict = {
         "amboss": "__amboss.svg",
         "wikipedia": "__wikipedia.svg",
         "doccheck": "__doccheck.png",
         "notfallguru": "__notfallguru.svg",
+        "awmf": "__awmf.svg",
+        "gelbe-liste": "__gelbe-liste.png",
       }
       if (domain in domainDict) {
         icon = domainDict[domain]
