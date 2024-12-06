@@ -95,7 +95,18 @@ class NotetypesConfigWindow:
         self.conf.add_config_tab(lambda window: self._add_general_tab(window))
 
         # setup tabs for all notetypes
-        for notetype_base_name in sorted(projekt_anki_notetype_names()):
+        # INFO: the order of the notetypes is overwritten here
+        # notetype_base_names = sorted(projekt_anki_notetype_names())
+        notetype_base_names = [
+            "ProjektAnkiCloze",
+            "ProjektAnkiBlickdiagnose",
+            "ProjektAnkiAnatomieTrainer",
+            "ProjektAnkiHistoTrainer",
+            "ProjektAnkiVocab",
+            "ProjektAnkiBasic",
+        ]
+
+        for notetype_base_name in notetype_base_names:
             self.conf.add_config_tab(
                 lambda window, notetype_base_name=notetype_base_name: self._add_notetype_settings_tab(
                     notetype_base_name=notetype_base_name, window=window
