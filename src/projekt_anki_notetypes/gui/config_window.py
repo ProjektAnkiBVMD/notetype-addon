@@ -100,6 +100,7 @@ class NotetypesConfigWindow:
         notetype_base_names = [
             "ProjektAnkiCloze",
             "ProjektAnkiBlickdiagnose",
+            "ProjektAnkiIO",
             "ProjektAnkiAnatomieTrainer",
             "ProjektAnkiHistoTrainer",
             "ProjektAnkiVocab",

@@ -7,8 +7,16 @@
   // ##############  HINT REVEAL SHORTCUTS  ##############
   // All shortcuts will also open with "H" if using the Hint Hotkeys add-on 
   var ButtonShortcuts = {
+    "Eigene Notizen & Bilder": "Alt + 1",
+    "Eigene Prüfungsfragen": "Alt + 2",
+    "Definitionen": "Alt + 3",
+    "Merksprüche": "Alt + 4",
+    "Klinik": "Alt + 5",
+    "Memes": "Alt + 7",
+    "linkContainer": "Alt + L",
+    "Meditricks": "Alt + M",
     "Tags": "Alt + 8",
-    "Subdeck": "Alt + 9",
+    "Quelle": "Alt + 9",
     "Note ID": "Alt + 0"
   }
   var ToggleNextButtonShortcut = "H"
@@ -17,8 +25,16 @@
 
   // ##############  SHOW HINTS AUTOMATICALLY  ##############
   var ButtonAutoReveal = {
+    "Eigene Notizen & Bilder": false,
+    "Eigene Prüfungsfragen": false,
+    "Definitionen": false,
+    "Merksprüche": false,
+    "Klinik": false,
+    "Memes": false,
+    "linkContainer": true,
+    "Meditricks": false,
     "Tags": false,
-    "Subdeck": false,
+    "Quelle": false,
     "Note ID": false
   }
   var ScrollToButton = false;
@@ -51,6 +67,59 @@
   // Enable bionic reading feature (based on AnKing add-on)
   var bionicReading = false;
 
+  // ##############  CLOZE ONE BY ONE  ##############
+  var revealNextShortcut = "N"
+  var revealNextWordShortcut = "Shift + N"
+  var toggleAllShortcut = ","
+
+  // Enables revealing of next Cloze by simply clicking / tapping anywhere on the card (except the buttons)
+  var revealAnywhere = true;
+
+  // INFO ----------------------
+  // to make a card behave like normal clozes without one-by-one, set:
+  // selectiveOneByOne = false, minNumberOfClozes = Infinity, alwaysOneByOne = false
+  // ---------------------------
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // enables selective cloze one-by-one (e.g. only c1 and c3)
+  // seperate wanted numbers by "," in one-by-one field
+  var selectiveOneByOne = false;
+
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // if selective one-by-one is disabled, set this to select a min number of clozes necessary to activate 1b1
+  // can be set to any number to set lower bound, any falsy value (e.g. 0 or null) disables this setting
+  var minNumberOfClozes = 3;
+
+  // THIS NEEDS TO BE SET ON THE BACK AS WELL
+  // enables cloze one-by-one even when one-by-one field is empty
+  // minNumberOfClozes is still considered in this case
+  // overridden in importance by selectiveOneByOne
+  var alwaysOneByOne = true;
+  // ----------------------------
+
+  // Changes how "Reveal Next" and clicking behaves. Either "cloze" or "word".
+  // "word" reveals word by word. 
+  var revealNextClozeMode = "cloze"
+
+  // Changes how fields with additional information are displayed.
+  // true displays fields with additional information only if all clozes are revealed.
+  var hideAdditional = true;
+  var hideAdditionalButtons = true;
+
+  // What cloze is hidden with
+  var clozeHider = (elem) => "[ _ ]"
+  /*
+  You can replace the above line with below examples. '█' or '_' works well for hiding clozes.
+  
+  // Fixed length:
+  var clozeHider = (elem) => "███"
+  // Replace each character with "█":
+  var clozeHider = (elem) => "█".repeat(elem.textContent.length)
+  // Show whitespaces:
+  var clozeHider = (elem) => "[" + elem.textContent.split(" ").map((t) => "█".repeat(t.length)).join(" ") + "]"
+  // Color-filled box (doesn't hide images):
+  var clozeHider = (elem) => `<span style="background-color: red; color: transparent;">${elem.innerHTML}</span>`
+  */
+
   // ############### USER CONFIGURATION END ###############
 </script>
 
@@ -59,6 +128,11 @@
 <!-- ###################################### -->
 <div id="header-container">
   <div class="header">
+    <!-- TIMER -->
+    <div class="head-flex-left">
+      <span class="timer" id="timer"></span>
+    </div>
+
     <div class="head-flex-mid">
       <!-- TAGS FIELD -->
       {{#Tags}}
@@ -69,52 +143,67 @@
       {{/Tags}}
 
       <!-- SOURCE FIELD -->
-      {{#Subdeck}}
+      {{#Quelle}}
       <button id="button-src" class="button-general headhov"
         onclick="toggleHintBtn('hint-src'); event.stopPropagation()">
-        Subdeck
-      </button> |
-      {{/Subdeck}}
+        Quelle
+      </button>
+      {{/Quelle}}
 
       <!-- NOTE ID FIELD -->
-      {{#Note ID}}
+      {{#Note ID}} |
       <button id="button-nid" class="button-general headhov"
         onclick="toggleHintBtn('hint-nid'); event.stopPropagation()">
         Note ID
       </button>
       {{/Note ID}}
     </div>
+
+    <!-- ERRATA BUTTON -->
+    <div class="head-flex-right" onclick="event.stopPropagation()">
+      <a id="link-ankihub" href="https://app.ankihub.net/">
+        <button id="button-ankihub" class="button-general" title="Karte in AnkiHub">
+          <strong>AnkiHub</strong>
+        </button>
+      </a>
+      <script>
+        try {
+          document.getElementById("link-ankihub").href =
+            document.getElementsByClassName("ankihub-view-note")[0].href
+        } catch (e) { }
+      </script>
+    </div>
   </div>
 
   <!-- CLICKABLE COLORFUL TAGS -->
   {{#Tags}}
-  <span id="hint-tags" class="hintBtn" data-name="Tags" style="display: flex;">
-    <button id="button-tags" style="all: unset !important; display: none;"
+  <span id="hint-tags" class="hintBtn" data-name="Tags" style="display: flex">
+    <button id="button-tags" style="all: unset !important; display: none"
       onclick="toggleHintBtn('hint-tags'); event.stopPropagation()"></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
-    <div id="tags-container" class="hints" style="display: none;">{{clickable::Tags}}</div>
+    <div id="tags-container" class="hints" style="display: none">
+      {{clickable::Tags}}
+    </div>
   </span>
-  {{/Tags}}
-  {{#Subdeck}}
-  <span id="hint-src" class="hintBtn" data-name="Quelle" style="display: flex;">
-    <button id="button-src" style="all: unset !important; display: none;"
+  {{/Tags}} {{#Quelle}}
+  <span id="hint-src" class="hintBtn" data-name="Quelle" style="display: flex">
+    <button id="button-src" style="all: unset !important; display: none"
       onclick="toggleHintBtn('hint-src'); event.stopPropagation()"></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
-    <div id="src" class="hints" style="display: none;">Subdeck: {{Subdeck}}</div>
+    <div id="src" class="hints" style="display: none">Quelle: {{Quelle}}</div>
   </span>
-  {{/Subdeck}}
-  {{#Note ID}}
-  <span id="hint-nid" class="hintBtn" data-name="Note ID" style="display: flex;">
-    <button id="button-nid" style="all: unset !important; display: none;"
+  {{/Quelle}} {{#Note ID}}
+  <span id="hint-nid" class="hintBtn" data-name="Note ID" style="display: flex">
+    <button id="button-nid" style="all: unset !important; display: none"
       onclick="toggleHintBtn('hint-nid'); event.stopPropagation()"></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
-    <div id="nid" class="hints" style="display: none;">ID: {{Note ID}}</div>
+    <div id="nid" class="hints" style="display: none">ID: {{Note ID}}</div>
   </span>
   {{/Note ID}}
 
-  <hr>
-
+  <hr />
 </div>
+
 
 <div id="container">
   <div class="col" id="container-content">
@@ -123,11 +212,34 @@
     <!-- ##############  CONTENT  ############## -->
     <!-- ####################################### -->
 
-    <div>{{Vorderseite}}</div>
+    <span class="frage">{{Titel}}</span>
 
-    <hr>
+    <br>
+    <br>
 
-    <div>{{Rückseite}}</div>
+    <div style="display: none">{{cloze:Occlusion}}</div>
+    <div id="err"></div>
+    <div id="image-occlusion-container">
+      {{Image}}
+      <canvas id="image-occlusion-canvas"></canvas>
+    </div>
+
+    <br>
+    <br>
+
+    <!-- BUTTON FIELDS -->
+    <div id="toggle-mask-button" class="onebyone">
+      <button class="button-general button-one-by-one" id="toggle">Toggle Masks</button>
+    </div>
+    <!-- ClOZE ONE BY ONE BUTTONS -->
+    <div id="onebyone-buttons" class="onebyone">
+      <button id="button-reveal-next" class="button-general button-one-by-one"
+        onclick="revealNextCloze(); event.stopPropagation()">Reveal Next</button>
+      <button id="button-toggle-all" class="button-general button-one-by-one"
+        onclick="toggleAllCloze(); event.stopPropagation()">Toggle All</button>
+    </div>
+
+    <br>
 
   </div>
 
@@ -136,23 +248,120 @@
     <!-- ####################################### -->
     <!-- ##############  BUTTONS  ############## -->
     <!-- ####################################### -->
+    <!-- BUTTON FIELDS -->
+    {{#Eigene Notizen & Bilder}}
+    <span id="hint-zusatz" class="hintBtn" data-name="Eigene Notizen & Bilder" style="display: none;">
+      <button id="button-zusatz" class="button-general" onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()">
+        <img src="__zusatz.svg" style="height: 10px;"> Eigene Notizen & Bilder
+      </button>
+      <div id="zusatz" class="hints" style="display: none;">{{edit:Eigene Notizen & Bilder}}</div>
+    </span>
+    {{/Eigene Notizen & Bilder}}
+
+    {{#Eigene Prüfungsfragen}}
+    <span id="hint-hammer" class="hintBtn" data-name="Eigene Prüfungsfragen" style="display: none;">
+      <button id="button-hammer" class="button-general" onclick="toggleHintBtn('hint-hammer'); event.stopPropagation()">
+        <img src="__hammer.svg" style="height: 10px;"> Eigene Prüfungsfragen
+      </button>
+      <div id="hammer" class="hints" style="display: none;">{{edit:Eigene Prüfungsfragen}}</div>
+    </span>
+    {{/Eigene Prüfungsfragen}}
+
+    {{#Definitionen}}
+    <span id="hint-definition" class="hintBtn" data-name="Definitionen" style="display: none;">
+      <button id="button-definition" class="button-general"
+        onclick="toggleHintBtn('hint-definition'); event.stopPropagation()">
+        <img src="__explanation.svg" style="height: 10px;"> Definitionen
+      </button>
+      <div id="definition" class="hints" style="display: none;">{{edit:Definitionen}}</div>
+    </span>
+    {{/Definitionen}}
+
+    {{#Merksprüche}}
+    <span id="hint-merksprueche" class="hintBtn" data-name="Merksprüche" style="display: none;">
+      <button id="button-merksprueche" class="button-general"
+        onclick="toggleHintBtn('hint-merksprueche'); event.stopPropagation()">
+        <img src="__merkhilfe.svg" style="height: 10px;"> Merksprüche
+      </button>
+      <div id="merksprueche" class="hints" style="display: none;">{{edit:Merksprüche}}</div>
+    </span>
+    {{/Merksprüche}}
+
+    {{#Klinik}}
+    <span id="hint-klinik" class="hintBtn" data-name="Klinik" style="display: none;">
+      <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
+        <img src="__stethoscope.svg" style="height: 10px;"> Klinik
+      </button>
+      <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
+    </span>
+    {{/Klinik}}
+
+    {{#Memes}}
+    <span id="hint-memes" class="hintBtn" data-name="Memes" style="display: none;">
+      <button id="button-memes" class="button-general" onclick="toggleHintBtn('hint-memes'); event.stopPropagation()">
+        <img src="__sonstiges.svg" style="height: 10px;"> Memes
+      </button>
+      <div id="memes" class="hints" style="display: none;">{{edit:Memes}}</div>
+    </span>
+    {{/Memes}}
+
+    <!-- LINEBREAKS IF BUTTONS EXIST -->
+    <script>
+      var array = [`{{text:Eigene Notizen & Bilder}}`, `{{text:Eigene Prüfungsfragen}}`, `{{text:Definitionen}}`, `{{text:Merksprüche}}`, `{{text:Klinik}}`, `{{text:Memes}}`];
+      var anyistrue = (element) => element;
+      if (array.some(anyistrue)) {
+        document.getElementById("linebreaksIfButtons").innerHTML = "<br>";
+      }
+    </script>
+    <div id="linebreaksIfButtons"></div>
+
     <!-- Extra field -->
     {{#Extra}}
     <div id="extra" style="display: none;">
-      <br><br>{{edit:Extra}}
-    </div><br>
+      <br>{{edit:Extra}}<br><br>
+    </div>
     {{/Extra}}
 
-    <!-- BUTTON FIELDS -->
-    {{#Tabellen}}
-    <span id="hint-definition" class="hintBtn" data-name="Tabellen" style="display: none;">
-      <button id="button-definition" class="button-general"
-        onclick="toggleHintBtn('hint-definition'); event.stopPropagation()">
-        <img src="__explanation.svg" style="height: 10px;"> Tabellen
-      </button>
-      <div id="definition" class="hints" style="display: none;">{{edit:Tabellen}}</div>
+    {{#AMBOSS-Link}}
+    <span id="hint-amboss" onclick="event.stopPropagation()" style="display: none;">
+      <a href="{{text:AMBOSS-Link}}">
+        <button id="button-amboss" class="button-general">
+          <img src="__amboss.svg" style="height: 10px;"> AMBOSS&#8203;
+        </button>
+      </a>
     </span>
-    {{/Tabellen}}
+    {{/AMBOSS-Link}}
+
+    {{#Thieme via medici-Link}}
+    <span id="hint-thieme" onclick="event.stopPropagation()" style="display: none;">
+      <a href="{{text:Thieme via medici-Link}}">
+        <button id="button-thieme" class="button-general">
+          <img id="button-thieme-img" src="__thieme-heart.svg" style="height: 10px;"> Thieme via medici
+        </button>
+      </a>
+    </span>
+    {{/Thieme via medici-Link}}
+
+    {{#Meditricks}}
+    <span id="hint-meditricks" class="hintBtn" data-name="Meditricks" style="display: none;">
+      <button id="button-meditricks" class="button-general"
+        onclick="toggleHintBtn('hint-meditricks'); event.stopPropagation()">
+        <img src="__meditricks.svg" style="height: 10px;"> Meditricks
+      </button>
+      <div id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
+    </span>
+    {{/Meditricks}}
+
+    {{#weitere Links}}
+    <span id="hint-linkcontainer" class="hintBtn" data-name="linkContainer" style="display: none;">
+      <button id="button-linkcontainer" class="button-general"
+        onclick="toggleHintBtn('hint-linkcontainer'); event.stopPropagation()">
+        <img src="__internet.svg" style="height: 10px;"> weitere Links
+      </button>
+      <div id="linkcontainer" class="hints" style="display: none;"></div>
+      <span id="linkContainerLinks" style="display: none;">{{edit:weitere Links}}</span>
+    </span>
+    {{/weitere Links}}
 
   </div>
 </div>
@@ -165,10 +374,118 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <!-- ##############  SCRIPTS  ############## -->
 <!-- ####################################### -->
 
+<script>
+  try {
+    anki.imageOcclusion.setup();
+  } catch (exc) {
+    document.getElementById("err").innerHTML = `Error loading image occlusion. Is your Anki version up to date?<br><br>${exc}`;
+  }
+</script>
+
 <!-- ############ DO NOT DELETE ############# -->
 <!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->
 
 <!-- ############ DO NOT DELETE ############# -->
+
+<script>
+  /**
+* Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
+* 
+* @param {String} text: The text to be rendered.
+* @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
+* 
+* @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
+*/
+  function getTextWidth(text, font) {
+    // re-use canvas object for better performance
+    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+    const context = canvas.getContext("2d");
+    context.font = font;
+    const metrics = context.measureText(text);
+    return metrics.width;
+  }
+
+  function getCSSStyle(element, prop) {
+    return window.getComputedStyle(element, null).getPropertyValue(prop);
+  }
+
+  function getCanvasFont(el = document.body) {
+    const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
+    const fontSize = getCSSStyle(el, 'font-size') || '16px';
+    const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
+
+    return `${fontWeight} ${fontSize} ${fontFamily}`;
+  }
+
+  /**
+  * Iterates over a list of divs containing text to be indented
+  *
+  * @param {HTMLCollection} divs: The divs to be iterated over.
+  */
+  function indentText(divs) {
+    // setup the indentation markers
+    var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
+    var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
+    var bulletP = "•"
+    var minus = "– "
+    var enter = "↳(?!( ↳|↳))"
+    var arrow = "→"
+
+    // heuristic indentation hierarchy
+    hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
+
+    // set up RegEx to analyze the provided divs
+    // negative lookbehinds unfortunately do not work yet on iPad / Android
+    var beginning = '(?<=<(br|td|td rowspan="\\d"|td colspan="\\d"|hr|div)>)(?<!cloze=")('
+    var middle = ".*?)((?:<br>)(?=("
+    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
+
+    // const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
+    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + end, "g")
+    const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
+    const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
+    const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
+    const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
+    const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
+
+    // iterate over divs
+    for (const div of divs) {
+      // calculate indentation depths
+      var canvasFont = getCanvasFont(div)
+      var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
+      var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
+      var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
+      var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
+      var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
+
+      var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
+      var indentEnd = ';">$2</indent>'
+
+      // do the indentation
+      divHTML = div.outerHTML
+      divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
+      divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
+      divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
+
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
+      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
+      //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
+
+      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>").replaceAll("</indent><br><img", "</indent><img")
+    }
+  }
+
+  // do the indentation if wanted
+  if (indentation) {
+    indentText(document.getElementById("container-content").getElementsByTagName("div"));
+    indentText(document.getElementById("container-buttons").getElementsByTagName("div"));
+  }
+</script>
 
 <!-- NOT-PERSISTING EVENT LISTENER -->
 <script>
@@ -448,116 +765,324 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
 </script>
 
+<!-- AUTOFLIP BACK SCRIPT -->
 <script>
-  var buttonIds = ["extra", "image", "hint-zusatz", "hint-definition", "hint-hammer", "hint-klinik", "hint-praeparat", "hint-microscope", "hint-smartzoom", "hint-histotrainer", "hint-uafi", "hint-merksprueche", "hint-memes", "hint-image", "hint-amboss", "hint-thieme", "hint-meditricks", "hint-linkcontainer"]
-
-  for (const button in buttonIds) {
-    try {
-      document.getElementById(buttonIds[button]).style.removeProperty("display")
-    } catch (exception) {
-      console.log(exception)
-    }
-  }
+  // autoflip hides card in front template
+  document.getElementById("qa").style.removeProperty("display")
 </script>
 
 <script>
-  /**
-* Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
-* 
-* @param {String} text: The text to be rendered.
-* @param {String} font: The CSS font descriptor that text is to be rendered with (e.g. "bold 14px verdana").
-* 
-* @see https://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
-*/
-  function getTextWidth(text, font) {
-    // re-use canvas object for better performance
-    const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    const context = canvas.getContext("2d");
-    context.font = font;
-    const metrics = context.measureText(text);
-    return metrics.width;
-  }
+    /**
+     * Based on the AnKing Notetype, but expanded and modified by phyn.
+     * Credit to the original authors, except where modified or otherwise indicated.
+     */
 
-  function getCSSStyle(element, prop) {
-    return window.getComputedStyle(element, null).getPropertyValue(prop);
-  }
+    (function () {
+      var clozeOneByOneEnabled = true;
 
-  function getCanvasFont(el = document.body) {
-    const fontWeight = getCSSStyle(el, 'font-weight') || 'normal';
-    const fontSize = getCSSStyle(el, 'font-size') || '16px';
-    const fontFamily = getCSSStyle(el, 'font-family') || 'Times New Roman';
+      // remove the clickAnywhere function from global scope
+      document.documentElement.removeAttribute("onclick")
 
-    return `${fontWeight} ${fontSize} ${fontFamily}`;
-  }
+      // --- CHECK IF ONE BY ONE IS GENERALLY ENABLED FOR THIS NOTE ---
+      var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
+      try {
+        clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty
+      } catch (exception) {
+        console.log(exception)
+      }
 
-  /**
-  * Iterates over a list of divs containing text to be indented
-  *
-  * @param {HTMLCollection} divs: The divs to be iterated over.
-  */
-  function indentText(divs) {
-    // setup the indentation markers
-    var numbers = "(" + "⓪①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳".split("").join("|") + ")"
-    var letters = "(" + "ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ".split("").join("|") + ")"
-    var bulletP = "•"
-    var minus = "– "
-    var enter = "↳(?!( ↳|↳))"
-    var arrow = "→"
+      /**
+   * helper functions to show / hide fields containing additional information
+   */
+      const showExtra = function () {
+        try {
+          document.getElementById("extra").style.removeProperty("display");
+        } catch (exception) {
+          console.log(exception);
+        }
+        try {
+          document.getElementById("image").style.removeProperty("display");
+        } catch (exception) {
+          console.log(exception);
+        }
+      };
 
-    // heuristic indentation hierarchy
-    hierarchy = [numbers, letters, bulletP, minus, enter, bulletP]
+      const hideExtra = function () {
+        try {
+          document.getElementById("extra").style.display = "none";
+        } catch (exception) {
+          console.log(exception);
+        }
+        try {
+          document.getElementById("image").style.display = "none";
+        } catch (exception) {
+          console.log(exception);
+        }
+      };
 
-    // set up RegEx to analyze the provided divs
-    // negative lookbehinds unfortunately do not work yet on iPad / Android
-    var beginning = '(?<=<(br|td|td rowspan="\\d"|td colspan="\\d"|hr|div)>)(?<!cloze=")('
-    var middle = ".*?)((?:<br>)(?=("
-    var end = "))|(?=(<\/indent>|<\/div>|<\/td>|<br><br>|<img)))"
+      const buttonIds = [
+        "hint-zusatz",
+        "hint-definition",
+        "hint-hammer",
+        "hint-klinik",
+        "hint-praeparat",
+        "hint-microscope",
+        "hint-smartzoom",
+        "hint-histotrainer",
+        "hint-uafi",
+        "hint-merksprueche",
+        "hint-memes",
+        "hint-image",
+        "hint-amboss",
+        "hint-thieme",
+        "hint-meditricks",
+        "hint-linkcontainer",
+      ];
 
-    // const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + "))|(?=<\/div>|<br><br>))", "g")
-    const reNumbers = new RegExp(beginning + hierarchy[0] + middle + hierarchy[0] + end, "g")
-    const reLetters = new RegExp(beginning + hierarchy[1] + middle + hierarchy.slice(0, 2).join('|') + end, "g")
-    const reBulletP = new RegExp(beginning + hierarchy[2] + middle + hierarchy.slice(0, 3).join('|') + end, "g")
-    const reMinus = new RegExp(beginning + hierarchy[3] + middle + hierarchy.slice(0, 4).join('|') + end, "g")
-    const reEnter = new RegExp(beginning + hierarchy[4] + middle + hierarchy.slice(0, 5).join('|') + end, "g")
-    const reArrow = new RegExp(beginning + hierarchy[5] + middle + hierarchy.slice(0, 6).join('|') + end, "g")
+      const showExtraButtons = function () {
+        for (const button in buttonIds) {
+          try {
+            document
+              .getElementById(buttonIds[button])
+              .style.removeProperty("display");
+          } catch (exception) {
+            console.log(exception);
+          }
+        }
+      };
 
-    // iterate over divs
-    for (const div of divs) {
-      // calculate indentation depths
-      var canvasFont = getCanvasFont(div)
-      var circledWidth = getTextWidth("① ", canvasFont).toString() + "px"
-      var bulletPWidth = getTextWidth("• ", canvasFont).toString() + "px"
-      var minusWidth = getTextWidth("– ", canvasFont).toString() + "px"
-      var enterWidth = getTextWidth("↳ ", canvasFont).toString() + "px"
-      var arrowWidth = getTextWidth("→ ", canvasFont).toString() + "px"
+      const hideExtraButtons = function () {
+        for (const button in buttonIds) {
+          try {
+            document.getElementById(buttonIds[button]).style.display = "none";
+          } catch (exception) {
+            console.log(exception);
+          }
+        }
+      };
 
-      var indentStart = '<indent style="margin: 0; display: block; padding-left:' // display: inline-block; vertical-align: top;
-      var indentEnd = ';">$2</indent>'
 
-      // do the indentation
-      divHTML = div.outerHTML
-      divHTML = divHTML.replaceAll(/(\d|<sup>|<sub>)–(\d|<\/sup>|<\/sub>|&#8288;)/g, "$1‒$2").replaceAll("–&#8288;", "‒&#8288;")
-      divHTML = divHTML.replaceAll(reNumbers, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reLetters, indentStart + circledWidth + '; text-indent: -' + circledWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reBulletP, indentStart + bulletPWidth + '; text-indent: -' + bulletPWidth + indentEnd)
-      divHTML = divHTML.replaceAll(reMinus, indentStart + minusWidth + '; text-indent: -' + minusWidth + indentEnd)
+      // --- CHECK IF ONE BY ONE SHOULD BE ENABLED FOR THIS SPECIFIC CARD ---
+      /**
+       * Credit for the getCardNumber function goes to foenixx (GitHub) / ollevolle (AnkiWeb Forum)
+       */
+      const getCardNumber = function () {
+        clz = document.body.className;
+        const regex = /card(\d+)/gm;
 
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      divHTML = divHTML.replaceAll("↳ ↳ ", "↳ ").replaceAll("↳↳ ", "↳ ")
-      divHTML = divHTML.replaceAll(reEnter, indentStart + enterWidth + '; text-indent: -' + enterWidth + indentEnd)
-      //divHTML = divHTML.replaceAll(reArrow,    indentStart + arrowWidth   + '; text-indent: -' + arrowWidth   + indentEnd)
+        let clz2;
+        try {
+          clz2 = document.getElementById("cloze").getAttribute("data-card");
+        } catch (e) {
+          clz2 = "";
+        }
+        const regex2 = /.*?Cloze(\d+)/gm;
 
-      div.outerHTML = divHTML.replaceAll("<br></indent>", "</indent><br>").replaceAll("</indent><br><br>", "</indent><br>").replaceAll("</indent><br><img", "</indent><img")
-    }
-  }
+        let m;
 
-  // do the indentation if wanted
-  if (indentation) {
-    indentText(document.getElementById("container-content").getElementsByTagName("div"));
-    indentText(document.getElementById("container-buttons").getElementsByTagName("div"));
-  }
+        if ((m = regex2.exec(clz2)) !== null) {
+          return m[1];
+        } else if ((m = regex.exec(clz)) !== null) {
+          return m[1];
+        } else {
+          // Should only fire if card is not cloze
+          console.error("Cannot find cardN class of body element!");
+          return "0";
+        }
+      }
+
+      // parse the cloze numbers for which selectiveOneByOne is enabled
+      cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
+
+      // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
+      numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+
+      // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
+      // -> show normal backside
+      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes))) {
+        clozeOneByOneEnabled = false
+        showExtra()
+        showExtraButtons()
+        document.getElementById("onebyone-buttons").style.display = "none"
+        document.getElementById("qa").style.removeProperty("display")
+        return
+      }
+
+      const doIOsetup = function () {
+        try {
+          anki.imageOcclusion.setup();
+        } catch (exc) {
+          document.getElementById("err").innerHTML = `Error loading image occlusion. Is your Anki version up to date?<br><br>${exc}`;
+        }
+      }
+
+      const hideAllCloze = function (initial) {
+        let clozes = document.querySelectorAll(`[data-one-by-one="true"]`)
+        for (const cloze of clozes) {
+          cloze.classList.remove("cloze-inactive").add("cloze")
+          cloze.attributes.removeNamedItem("data-one-by-one")
+          document.getElementById("button-reveal-next").style.display = null;
+          if (initial) {
+            cloze.addEventListener("touchend", revealClozeClicked)
+            cloze.addEventListener("click", revealClozeClicked)
+            cloze.classList.add("one-by-one");
+          }
+        }
+
+        // Hide #extra until all clozes are shown
+        const extra = document.getElementById("extra");
+        if (extra) {
+          extra.classList.add("hidden");
+        }
+
+        hideExtra();
+        hideExtraButtons();
+        if (revealAnywhere) {
+          document.documentElement.setAttribute("onclick", "revealNextCloze(); event.stopPropagation()")
+        }
+
+        // Also hide autoReveal fields
+        for (const [field, autoReveal] of Object.entries(ButtonAutoReveal)) {
+          const container = document.querySelector(`[data-name="${field}"]`)
+          if (container) {
+            const tag = `autoopen::${field.toLowerCase().replace(' ', '_')}`
+            if (autoReveal || (globalThis.tagList && globalThis.tagList.includes(tag))) {
+              // const link = container.getElementsByTagName("a")[0]
+              const button = container.getElementsByTagName("button")[0]
+              const hint = container.getElementsByTagName("div")[0]
+              button.classList.remove("expanded-button")
+              hint.style.display = "none"
+              // link.style.display = ""
+            }
+          }
+        }
+
+        doIOsetup();
+      }
+
+      const revealCloze = function (cloze) {
+        cloze.classList.remove("cloze").add("cloze-inactive")
+        cloze.attributes.add("data-one-by-one", "true")
+        doIOsetup();
+        maybeRevealExtraField()
+      }
+
+      const revealNextCloze = () => {
+        const nextHidden = document.querySelectorAll(".cloze")
+        const nextNextHidden = nextHidden.length > 1 ? true : false
+        if (!nextNextHidden) {
+          document.documentElement.removeAttribute("onclick")
+          document.getElementById("button-reveal-next").style.display = "none";
+        }
+        if (!nextHidden) {
+          return
+        }
+        revealCloze(nextHidden[0])
+      }
+
+      const toggleAllCloze = function () {
+        let elems = document.querySelectorAll(".cloze")
+        if (elems.length > 0) {
+          for (const elem of elems) {
+            revealCloze(elem)
+          }
+          document.documentElement.removeAttribute("onclick")
+          document.getElementById("button-reveal-next").style.display = "none"
+        } else {
+          hideAllCloze(initial = false)
+        }
+      }
+
+      const maybeRevealExtraField = () => {
+        let elems = document.querySelectorAll(".cloze")
+        if (elems.length == 0) {
+          const extra = document.getElementById("extra")
+          if (extra) {
+            extra.classList.remove("hidden")
+          }
+
+          showExtra();
+          showExtraButtons();
+          document.documentElement.removeAttribute("onclick")
+
+          // Also reveal autoReveal fields
+          for (const [field, autoReveal] of Object.entries(ButtonAutoReveal)) {
+            const container = document.querySelector(`[data-name="${field}"]`)
+            if (container) {
+              const tag = `autoopen::${field.toLowerCase().replace(' ', '_')}`
+              if (autoReveal || (globalThis.tagList && globalThis.tagList.includes(tag))) {
+                // const link = container.getElementsByTagName("a")[0]
+                const button = container.getElementsByTagName("button")[0]
+                const hint = container.getElementsByTagName("div")[0]
+                button.classList.add("expanded-button")
+                hint.style.display = "block"
+                // link.style.display = "none"
+              }
+            }
+          }
+        }
+      }
+
+      /**
+       * mode: 'beforeFirstSpace' or 'beforeFirstChar'
+       * Return `true` if it exists and setEnd() was called, otherwise `false`
+       */
+      const setRangeEnd = function (range, node, mode) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const regex = mode === 'beforeFirstSpace' ? /\s/ : /\S/
+          const match = node.textContent.match(regex)
+          if (match) {
+            if (match.index === 0) {
+              while (node.previousSibling === null) {
+                node = node.parentElement
+              }
+              range.setEndBefore(node)
+            } else {
+              range.setEnd(node, match.index);
+            }
+            return true;
+          } else {
+            return false;
+          }
+        } else if (mode === 'beforeFirstChar' && isCharNode(node)) {
+          range.setEndBefore(node)
+          return true
+        } else if (!ignoreSpaceInNode(node)) {
+          for (const child of node.childNodes) {
+            if (setRangeEnd(range, child, mode)) {
+              return true;
+            }
+          }
+          return false;
+        }
+      }
+
+      const ignoreSpaceInNode = function (node) {
+        return node.tagName === "MJX-ASSISTIVE-MML"
+      }
+
+      const isCharNode = function (node) {
+        return ["IMG", "MJX-CONTAINER"].includes(node.tagName)
+      }
+
+      hideAllCloze(initial = true)
+
+      let isShowNextShortcut = shortcutMatcher(window.revealNextShortcut)
+      let isToggleAllShortcut = shortcutMatcher(window.toggleAllShortcut)
+      ankingAddEventListener("keydown", (ev) => {
+        let next = isShowNextShortcut(ev)
+        let all = isToggleAllShortcut(ev)
+        if (next) {
+          revealNextCloze()
+        } else if (all) {
+          toggleAllCloze()
+        } else {
+          return;
+        }
+        ev.stopPropagation()
+        ev.preventDefault()
+      });
+    })()
 </script>
 
 <!-- COUNTDOWN TIMER -->
@@ -1022,4 +1547,32 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     table.parentNode.insertBefore(tableDiv, table);
     tableDiv.appendChild(table);
   };
+</script>
+
+<!-- MEDITRICKS SNIPPETS DATA -->
+<div id="meditricks-mtsp-values" style="display:none;">
+  <div id="meditricks-mtsp-nfname">_meditricks_nf_v1000_ankizin</div>
+  <div id="meditricks-mtsp-nid">{{Note ID}}</div>
+</div>
+<script src="_meditricks_mtsp_scripts_v1000_ankizin.js"></script>
+<link href="_meditricks_mtsp_styles_v1000_ankizin.css" rel="stylesheet" />
+
+<!-- include "_meditricks_mtsp_nf_v1000_ankizin.js" -->
+<!-- include "_meditricks_mtsp_scripts_v1000_iframe.map" -->
+<!-- include "_meditricks_mtsp_mtlogo.webp" -->
+<!-- include "_meditricks_mtsp_mt-loading.png" -->
+<!-- include "_meditricks_mtsp_mt-loading_night.png" -->
+
+<!-- //MEDITRICKS SNIPPETS DATA -->
+
+<!-- ANKIMOBILE USER ACTIONS -->
+<script>
+  var userJs1 = undefined
+  var userJs2 = undefined
+  var userJs3 = undefined
+  var userJs4 = undefined
+  var userJs5 = undefined
+  var userJs6 = undefined
+  var userJs7 = undefined
+  var userJs8 = undefined
 </script>

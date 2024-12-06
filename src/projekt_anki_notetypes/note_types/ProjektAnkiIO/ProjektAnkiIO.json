@@ -1,0 +1,209 @@
+{
+  "id": 161000000,
+  "name": "ProjektAnkiIO",
+  "type": 1,
+  "mod": 1638144714,
+  "usn": -1,
+  "sortf": 2,
+  "did": 1542938001935,
+  "tmpls": [
+    {
+      "name": "Image Occlusion",
+      "ord": 0,
+      "qfmt": "",
+      "afmt": "",
+      "bafmt": "",
+      "bqfmt": "",
+      "did": null,
+      "bfont": "",
+      "bsize": 12,
+      "scratchPad": false
+    }
+  ],
+  "flds": [
+    {
+      "name": "Occlusion",
+      "ord": 0,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "preventDeletion": true
+    },
+    {
+      "name": "Image",
+      "ord": 1,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "preventDeletion": true
+    },
+    {
+      "name": "Titel",
+      "ord": 2,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "preventDeletion": true
+    },
+    {
+      "name": "Extra",
+      "ord": 3,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "collapsed": false,
+      "excludeFromSearch": false,
+      "preventDeletion": true
+    },
+    {
+      "name": "Eigene Notizen & Bilder",
+      "ord": 4,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Eigene Prüfungsfragen",
+      "ord": 5,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Definitionen",
+      "ord": 6,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Merksprüche",
+      "ord": 7,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Klinik",
+      "ord": 8,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Memes",
+      "ord": 9,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Meditricks",
+      "ord": 10,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "AMBOSS-Link",
+      "ord": 11,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Thieme via medici-Link",
+      "ord": 12,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "weitere Links",
+      "ord": 13,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Quelle",
+      "ord": 14,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "Datum",
+      "ord": 15,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "media": []
+    },
+    {
+      "name": "One by one",
+      "ord": 16,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 8
+    },
+    {
+      "name": "Note ID",
+      "ord": 17,
+      "sticky": false,
+      "rtl": false,
+      "font": "Helvetica",
+      "size": 16,
+      "meta": "noteid"
+    }
+  ],
+  "css": "",
+  "latexPre": "\\documentclass[12pt]{article}\n\\special{papersize=3in,5in}\n\\usepackage[utf8]{inputenc}\n\\usepackage{amssymb,amsmath}\n\\pagestyle{empty}\n\\setlength{\\parindent}{0in}\n\\begin{document}\n",
+  "latexPost": "\\end{document}",
+  "latexsvg": false,
+  "req": [
+    [
+      0,
+      "any",
+      [
+        0,
+        1,
+        2
+      ]
+    ]
+  ]
+}
