@@ -29,7 +29,6 @@
       "font": "Helvetica",
       "size": 16,
       "collapsibleFieldsCollapseByDefault": false,
-      "meta": null,
       "media": []
     },
     {
@@ -173,8 +172,7 @@
       "sticky": false,
       "rtl": false,
       "font": "Helvetica",
-      "size": 8,
-      "meta": null
+      "size": 8
     },
     {
       "name": "Note ID",
@@ -183,7 +181,7 @@
       "rtl": false,
       "font": "Helvetica",
       "size": 16,
-      "media": []
+      "meta": "noteid"
     }
   ],
   "css": "",

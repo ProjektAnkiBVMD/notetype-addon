@@ -52,6 +52,11 @@
   --expanded-button-bg: #ababab;
   --expanded-button-text: black;
 
+  --rect-bg: #ffeba2;
+  --active-rect-bg: #ff8e8e;
+  --rect-border: #212121;
+  --active-rect-border: #212121;
+
   --tag-1: #f44336;
   --tag-2: #9c27b0;
   --tag-3: #3f51b5;
@@ -590,6 +595,13 @@ img {
   max-width: none;
 }
 
+#image-occlusion-canvas {
+  --inactive-shape-color: var(--rect-bg);
+  --active-shape-color: var(--active-rect-bg);
+  --inactive-shape-border: 1px var(--rect-border);
+  --active-shape-border: 1px var(--active-rect-border);
+}
+
 /* ~~~~~~~MNEMONICS LEFT JUSTIFIED~~~~~~~ */
 .mnemonics {
   display: inline-block;
@@ -771,7 +783,7 @@ kbd:nth-of-type(10n + 0) {
 }
 
 .mobile .header {
-  padding-bottom: 4px;
+  margin-bottom: 4px;
   top: 0px;
 }
 
@@ -795,7 +807,8 @@ kbd:nth-of-type(10n + 0) {
 
 /* ~~~~~~~~~BUTTON LAYOUT~~~~~~~~~ */
 #container-buttons,
-#onebyone-buttons {
+#onebyone-buttons,
+#toggle-mask-button {
   text-align: var(--button-alignment);
 }
 
