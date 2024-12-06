@@ -1,4 +1,4 @@
-<!-- version b288a6b -->
+<!-- version af45312 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -895,7 +895,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
 
       // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
-      numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+      numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.cloze-highlight').length : 0
 
       // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
       // -> show normal backside
@@ -917,16 +917,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       const hideAllCloze = function (initial) {
-        let clozes = document.querySelectorAll(`[data-one-by-one="true"]`)
+        let clozes = document.querySelectorAll(".cloze-highlight")
         for (const cloze of clozes) {
-          cloze.classList.remove("cloze-inactive").add("cloze")
-          cloze.attributes.removeNamedItem("data-one-by-one")
-          document.getElementById("button-reveal-next").style.display = null;
-          if (initial) {
-            cloze.addEventListener("touchend", revealClozeClicked)
-            cloze.addEventListener("click", revealClozeClicked)
-            cloze.classList.add("one-by-one");
-          }
+          cloze.classList.remove("cloze-highlight")
+          cloze.classList.add("cloze")
+          cloze.setAttribute("data-one-by-one", "true")
         }
 
         // Hide #extra until all clozes are shown
@@ -961,13 +956,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       const revealCloze = function (cloze) {
-        cloze.classList.remove("cloze").add("cloze-inactive")
-        cloze.attributes.add("data-one-by-one", "true")
+        cloze.classList.remove("cloze")
+        cloze.classList.add("cloze-highlight")
+        cloze.setAttribute("data-one-by-one", "false")
         doIOsetup();
         maybeRevealExtraField()
       }
 
-      const revealNextCloze = () => {
+      window.revealNextCloze = () => {
         const nextHidden = document.querySelectorAll(".cloze")
         const nextNextHidden = nextHidden.length > 1 ? true : false
         if (!nextNextHidden) {
@@ -980,7 +976,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         revealCloze(nextHidden[0])
       }
 
-      const toggleAllCloze = function () {
+      window.toggleAllCloze = function () {
         let elems = document.querySelectorAll(".cloze")
         if (elems.length > 0) {
           for (const elem of elems) {
@@ -1066,6 +1062,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       hideAllCloze(initial = true)
+      document.getElementById("toggle").style.display = "none"
 
       let isShowNextShortcut = shortcutMatcher(window.revealNextShortcut)
       let isToggleAllShortcut = shortcutMatcher(window.toggleAllShortcut)
