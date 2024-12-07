@@ -1,4 +1,4 @@
-<!-- version 72c45bd -->
+<!-- version 1f95930 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -916,6 +916,32 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         }
       }
 
+      const markNextCloze = function (initial) {
+        if (initial) {
+          var cnv = document.createElement("canvas")
+          cnv.id = "image-occlusion-highlight-canvas"
+          document.getElementById("image-occlusion-container").appendChild(cnv)
+        } else {
+          var cnv = document.getElementById("image-occlusion-highlight-canvas")
+        }
+
+        var ctx = cnv.getContext("2d")
+        ctx.clearRect(0, 0, cnv.width, cnv.height);
+
+        var clz = document.querySelectorAll(".cloze")[0]
+        if (clz == null) { return }
+
+        let left = parseFloat(clz.getAttribute("data-left"))
+        let tops = parseFloat(clz.getAttribute("data-top"))
+        let width = parseFloat(clz.getAttribute("data-width"))
+        let height = parseFloat(clz.getAttribute("data-height"))
+
+        ctx.fillStyle = getComputedStyle(cnv).getPropertyValue("--highlight-rect-bg");
+        ctx.fillRect(left * cnv.width, tops * cnv.height, width * cnv.width, height * cnv.height)
+        // ctx.fillRect(0, 0, cnv.width, cnv.height)
+        console.log(left * cnv.width, tops * cnv.height, width * cnv.width, height * cnv.height)
+      }
+
       const hideAllCloze = function (initial) {
         let clozes = document.querySelectorAll(".cloze-highlight")
         for (const cloze of clozes) {
@@ -953,14 +979,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         }
 
         doIOsetup();
+        markNextCloze(initial);
       }
 
-      const revealCloze = function (cloze) {
+      window.revealCloze = function (cloze) {
         cloze.classList.remove("cloze")
         cloze.classList.add("cloze-highlight")
         cloze.setAttribute("data-one-by-one", "false")
         doIOsetup();
-        maybeRevealExtraField()
+        markNextCloze(false);
+        maybeRevealExtraField();
       }
 
       window.revealNextCloze = () => {
