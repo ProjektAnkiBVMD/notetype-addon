@@ -770,7 +770,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "cyan",
         },
         "image_occlusion_rect_color": {
-            "text": "A - Light-Mode: Image Occlusion Rechteck-Füllfarbe",
+            "text": "Image Occlusion Rechteck-Füllfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -779,7 +779,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "moccasin",
         },
         "image_occlusion_border_color": {
-            "text": "A - Light-Mode: Image Occlusion Rechteck-Randfarbe",
+            "text": "Image Occlusion Rechteck-Randfarbe",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -788,7 +788,7 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "olive",
         },
         "image_occlusion_active_rect_color": {
-            "text": "A - Light-Mode: Image Occlusion Rechteck-Füllfarbe - aktiv",
+            "text": "Image Occlusion Rechteck-Füllfarbe - aktiv",
             "tooltip": "",
             "type": "color",
             "file": "style",
@@ -797,13 +797,22 @@ you may have to change the \"Toggle next Button\" shortcut to something else tha
             "default": "salmon",
         },
         "image_occlusion_active_border_color": {
-            "text": "A - Light-Mode: Image Occlusion Rechteck-Randfarbe - aktiv",
+            "text": "Image Occlusion Rechteck-Randfarbe - aktiv",
             "tooltip": "",
             "type": "color",
             "file": "style",
             "regex": r"--active-rect-border: +([^ ]*?);",
             "section": "Farben",
             "default": "yellow",
+        },
+        "image_occlusion_highlight_border_color": {
+            "text": "Image Occlusion Rechteck-Füllfarbe - nächste Occlusion",
+            "tooltip": "",
+            "type": "color",
+            "file": "style",
+            "regex": r"--highlight-rect-bg: +([^ ]*?);",
+            "section": "Farben",
+            "default": "#00FF00",
         },
         "custom_colors": {
             "text": "Custom Farben",
@@ -1089,6 +1098,7 @@ general_settings = [
     "image_occlusion_border_color",
     "image_occlusion_active_rect_color",
     "image_occlusion_active_border_color",
+    "image_occlusion_highlight_border_color",
     "custom_colors",
     "custom_styles",
     "custom_scripts_front",
