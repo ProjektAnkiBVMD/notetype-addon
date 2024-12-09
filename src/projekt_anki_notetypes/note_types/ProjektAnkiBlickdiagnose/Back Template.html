@@ -1,4 +1,4 @@
-<!-- version 734f45d -->
+<!-- version c23662a -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -171,7 +171,7 @@
     <br>
     <br>
 
-    <span class="bild" id="bild" ondblclick="toggleOverlay(); event.stopImmediatePropagation()">
+    <span class="bild" id="bild">
       {{Path-Image (Overlay)}}
       {{^Path-Image (Overlay)}} {{Path-Image}} {{/Path-Image (Overlay)}}
     </span>
@@ -181,6 +181,15 @@
     <br>
     <div style="font-size: .6em; line-height: 1em !important;">{{edit:Bild}}</div>
     {{/Bild}}
+
+    <!-- ##############  TOGGLE OVERLAY  ############## -->
+    {{#Path-Image (Overlay)}}
+    <div style="text-align: var(--button-alignment);">
+      <br>
+      <button id="button-toggle-overlay" class="button-general button-one-by-one"
+        onclick="toggleOverlay(); event.stopPropagation()">Toggle Overlay</button>
+    </div>
+    {{/Path-Image (Overlay)}}
 
     <br><br>
 
@@ -586,6 +595,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         "gelbe-liste": "__gelbe-liste.png",
         "embryotox": "__embryotox.svg",
         "radiopaedia": "__radiopaedia.png",
+        "orphanet": "__orphanet.png",
       }
       if (domain in domainDict) {
         icon = domainDict[domain]
@@ -625,11 +635,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <script>
   function toggleOverlay() {
     event.stopImmediatePropagation()
-    if (document.getElementById("bild").innerHTML == '{{Path-Image}}' && '{{Path-Image (Overlay)}}') {
-      document.getElementById("bild").innerHTML = '{{Path-Image (Overlay)}}';
+    bild = document.getElementById("bild")
+    // set outerHTML to displayed size of image to prevent jumping
+    bild.style.width = bild.offsetWidth + "px";
+    bild.style.height = bild.offsetHeight + "px";
+
+    if (bild.innerHTML == '{{Path-Image}}' && '{{Path-Image (Overlay)}}') {
+      bild.innerHTML = '{{Path-Image (Overlay)}}';
       makeImagesBlur();
     } else {
-      document.getElementById("bild").innerHTML = '{{Path-Image}}';
+      bild.innerHTML = '{{Path-Image}}';
       makeImagesBlur();
     };
   }
