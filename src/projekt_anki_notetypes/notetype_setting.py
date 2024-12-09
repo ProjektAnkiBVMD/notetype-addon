@@ -83,13 +83,19 @@ class NotetypeSetting(ABC):
 
     def is_present(self, model: "NotetypeDict") -> bool:
         # returns True if the section related to the setting is present on the model
-        relevant_template_text = self._relevant_template_text(model)
-        return bool(re.search(self.config["regex"], relevant_template_text))
+        relevant_template_texts = self._relevant_template_texts(model)
+        relevant_template_text_present = [
+            bool(re.search(self.config["regex"], text))
+            for text in relevant_template_texts
+        ]
+        return bool(all(relevant_template_text_present))
 
     # can raise NotetypeSettingException
     def setting_value(self, model: "NotetypeDict") -> Any:
         try:
-            section = self._relevant_template_sections(model)[0]
+            # does not matter how many templates the notetype has
+            # because the setting is the same for all of them
+            section = self._relevant_template_sections(model)[0][0]
             result = self._extract_setting_value(section)
         except NotetypeSettingException as e:
             raise e
@@ -124,23 +130,31 @@ class NotetypeSetting(ABC):
         for t_idx, (template, section) in enumerate(zip(templates, sections)):
             try:
                 processed_section = self._set_setting_value(
-                    section, setting_value
+                    section[0], setting_value
                 )
 
-                updated_text = self._relevant_template_text(
-                    result, t_idx
-                ).replace(section, processed_section, 1)
+                original_texts = self._relevant_template_texts(result, t_idx)
+                updated_texts = []
+                for original_text in original_texts:
+                    updated_texts.append(
+                        original_text.replace(section[0], processed_section, 1)
+                    )
             except NotetypeSettingException as e:
                 raise e
             except Exception as e:
                 raise NotetypeSettingException(e)
 
-            if self.config["file"] == "front":
-                template["qfmt"] = updated_text
+            # "both" is a special case, because it changes both the question and answer
+            # -> works only if relevant front and back sections are exactly the same
+            if self.config["file"] == "both":
+                template["qfmt"] = updated_texts[0]
+                template["afmt"] = updated_texts[1]
+            elif self.config["file"] == "front":
+                template["qfmt"] = updated_texts[0]
             elif self.config["file"] == "back":
-                template["afmt"] = updated_text
+                template["afmt"] = updated_texts[0]
             else:
-                result["css"] = updated_text
+                result["css"] = updated_texts[0]
 
         return result
 
@@ -154,15 +168,17 @@ class NotetypeSetting(ABC):
     def _relevant_template_sections(self, model: "NotetypeDict"):
         results = []
         for t_idx, _ in enumerate(model["tmpls"]):
-            template_text = self._relevant_template_text(model, t_idx)
-            section_match = re.search(self.config["regex"], template_text)
-            if not section_match:
-                raise NotetypeSettingException(
-                    f"could not find '{self.config['text']}' in {self.config['file']}"
-                    "template of notetype '{model['name']}'"
-                )
-            result = section_match.group(0)
-            results.append(result)
+            template_texts = self._relevant_template_texts(model, t_idx)
+            section_results = []
+            for section in template_texts:
+                section_match = re.search(self.config["regex"], section)
+                if not section_match:
+                    raise NotetypeSettingException(
+                        f"could not find '{self.config['text']}' in {self.config['file']}"
+                        f"template of notetype '{model['name']}'"
+                    )
+                section_results.append(section_match.group(0))
+            results.append(section_results)
         return results
 
     # raises NotetypeSettingException if the current setting value is
@@ -176,9 +192,9 @@ class NotetypeSetting(ABC):
     def _set_setting_value(self, section: str, setting_value: Any):
         pass
 
-    def _relevant_template_text(
+    def _relevant_template_texts(
         self, model: "NotetypeDict", t_idx: int = 0
-    ) -> str:
+    ) -> list[str]:
         templates = model["tmpls"]
 
         # all the AnKing notetypes have one template each
@@ -186,12 +202,14 @@ class NotetypeSetting(ABC):
         assert len(templates) >= 1
         template = templates[t_idx]
 
-        if self.config["file"] == "front":
-            result = template["qfmt"]
+        if self.config["file"] == "both":
+            result = [template["qfmt"], template["afmt"]]
+        elif self.config["file"] == "front":
+            result = [template["qfmt"]]
         elif self.config["file"] == "back":
-            result = template["afmt"]
+            result = [template["afmt"]]
         else:
-            result = model["css"]
+            result = [model["css"]]
         return result
 
     def _replace_first_capture_group(
@@ -482,7 +500,7 @@ class ElementOrderSetting(NotetypeSetting):
             key=self.key(notetype_base_name),
             items=list(
                 self._name_to_match_odict(
-                    self._relevant_template_sections(model)[0]
+                    self._relevant_template_sections(model)[0][0]
                 ).keys()
             ),
             description=self.config["text"],
