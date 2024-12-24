@@ -1,4 +1,4 @@
-<!-- version c23662a -->
+<!-- version 17ddb37 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -124,7 +124,10 @@
     <button id="button-src" style="all: unset !important; display: none"
       onclick="toggleHintBtn('hint-src'); event.stopPropagation()"></button>
     <!-- too lazy to rewrite toggleHintBtn script, so a invisible button must do it -->
-    <div id="src" class="hints" style="display: none">Quelle: {{Quelle}}</div>
+    <div id="src" class="hints" style="display: none">
+      Quelle: {{Quelle}}
+      {{#Datum}}<br>Datum: {{Datum}}{{/Datum}}
+    </div>
   </span>
   {{/Quelle}} {{#Note ID}}
   <span id="hint-nid" class="hintBtn" data-name="Note ID" style="display: flex">
