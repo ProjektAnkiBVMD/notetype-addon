@@ -2,6 +2,7 @@
     <qresource prefix="AnKing">
         <file>ankizin.png</file>
         <file>ankizin_logotype.png</file>
+        <file>sternisanta.png</file>
         <file>instagram.png</file>
         <file>discord.png</file>
         <file>bvmd.png</file>

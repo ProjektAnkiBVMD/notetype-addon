@@ -115,7 +115,7 @@ def maybe_show_deck_update_notice():
         return
 
     # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 3
+    latest_version = 4
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if latest_version == conf.get("latest_notified_deck_version"):
@@ -123,13 +123,33 @@ def maybe_show_deck_update_notice():
 
     update_dialog = askUserDialog(
         title="Ankizin Deck Update",
-        text="<h1>Ankizin V3 ist da!</h1>"
-        "<h2>Es ist ein neuer Major Release von Ankizin verfügbar!</h2>"
+        text="<h1>Ankizin V4 — Release am heiligen Abend!</h1>"
+        "<h2>Als kleines Weihnachtsgeschenk ist ein neuer Major Release von Ankizin verfügbar!</h2>"
+        "Mit V4 steht nicht nur Heiligabend vor der Tür, sondern auch die Vorklinik:"
+        "<ul>"
+        "<li>Vorklinik: ~1800 M1-Karten</li>"
+        "<ul><li>zu finden unter <code>#Ankizin_v4::#M1_Vorklinik_(work_in_progress)</code></li></ul>"
+        "<li>Klinik: ~4000 M2-Karten neu geschrieben / geupdatet<li>"
+        "<ul><li>v.a. Einarbeitungen des Lernplan-Updates H2024 und Updates älterer Kapitel</li></ul>"
+        "</ul>"
         "<h3>Kein AnkiHub?</h3>"
-        "Wenn du kein AnkiHub nutzt, solltest du die Ankizin-Webseite öffnen, um die neueste Version herunterzuladen."
+        "Wenn du kein AnkiHub nutzt, solltest du über unsere Ankizin-Webseite die neueste Version herunterladen. "
+        "Unten auf 'Ja, ankizin.de öffnen' klicken, um zum manuellen Update-Tutorial zu gelangen."
         "<h3>AnkiHub-Nutzer*in?</h3>"
         "Wenn du AnkiHub nutzt, brauchst du nichts weiter machen. Die Karten hast du bereits in den letzten Wochen automatisch erhalten.<br>"
-        "Um sicherzugehen, führe einen manuellen AnkiHub-Sync durch via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'.",
+        "Um sicherzugehen, führe einen manuellen AnkiHub-Sync durch via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'."
+        "<h2>Add-On-Updates:</h2>"
+        "<ul>"
+        "<li>3(!) neue Notiztypen:</li>"
+        "<ul>"
+        "<li><code>ProjektAnkiVocab</code> (für Termi & Co)</li>"
+        "<li>[DEV-Preview] <code>ProjektAnkiAnatomieTrainer</code> (für mehr als nur Muskeln)</li>"
+        "<li>[DEV-Preview] <code>ProjektAnkiIO</code> (für IO-Bilder)</li>"
+        "</ul>"
+        "<li>... und alle davon haben 1b1-Cloze-Support ;) [Tech-Tutorial folgt]</li>"
+        "<li>Vorderseite und Rückseite haben nun konsolidierte Einstellungen, keine Dopplungen mehr!</li>"
+        "<li>kleine Styling-Fixes hier und da</li>"
+        "</ul>",
         buttons=reversed(
             [
                 "Nein, ich habe schon die neueste Version",
@@ -137,7 +157,7 @@ def maybe_show_deck_update_notice():
             ]
         ),
     )
-    update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
+    update_dialog.setIconPixmap(QPixmap("icons:sternisanta.png"))
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
         "Ja, ankizin.de öffnen", QMessageBox.ButtonRole.AcceptRole
