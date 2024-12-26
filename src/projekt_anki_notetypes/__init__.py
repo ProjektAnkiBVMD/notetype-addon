@@ -127,28 +127,19 @@ def maybe_show_deck_update_notice():
         "<h2>Als kleines Weihnachtsgeschenk ist ein neuer Major Release von Ankizin verfügbar!</h2>"
         "Mit V4 steht nicht nur Heiligabend vor der Tür, sondern auch die Vorklinik:"
         "<ul>"
-        "<li>Vorklinik: ~1800 M1-Karten</li>"
-        "<ul><li>zu finden unter <code>#Ankizin_v4::#M1_Vorklinik_(work_in_progress)</code></li></ul>"
-        "<li>Klinik: ~4000 M2-Karten neu geschrieben / geupdatet<li>"
-        "<ul><li>v.a. Einarbeitungen des Lernplan-Updates H2024 und Updates älterer Kapitel</li></ul>"
+        "<li>Vorklinik: ~1800 M1-Karten zu finden unter <code>#Ankizin_v4::#M1_Vorklinik_(work_in_progress)</code></li>"
+        "<li>Klinik: ~4000 M2-Karten neu geschrieben / geupdatet, v.a. Einarbeitungen des Lernplan-Updates H2024 und Updates älterer Kapitel</li></ul>"
         "</ul>"
         "<h3>Kein AnkiHub?</h3>"
-        "Wenn du kein AnkiHub nutzt, solltest du über unsere Ankizin-Webseite die neueste Version herunterladen. "
-        "Unten auf 'Ja, ankizin.de öffnen' klicken, um zum manuellen Update-Tutorial zu gelangen."
+        "Wenn du kein AnkiHub nutzt, solltest du unten auf 'Ja, ankizin.de öffnen' klicken, um über unsere Ankizin-Webseite die neueste Version herunterladen. "
         "<h3>AnkiHub-Nutzer*in?</h3>"
-        "Wenn du AnkiHub nutzt, brauchst du nichts weiter machen. Die Karten hast du bereits in den letzten Wochen automatisch erhalten.<br>"
-        "Um sicherzugehen, führe einen manuellen AnkiHub-Sync durch via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'."
+        "Wenn du AnkiHub nutzt, brauchst du nichts weiter machen. Die Karten hast du bereits in den letzten Wochen automatisch erhalten. "
+        "(Um sicherzugehen: manueller AnkiHub-Sync via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'.)"
         "<h2>Add-On-Updates:</h2>"
         "<ul>"
-        "<li>3(!) neue Notiztypen:</li>"
-        "<ul>"
-        "<li><code>ProjektAnkiVocab</code> (für Termi & Co)</li>"
-        "<li>[DEV-Preview] <code>ProjektAnkiAnatomieTrainer</code> (für mehr als nur Muskeln)</li>"
-        "<li>[DEV-Preview] <code>ProjektAnkiIO</code> (für IO-Bilder)</li>"
-        "</ul>"
-        "<li>... und alle davon haben 1b1-Cloze-Support ;) [Tech-Tutorial folgt]</li>"
-        "<li>Vorderseite und Rückseite haben nun konsolidierte Einstellungen, keine Dopplungen mehr!</li>"
-        "<li>kleine Styling-Fixes hier und da</li>"
+        "<li>3(!) neue Notiztypen: <code>Vocab</code> (für Termi & Co), [Preview: <code>AnatomieTrainer</code> (für mehr als nur Muskeln), <code>IO</code> (für IO-Bilder)] "
+        "... und alle davon haben 1b1-Cloze-Support ;) [Tech-Tutorial folgt]</li>"
+        "<li>Vorder- und Rückseite haben nun konsolidierte Einstellungen, sowie kleine Styling-Fixes hier und da</li>"
         "</ul>",
         buttons=reversed(
             [
@@ -160,7 +151,7 @@ def maybe_show_deck_update_notice():
     update_dialog.setIconPixmap(QPixmap("icons:sternisanta.png"))
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
-        "Ja, ankizin.de öffnen", QMessageBox.ButtonRole.AcceptRole
+        "Ja, ankizin.de öffnen", QMessageBox.ButtonRole.RejectRole
     )
     link_button_url = "https://www.ankizin.de/wiki/howto-update-deck/"
     link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
