@@ -37,6 +37,11 @@ from .notetype_setting_definitions import (
 ADDON_DIR_NAME = str(Path(__file__).parent.name)
 RESOURCES_PATH = Path(__file__).parent / "resources"
 
+from .butler.init import init_butler
+
+# Init Butler sub-component
+def setup_butler():
+    init_butler()
 
 def setup():
     add_compat_aliases()
@@ -372,3 +377,4 @@ def on_editor_will_show_context_menu(
 
 if mw is not None:
     setup()
+    setup_butler()
