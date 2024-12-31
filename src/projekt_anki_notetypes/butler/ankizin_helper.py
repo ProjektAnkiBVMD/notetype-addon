@@ -16,7 +16,7 @@ class AnkizinHelper:
 
     def __init__(self):
         self.DELETE_TAG_PATTERN = re.compile(
-            r"#Ankizin_v\d+::!DELETE(::(?:update|duplicate))?"
+            r"#Ankizin_v(?:\d+|Ankihub)::!DELETE(::(?:update|duplicate))?"
         )
 
         self.delete_outdated_cards = True
