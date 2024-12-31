@@ -40,7 +40,6 @@ def add_lernplan_manager(menu):
 
 
 def menu_init():
-
     menu = get_ankizin_menu()
     menu.addSeparator()
     add_lernplan_manager(menu)

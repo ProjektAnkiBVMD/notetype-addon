@@ -30,6 +30,8 @@ class LernplanManagerDialog(QDialog):
             highyield = lernplan_conf.get("highyield", False)
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
+            autocreate = lernplan_conf.get("autocreate", False)
+            wochentage = lernplan_conf.get("wochentage", [False] * 7)
 
         # Logo
         logo_label = QLabel()
@@ -76,6 +78,7 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_button = QCheckBox(
             "Lerntag-Deck jeden Tag automatisch erstellen"
         )
+        self.autocreate_button.setChecked(autocreate)
         right_layout.addWidget(self.autocreate_button)
 
         # WOCHENTAGE AUSWÄHLEN
@@ -83,8 +86,9 @@ class LernplanManagerDialog(QDialog):
         weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
-        for weekday in ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]:
+        for weekday, check in zip(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], wochentage):
             button = QCheckBox(weekday)
+            button.setChecked(check)
             self.weekday_buttons.append(button)
             weekdays_layout.addWidget(button)
         weekdays.setLayout(weekdays_layout)
