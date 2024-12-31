@@ -36,11 +36,19 @@ class LernplanManagerDialog(QDialog):
             self.lerntag_combo.addItem(display_text, number)
         right_layout.addWidget(self.lerntag_combo)
 
-        self.yield_checkbox = QCheckBox("Nur high-yield-Karten")
-        right_layout.addWidget(self.yield_checkbox)
+        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten only")
+        right_layout.addWidget(self.highyield_button)
 
-        self.exclude_lowyield = QCheckBox("low-yield-Karten ausschließen")
-        right_layout.addWidget(self.exclude_lowyield)
+        self.standard_button = QRadioButton(
+            "STANDARD Karten (high-yield und normal)"
+        )
+        self.standard_button.setChecked(True)
+        right_layout.addWidget(self.standard_button)
+
+        self.lowyield_button = QRadioButton(
+            "ALLE Karten (high-yield, normal UND low-yield)"
+        )
+        right_layout.addWidget(self.lowyield_button)
 
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
@@ -80,8 +88,8 @@ class LernplanManagerDialog(QDialog):
         if col is None:
             raise Exception("collection not available")
         lerntag = self.lerntag_combo.currentData().zfill(3)
-        yield_checked = self.yield_checkbox.isChecked()
-        no_lowyield = self.exclude_lowyield.isChecked()
+        highyield = self.highyield_button.isChecked()
+        lowyield = self.lowyield_button.isChecked()
 
         # Determine the latest Ankizin_v version dynamically
         pattern = re.compile(r"#Ankizin_v(\d+)::")
@@ -98,16 +106,16 @@ class LernplanManagerDialog(QDialog):
         tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
         search = col.build_search_string(f'tag:"{tag_pattern}"')
 
-        if yield_checked:
+        if highyield:
             high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
             search += f' tag:"{high_yield_tag}"'
-            deck_name = f"High yield - Lerntag {lerntag}"
+            deck_name = f"Lerntag {lerntag} - nur high-yield"
+        elif lowyield:
+            deck_name = f"Lerntag {lerntag} - inkl. low-yield"
         else:
-            deck_name = f"Lerntag {lerntag}"
-
-        if no_lowyield:
             low_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
             search += f' -tag:"{low_yield_tag}"'
+            deck_name = f"Lerntag {lerntag}"
 
         # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
         cidsToUnsuspend = col.find_cards(search)
