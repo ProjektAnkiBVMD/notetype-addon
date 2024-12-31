@@ -13,7 +13,7 @@ class FirstSetupConfigDialog(QDialog):
     def __init__(self, parent, helper):
         super().__init__(parent)
         self.helper = helper
-        self.setWindowTitle("Ankizin Installations Konfiguration")
+        self.setWindowTitle("Ankizin Installations-Konfiguration")
 
         main_layout = QHBoxLayout(self)
 
@@ -35,7 +35,7 @@ class FirstSetupConfigDialog(QDialog):
 
         # Explanatory text
         info_label = QLabel(
-            "Neu bei Ankizin? Herzlich Willkommen! Aller Anfang ist schwer, und um dein Leben etwas leichter zu machen kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
+            "Neu bei Ankizin? Herzlich Willkommen!<br>Aller Anfang ist schwer. Um dein Leben etwas leichter zu machen, kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
         )
         info_label.setWordWrap(True)
         right_layout.addWidget(info_label)
@@ -50,7 +50,7 @@ class FirstSetupConfigDialog(QDialog):
         right_layout.addWidget(self.suspend_all_cb)
 
         self.deck_cb = QCheckBox(
-            "Empfohlene Einstellungen übernehmen (Sinnvoll, wenn du neu bei Anki bist)"
+            "Empfohlene Einstellungen übernehmen (sinnvoll, wenn du neu bei Anki bist!)"
         )
         self.deck_cb.setChecked(self.helper.update_deck_config)
         right_layout.addWidget(self.deck_cb)
@@ -82,7 +82,7 @@ class UpdateConfigDialog(QDialog):
     def __init__(self, parent, helper):
         super().__init__(parent)
         self.helper = helper
-        self.setWindowTitle("Ankizin Update Konfiguration")
+        self.setWindowTitle("Ankizin Update-Konfiguration")
 
         main_layout = QHBoxLayout(self)
 
@@ -104,7 +104,7 @@ class UpdateConfigDialog(QDialog):
 
         # Explanatory text
         info_label = QLabel(
-            "Frisch eine neue Version von Ankizin heruntergeladen? Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
+            "Frisch eine neue Version von Ankizin heruntergeladen?<br>Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
         )
         info_label.setWordWrap(True)
         right_layout.addWidget(info_label)
@@ -114,7 +114,7 @@ class UpdateConfigDialog(QDialog):
         self.delete_cb.setChecked(self.helper.delete_outdated_cards)
         right_layout.addWidget(self.delete_cb)
 
-        self.suspend_new_cb = QCheckBox("Neuen Karten aussetzen")
+        self.suspend_new_cb = QCheckBox("Neue Karten aussetzen")
         self.suspend_new_cb.setChecked(self.helper.suspend_new_cards)
         right_layout.addWidget(self.suspend_new_cb)
 

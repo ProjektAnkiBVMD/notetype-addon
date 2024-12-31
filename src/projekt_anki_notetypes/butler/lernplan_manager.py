@@ -36,10 +36,10 @@ class LernplanManagerDialog(QDialog):
             self.lerntag_combo.addItem(display_text, number)
         right_layout.addWidget(self.lerntag_combo)
 
-        self.yield_checkbox = QCheckBox("Nur High yield Karten")
+        self.yield_checkbox = QCheckBox("Nur high-yield-Karten")
         right_layout.addWidget(self.yield_checkbox)
 
-        self.exclude_lowyield = QCheckBox("Low Yield Karten ausschließen")
+        self.exclude_lowyield = QCheckBox("low-yield-Karten ausschließen")
         right_layout.addWidget(self.exclude_lowyield)
 
         # Confirm button

@@ -179,7 +179,7 @@ class AnkizinHelper:
                 mw.col.decks.save(default_conf)
             else:
                 showInfo(
-                    "Keine Deckeinstellung gefunden. Schreib uns gerne auf Discord an."
+                    "Keine Deck-Einstellung gefunden. Schreib uns gerne auf Discord an."
                 )
 
         except Exception as e:

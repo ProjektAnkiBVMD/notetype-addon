@@ -66,8 +66,8 @@ def maybe_add_get_help_submenu(menu: QMenu) -> None:
     new_act.setProperty("version", SUBMENU_VER)
 
 
-def get_anking_menu() -> QMenu:
-    """Get or create AnKing menu. Make sure its submenus are up to date."""
+def get_ankizin_menu() -> QMenu:
+    """Get or create Ankizin menu. Make sure its submenus are up to date."""
     menubar = mw.form.menubar
 
     submenus = menubar.findChildren(QMenu)
