@@ -8,7 +8,7 @@ from aqt.qt import *
 
 from .utils import check_ankizin_installation
 
-ADDON_DIR_NAME = str(Path(__file__).parent.name)
+ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
 class LernplanManagerDialog(QDialog):
@@ -21,11 +21,12 @@ class LernplanManagerDialog(QDialog):
         # Get the config
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
-            lerntag = 1
+            lerntag = 0  # 0-indexed
             highyield, normyield, lowyield = False, True, False
         else:
             lernplan_conf = conf.get("lernplan", {})
-            lerntag = lernplan_conf.get("lerntag", 1)
+            # config contains e.g. "035" but we want 0-indexed
+            lerntag = int(lernplan_conf.get("lerntag", 1)) - 1
             highyield = lernplan_conf.get("highyield", False)
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
@@ -141,7 +142,7 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
-        lernplan_conf["weekdays"] = [
+        lernplan_conf["wochentage"] = [
             button.isChecked() for button in self.weekday_buttons
         ]
         lernplan_conf["last_updated"] = (
@@ -153,7 +154,7 @@ class LernplanManagerDialog(QDialog):
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         # Create the filtered deck
-        self.create_filtered_deck(lerntag, highyield, lowyield)
+        create_filtered_deck(lerntag, highyield, lowyield)
         self.accept()
 
 

@@ -6,7 +6,7 @@ from aqt import mw
 from .lernplan_manager import create_filtered_deck
 from .menu import menu_init
 
-ADDON_DIR_NAME = str(Path(__file__).parent.name)
+ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
 def lernplan_init():
@@ -15,7 +15,12 @@ def lernplan_init():
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if conf is not None and "lernplan" in conf:
         lernplan_conf = conf["lernplan"]
-        lerntag = lernplan_conf.get("lerntag", 1)
+
+        # Check if the lernplan should be autocreated
+        if not lernplan_conf.get("autocreate", False):
+            return
+
+        lerntag = int(lernplan_conf.get("lerntag", 1) - 1) 
         highyield = lernplan_conf.get("highyield", False)
         lowyield = lernplan_conf.get("lowyield", False)
 
@@ -29,7 +34,7 @@ def lernplan_init():
 
         # Check if this weekday is in the list of weekdays
         lernplan_started_on = lernplan_conf["lernplan_started_on"]
-        weekdays = lernplan_conf["weekdays"]
+        weekdays = lernplan_conf["wochentage"]
         today_weekday = today.weekday()
         if not weekdays[today_weekday]:
             return # Today is not a lernplan day
