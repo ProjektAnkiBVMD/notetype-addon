@@ -32,7 +32,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(QLabel("Lerntag:"))
         self.lerntag_combo = QComboBox()
         for number, topic in self.get_lerntag_list():
-            display_text = f"{number} - {topic}"
+            display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
         right_layout.addWidget(self.lerntag_combo)
 
@@ -49,6 +49,25 @@ class LernplanManagerDialog(QDialog):
             "ALLE Karten (high-yield, normal UND low-yield)"
         )
         right_layout.addWidget(self.lowyield_button)
+
+        # AUTOCREATE LERNTAG DECK
+        right_layout.addSpacing(30)
+        self.autocreate_button = QCheckBox(
+            "Lerntag-Deck jeden Tag automatisch erstellen"
+        )
+        right_layout.addWidget(self.autocreate_button)
+
+        # WOCHENTAGE AUSWÄHLEN
+        right_layout.addSpacing(10)
+        weekdays = QGroupBox("Wochentage für den Lernplan:")
+        weekdays_layout = QHBoxLayout()
+        self.weekday_buttons = []
+        for weekday in ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]:
+            button = QCheckBox(weekday)
+            self.weekday_buttons.append(button)
+            weekdays_layout.addWidget(button)
+        weekdays.setLayout(weekdays_layout)
+        right_layout.addWidget(weekdays)
 
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
