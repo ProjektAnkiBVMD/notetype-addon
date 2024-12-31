@@ -39,7 +39,7 @@ RESOURCES_PATH = Path(__file__).parent / "resources"
 
 from .butler.init import init_butler
 
-# Init Butler sub-component
+# init Butler sub-component
 def setup_butler():
     init_butler()
 

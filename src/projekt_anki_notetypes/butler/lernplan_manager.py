@@ -1,9 +1,14 @@
+import datetime
+import re
+from pathlib import Path
+
+import anki
 from aqt import mw
 from aqt.qt import *
-import re
-import anki
 
 from .utils import check_ankizin_installation
+
+ADDON_DIR_NAME = str(Path(__file__).parent.name)
 
 
 class LernplanManagerDialog(QDialog):
@@ -12,6 +17,18 @@ class LernplanManagerDialog(QDialog):
         self.setWindowTitle("Lernplan-Manager")
 
         main_layout = QHBoxLayout(self)
+
+        # Get the config
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            lerntag = 1
+            highyield, normyield, lowyield = False, True, False
+        else:
+            lernplan_conf = conf.get("lernplan", {})
+            lerntag = lernplan_conf.get("lerntag", 1)
+            highyield = lernplan_conf.get("highyield", False)
+            normyield = lernplan_conf.get("normyield", True)
+            lowyield = lernplan_conf.get("lowyield", False)
 
         # Logo
         logo_label = QLabel()
@@ -34,20 +51,23 @@ class LernplanManagerDialog(QDialog):
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
+        self.lerntag_combo.setCurrentIndex(lerntag)
         right_layout.addWidget(self.lerntag_combo)
 
-        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten only")
+        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
+        self.highyield_button.setChecked(highyield)
         right_layout.addWidget(self.highyield_button)
 
         self.standard_button = QRadioButton(
             "STANDARD Karten (high-yield und normal)"
         )
-        self.standard_button.setChecked(True)
+        self.standard_button.setChecked(normyield)
         right_layout.addWidget(self.standard_button)
 
         self.lowyield_button = QRadioButton(
             "ALLE Karten (high-yield, normal UND low-yield)"
         )
+        self.lowyield_button.setChecked(lowyield)
         right_layout.addWidget(self.lowyield_button)
 
         # AUTOCREATE LERNTAG DECK
@@ -75,7 +95,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(
             confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
         )
-        confirm_btn.clicked.connect(self.create_filtered_deck)
+        confirm_btn.clicked.connect(self.create_filtered_deck_wrapper)
 
         main_layout.addLayout(right_layout)
 
@@ -102,64 +122,96 @@ class LernplanManagerDialog(QDialog):
         lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
         return lerntag_list
 
-    def create_filtered_deck(self):
-        col = mw.col
-        if col is None:
-            raise Exception("collection not available")
+    def create_filtered_deck_wrapper(self):
+        # Get the config
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            conf = {}
+        if "lernplan" not in conf:
+            conf["lernplan"] = {}
+        lernplan_conf = conf["lernplan"]
+
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield = self.highyield_button.isChecked()
         lowyield = self.lowyield_button.isChecked()
 
-        # Determine the latest Ankizin_v version dynamically
-        pattern = re.compile(r"#Ankizin_v(\d+)::")
-        versions = []
-        for tag in col.tags.all():
-            match = pattern.match(tag)
-            if match:
-                versions.append(int(match.group(1)))
-        if versions:
-            latest_version = f"v{max(versions)}"
-        else:
-            latest_version = "vAnkihub"
+        # Save the config
+        lernplan_conf["lerntag"] = lerntag
+        lernplan_conf["highyield"] = highyield
+        lernplan_conf["normyield"] = self.standard_button.isChecked()
+        lernplan_conf["lowyield"] = lowyield
+        lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
+        lernplan_conf["weekdays"] = [
+            button.isChecked() for button in self.weekday_buttons
+        ]
+        lernplan_conf["last_updated"] = (
+            datetime.datetime.today().date().isoformat()
+        )
+        lernplan_conf["lernplan_started_on"] = (
+            datetime.datetime.today().weekday()
+        )
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
-        tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
-        search = col.build_search_string(f'tag:"{tag_pattern}"')
-
-        if highyield:
-            high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
-            search += f' tag:"{high_yield_tag}"'
-            deck_name = f"Lerntag {lerntag} - nur high-yield"
-        elif lowyield:
-            deck_name = f"Lerntag {lerntag} - inkl. low-yield"
-        else:
-            low_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-            search += f' -tag:"{low_yield_tag}"'
-            deck_name = f"Lerntag {lerntag}"
-
-        # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
-        cidsToUnsuspend = col.find_cards(search)
-        col.sched.unsuspend_cards(cidsToUnsuspend)
-
-        print(search)
-        mw.progress.start()
-        did = col.decks.new_filtered(deck_name)
-        deck = col.decks.get(did)
-
-        print(f"Found cards: {len(col.find_cards(search))}")
-
-        deck["terms"] = [[search, 999, 2]]
-
-        col.decks.save(deck)
-
-        # Force rebuild
-        col.sched.rebuild_filtered_deck(did)
-        mw.progress.finish()
-        mw.reset()
-
-        card_count = len(col.decks.cids(did))
-        print(f"Created deck with {card_count} cards")
-
+        # Create the filtered deck
+        self.create_filtered_deck(lerntag, highyield, lowyield)
         self.accept()
+
+
+def create_filtered_deck(lerntag, highyield, lowyield):
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    # Determine the latest Ankizin_v version dynamically
+    pattern = re.compile(r"#Ankizin_v(\d+)::")
+    versions = []
+    for tag in col.tags.all():
+        match = pattern.match(tag)
+        if match:
+            versions.append(int(match.group(1)))
+    if versions:
+        latest_version = f"v{max(versions)}"
+    else:
+        latest_version = "vAnkihub"
+
+    tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
+    search = col.build_search_string(f'tag:"{tag_pattern}"')
+
+    if highyield:
+        high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        search += f' tag:"{high_yield_tag}"'
+        deck_name = f"Lerntag {lerntag} - nur high-yield"
+    elif lowyield:
+        deck_name = f"Lerntag {lerntag} - inkl. low-yield"
+    else:
+        low_yield_tag = (
+            f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
+        )
+        search += f' -tag:"{low_yield_tag}"'
+        deck_name = f"Lerntag {lerntag}"
+
+    # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
+    cidsToUnsuspend = col.find_cards(search)
+    col.sched.unsuspend_cards(cidsToUnsuspend)
+
+    print(search)
+    mw.progress.start()
+    did = col.decks.new_filtered(deck_name)
+    deck = col.decks.get(did)
+
+    print(f"Found cards: {len(col.find_cards(search))}")
+
+    deck["terms"] = [[search, 999, 2]]
+
+    col.decks.save(deck)
+
+    # Force rebuild
+    col.sched.rebuild_filtered_deck(did)
+    mw.progress.finish()
+    mw.reset()
+
+    card_count = len(col.decks.cids(did))
+    print(f"Created deck with {card_count} cards")
 
 
 def open_lernplan_manager(self):
