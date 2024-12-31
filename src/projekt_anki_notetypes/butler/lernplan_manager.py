@@ -9,7 +9,7 @@ from .utils import check_ankizin_installation
 class LernplanManagerDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setWindowTitle("Lernplan Manager")
+        self.setWindowTitle("Lernplan-Manager")
 
         main_layout = QHBoxLayout(self)
 
@@ -148,4 +148,6 @@ def open_lernplan_manager(self):
     if not check_ankizin_installation():
         return
 
-    LernplanManagerDialog(mw).exec()
+    dialog = LernplanManagerDialog(mw)
+    dialog.setFixedSize(dialog.sizeHint())
+    dialog.exec()

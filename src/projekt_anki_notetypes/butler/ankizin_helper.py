@@ -225,6 +225,7 @@ class AnkizinHelper:
             return
 
         dialog = FirstSetupConfigDialog(mw, self)
+        dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
             CollectionOp(
                 parent=mw, op=lambda _: self.handle_first_time_options()
@@ -257,6 +258,7 @@ class AnkizinHelper:
 
         # Ask user what they wanna  do
         dialog = UpdateConfigDialog(mw, self)
+        dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
             CollectionOp(
                 parent=mw, op=lambda _: self.handle_update_options()
