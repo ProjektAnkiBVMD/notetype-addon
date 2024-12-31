@@ -1,4 +1,3 @@
-
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, askUser
@@ -16,29 +15,32 @@ from ..gui.projekt_anki_menu import get_anking_menu
 
 ankizin_helper = None
 
+
 def init_ankizin_helper(menu):
     global ankizin_helper
     ankizin_helper = AnkizinHelper()
-    
+
     # Add menu item
     first_setup = QAction("Ankizin erstmalig installiert?", mw)
     first_setup.triggered.connect(ankizin_helper.run_first_time_setup)
-    
+
     update_setup = QAction("Ankizin Update installiert?", mw)
     update_setup.triggered.connect(ankizin_helper.run_ankizin_update_setup)
-    
+
     menu.addAction(first_setup)
     menu.addAction(update_setup)
-    
+
     print("Ankizin helper initialized")
+
 
 def add_lernplan_manager(menu):
     action = QAction("Lernplan Manager", mw)
     action.triggered.connect(open_lernplan_manager)
     menu.addAction(action)
 
+
 def menu_init():
-    
+
     menu = get_anking_menu()
     menu.addSeparator()
     add_lernplan_manager(menu)
