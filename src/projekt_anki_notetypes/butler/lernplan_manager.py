@@ -76,7 +76,7 @@ class LernplanManagerDialog(QDialog):
         # AUTOCREATE LERNTAG DECK
         right_layout.addSpacing(30)
         self.autocreate_button = QCheckBox(
-            "Lerntag-Deck jeden Tag automatisch erstellen"
+            "Lerntag-Stapel jeden Tag automatisch erstellen"
         )
         self.autocreate_button.setChecked(autocreate)
         right_layout.addWidget(self.autocreate_button)
