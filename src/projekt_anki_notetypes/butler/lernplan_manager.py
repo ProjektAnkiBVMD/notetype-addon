@@ -26,7 +26,7 @@ class LernplanManagerDialog(QDialog):
         else:
             lernplan_conf = conf.get("lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
-            lerntag = int(lernplan_conf.get("lerntag", 1)) - 1
+            lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             highyield = lernplan_conf.get("highyield", False)
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
@@ -86,7 +86,9 @@ class LernplanManagerDialog(QDialog):
         weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
-        for weekday, check in zip(["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], wochentage):
+        for weekday, check in zip(
+            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], wochentage
+        ):
             button = QCheckBox(weekday)
             button.setChecked(check)
             self.weekday_buttons.append(button)
@@ -192,18 +194,21 @@ def create_filtered_deck(lerntag, highyield, lowyield):
     tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'tag:"{tag_pattern}"')
 
+    # Select only high-yield cards
     if highyield:
         high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         search += f' tag:"{high_yield_tag}"'
         deck_name = f"Lerntag {lerntag} - nur high-yield"
-    elif lowyield:
-        deck_name = f"Lerntag {lerntag} - inkl. low-yield"
-    else:
+    # Exclude low-yield cards
+    elif not lowyield:
         low_yield_tag = (
             f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
         )
         search += f' -tag:"{low_yield_tag}"'
         deck_name = f"Lerntag {lerntag}"
+    # Don't exclude low-yield cards
+    else:
+        deck_name = f"Lerntag {lerntag} - inkl. low-yield"
 
     # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
     cidsToUnsuspend = col.find_cards(search)
