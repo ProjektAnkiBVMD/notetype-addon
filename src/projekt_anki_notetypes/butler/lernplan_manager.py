@@ -105,6 +105,11 @@ class LernplanManagerDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
+        
+    def closeEvent(self, event):
+        self.save_config()
+        event.ignore()
+        self.reject()
 
     def get_lerntag_list(self):
         col = mw.col
@@ -127,7 +132,7 @@ class LernplanManagerDialog(QDialog):
         lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
         return lerntag_list
 
-    def create_filtered_deck_wrapper(self):
+    def save_config(self):
         # Get the config
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
@@ -156,6 +161,11 @@ class LernplanManagerDialog(QDialog):
             datetime.datetime.today().weekday()
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        return lerntag, highyield, lowyield
+    
+    def create_filtered_deck_wrapper(self):
+        # save config + get values
+        lerntag, highyield, lowyield = self.save_config()
 
         # Create the filtered deck
         create_filtered_deck(lerntag, highyield, lowyield)
