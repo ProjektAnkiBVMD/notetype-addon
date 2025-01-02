@@ -7,6 +7,7 @@ from aqt.utils import showInfo, showWarning
 from aqt import mw
 from aqt.operations import CollectionOp
 from anki.collection import OpChanges
+from ..utils import create_backup
 
 from .utils import async_general_housekeeping, check_ankizin_installation
 from .gui import FirstSetupConfigDialog, UpdateConfigDialog
@@ -206,6 +207,11 @@ class AnkizinHelper:
 
         return OpChanges()  # to silence the collecitonOp
 
+    def handle_first_time_options_op(self):
+        CollectionOp(
+                parent=mw, op=lambda _: self.handle_first_time_options()
+            ).success(AnkizinHelper.on_success).run_in_background()
+        
     def handle_update_options(self):
         if self.suspend_new_cards:
             cids = self.find_new_cards_from_update()
@@ -215,6 +221,11 @@ class AnkizinHelper:
 
         return OpChanges()
 
+    def handle_update_options_op(self):
+        CollectionOp(
+                parent=mw, op=lambda _: self.handle_update_options()
+            ).success(AnkizinHelper.on_success).run_in_background()
+        
     @staticmethod
     def on_success(out: OpChanges) -> None:
         AnkizinHelper.general_housekeeping()  # always run this
@@ -227,9 +238,13 @@ class AnkizinHelper:
         dialog = FirstSetupConfigDialog(mw, self)
         dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            CollectionOp(
-                parent=mw, op=lambda _: self.handle_first_time_options()
-            ).success(AnkizinHelper.on_success).run_in_background()
+            mw.taskman.with_progress(
+                create_backup,
+                on_done=lambda _: self.handle_first_time_options_op(),
+                label="Erstelle Backup...",
+                immediate=True,
+            )
+            
 
     def find_new_cards_from_update(self):
         collection = mw.col
@@ -260,6 +275,10 @@ class AnkizinHelper:
         dialog = UpdateConfigDialog(mw, self)
         dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            CollectionOp(
-                parent=mw, op=lambda _: self.handle_update_options()
-            ).success(AnkizinHelper.on_success).run_in_background()
+            mw.taskman.with_progress(
+                create_backup,
+                on_done=lambda _: self.handle_update_options_op(),
+                label="Erstelle Backup...",
+                immediate=True,
+            )
+            
