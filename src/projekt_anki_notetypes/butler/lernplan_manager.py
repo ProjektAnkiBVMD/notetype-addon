@@ -5,6 +5,10 @@ from pathlib import Path
 import anki
 from aqt import mw
 from aqt.qt import *
+from anki.decks import FilteredDeckConfig
+from anki.scheduler import FilteredDeckForUpdate
+from anki.errors import FilteredDeckError
+from aqt.utils import showWarning
 
 from .utils import check_ankizin_installation
 
@@ -214,25 +218,32 @@ def create_filtered_deck(lerntag, highyield, lowyield):
     cidsToUnsuspend = col.find_cards(search)
     col.sched.unsuspend_cards(cidsToUnsuspend)
 
-    print(search)
     mw.progress.start()
-    did = col.decks.new_filtered(deck_name)
-    deck = col.decks.get(did)
+    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0) #deck_id = 0
 
-    print(f"Found cards: {len(col.find_cards(search))}")
+    deck.name = deck_name
+    config = deck.config
+    config.reschedule = 1
+    terms = [
+            FilteredDeckConfig.SearchTerm(
+                search=search,
+                limit=999,
+                order=5,  # order by added date, so its chronological (usually)
+            )
+        ]
+    
+    del config.delays[:] #v1 scheduler relict
+    del config.search_terms[:]
+    config.search_terms.extend(terms)
 
-    deck["terms"] = [[search, 999, 2]]
-
-    col.decks.save(deck)
-
-    # Force rebuild
-    col.sched.rebuild_filtered_deck(did)
     mw.progress.finish()
+    try:
+        col.sched.add_or_update_filtered_deck(deck)
+    except FilteredDeckError as e:
+        print(f"Error: {e}")
+        showWarning(f"Fehler: {e}")        
+    
     mw.reset()
-
-    card_count = len(col.decks.cids(did))
-    print(f"Created deck with {card_count} cards")
-
 
 def open_lernplan_manager(self):
     # Check if Ankizin is installed

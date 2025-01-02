@@ -43,7 +43,7 @@ def async_general_housekeeping() -> None:
         return empty_cards_report
 
     QueryOp(parent=aqt.mw, op=op, success=on_success).with_progress(
-        f"Paar finale Änderungen noch..."
+        f"Finale Änderungen werden durchgeführt..."
     ).run_in_background()
 
 
