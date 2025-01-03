@@ -21,7 +21,8 @@ class LernplanManagerDialog(QDialog):
         self.setWindowTitle("Lernplan-Manager")
 
         main_layout = QHBoxLayout(self)
-
+        main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+    
         # Get the config
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
@@ -83,11 +84,12 @@ class LernplanManagerDialog(QDialog):
             "Lerntag-Stapel jeden Tag automatisch erstellen"
         )
         self.autocreate_button.setChecked(autocreate)
+        self.autocreate_button.toggled.connect(self.toggle_weekdays)
         right_layout.addWidget(self.autocreate_button)
 
         # WOCHENTAGE AUSWÄHLEN
         right_layout.addSpacing(10)
-        weekdays = QGroupBox("Wochentage für den Lernplan:")
+        self.weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
         for weekday, check in zip(
@@ -97,8 +99,9 @@ class LernplanManagerDialog(QDialog):
             button.setChecked(check)
             self.weekday_buttons.append(button)
             weekdays_layout.addWidget(button)
-        weekdays.setLayout(weekdays_layout)
-        right_layout.addWidget(weekdays)
+        self.weekdays.setLayout(weekdays_layout)
+        self.weekdays.setVisible(autocreate)
+        right_layout.addWidget(self.weekdays)
 
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
@@ -111,6 +114,13 @@ class LernplanManagerDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
+       
+       
+    def toggle_weekdays(self, checked):
+        self.weekdays.setVisible(checked)
+        self.updateGeometry()
+        self.resize(0, 0)
+        self.adjustSize()
         
     def closeEvent(self, event):
         self.save_config()
@@ -251,5 +261,5 @@ def open_lernplan_manager(self):
         return
 
     dialog = LernplanManagerDialog(mw)
-    dialog.setFixedSize(dialog.sizeHint())
+    #dialog.setFixedSize(dialog.sizeHint())
     dialog.exec()
