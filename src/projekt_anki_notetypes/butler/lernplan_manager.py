@@ -10,7 +10,7 @@ from anki.scheduler import FilteredDeckForUpdate
 from anki.errors import FilteredDeckError
 from aqt.utils import showWarning
 
-from .utils import check_ankizin_installation
+from .utils import check_ankizin_installation, create_filtered_deck, get_ankizin_version_string
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
@@ -84,7 +84,7 @@ class LernplanManagerDialog(QDialog):
             "Lerntag-Stapel jeden Tag automatisch erstellen"
         )
         self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.toggled.connect(self.toggle_weekdays)
+        self.autocreate_button.toggled.connect(self.toggle_weekdays)  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
         # WOCHENTAGE AUSWÄHLEN
@@ -109,7 +109,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(
             confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
         )
-        confirm_btn.clicked.connect(self.create_filtered_deck_wrapper)
+        confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
 
         main_layout.addLayout(right_layout)
 
@@ -179,31 +179,21 @@ class LernplanManagerDialog(QDialog):
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return lerntag, highyield, lowyield
     
-    def create_filtered_deck_wrapper(self):
+    def create_lerntag_deck_wrapper(self):
         # save config + get values
         lerntag, highyield, lowyield = self.save_config()
 
         # Create the filtered deck
-        create_filtered_deck(lerntag, highyield, lowyield)
+        create_lerntag_deck(lerntag, highyield, lowyield)
         self.accept()
 
 
-def create_filtered_deck(lerntag, highyield, lowyield):
+def create_lerntag_deck(lerntag, highyield, lowyield):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
 
-    # Determine the latest Ankizin_v version dynamically
-    pattern = re.compile(r"#Ankizin_v(\d+)::")
-    versions = []
-    for tag in col.tags.all():
-        match = pattern.match(tag)
-        if match:
-            versions.append(int(match.group(1)))
-    if versions:
-        latest_version = f"v{max(versions)}"
-    else:
-        latest_version = "vAnkihub"
+    latest_version = get_ankizin_version_string()
 
     tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'tag:"{tag_pattern}"')
@@ -224,36 +214,7 @@ def create_filtered_deck(lerntag, highyield, lowyield):
     else:
         deck_name = f"Lerntag {lerntag} - inkl. low-yield"
 
-    # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
-    cidsToUnsuspend = col.find_cards(search)
-    col.sched.unsuspend_cards(cidsToUnsuspend)
-
-    mw.progress.start()
-    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0) #deck_id = 0
-
-    deck.name = deck_name
-    config = deck.config
-    config.reschedule = 1
-    terms = [
-            FilteredDeckConfig.SearchTerm(
-                search=search,
-                limit=999,
-                order=5,  # order by added date, so its chronological (usually)
-            )
-        ]
-    
-    del config.delays[:] #v1 scheduler relict
-    del config.search_terms[:]
-    config.search_terms.extend(terms)
-
-    mw.progress.finish()
-    try:
-        col.sched.add_or_update_filtered_deck(deck)
-    except FilteredDeckError as e:
-        print(f"Error: {e}")
-        showWarning(f"Fehler: {e}")        
-    
-    mw.reset()
+    create_filtered_deck(deck_name, search)
 
 def open_lernplan_manager(self):
     # Check if Ankizin is installed

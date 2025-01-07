@@ -1,12 +1,17 @@
+import webbrowser
+import aqt
+import anki
+import re
+
+from aqt import mw
 from aqt.qt import *
 from aqt.operations import QueryOp, CollectionOp
 from anki.collection import EmptyCardsReport, OpChanges
 from aqt.emptycards import EmptyCardsDialog
-from aqt.utils import showInfo, askUser
-
-import webbrowser
-import aqt
-
+from aqt.utils import showInfo, askUser, showWarning
+from anki.decks import FilteredDeckConfig
+from anki.scheduler import FilteredDeckForUpdate
+from anki.errors import FilteredDeckError
 
 def on_success(out: OpChanges) -> None:
     showInfo("Fertig! Viel Spaß mit Ankizin!")
@@ -76,3 +81,57 @@ def check_ankizin_installation():
         ):
             webbrowser.open("https://rebrand.ly/ankizin")
     return has_ankizin
+
+def get_ankizin_version_string():
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+    
+    # Determine the latest Ankizin_v version dynamically
+    pattern = re.compile(r"#Ankizin_v(\d+)::")
+    versions = []
+    for tag in col.tags.all():
+        match = pattern.match(tag)
+        if match:
+            versions.append(int(match.group(1)))
+    if versions:
+        latest_version = f"v{max(versions)}"
+    else:
+        latest_version = "vAnkihub"
+    return latest_version
+
+def create_filtered_deck(deck_name, search):
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+    
+    # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
+    cidsToUnsuspend = col.find_cards(search)
+    col.sched.unsuspend_cards(cidsToUnsuspend)
+
+    mw.progress.start()
+    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0) #deck_id = 0
+
+    deck.name = deck_name
+    config = deck.config
+    config.reschedule = 1
+    terms = [
+            FilteredDeckConfig.SearchTerm(
+                search=search,
+                limit=999,
+                order=5,  # order by added date, so its chronological (usually)
+            )
+        ]
+    
+    del config.delays[:] #v1 scheduler relict
+    del config.search_terms[:]
+    config.search_terms.extend(terms)
+
+    mw.progress.finish()
+    try:
+        col.sched.add_or_update_filtered_deck(deck)
+    except FilteredDeckError as e:
+        print(f"Error: {e}")
+        showWarning(f"Error: {e}")        
+    
+    mw.reset()
