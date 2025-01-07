@@ -4,7 +4,7 @@ from aqt.qt import *
 from anki import hooks
 import datetime
 from pathlib import Path
-from .lernplan_manager import create_filtered_deck
+from .lernplan_manager import create_lerntag_deck
 
 from .browser import filtered_deck_hk
 
@@ -53,7 +53,7 @@ def lernplan_auto_create():
         lowyield = lernplan_conf.get("lowyield", False)
 
         # Create the filtered deck
-        create_filtered_deck(lerntag, highyield, lowyield)
+        create_lerntag_deck(lerntag, highyield, lowyield)
         print("Lernplan updated")
 
     else:
