@@ -13,6 +13,8 @@ from .utils import create_filtered_deck, get_ankizin_version_string
 
 def filtered_deck_hk(_sidebar: "SidebarTreeView",  menu: QMenu, item: SidebarItem, _index: QModelIndex):
     if item.item_type == SidebarItemType.TAG:
+        if not item.full_name.startswith("#Ankizin"):
+            return
         menu.addSeparator()                
         menu.addAction("Ankizin: Auswahlstapel aus Schlagwort erstellen", 
                        lambda: create_dyn_deck_from_tag(item, False))
