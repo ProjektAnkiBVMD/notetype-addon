@@ -95,7 +95,7 @@ class LernplanManagerDialog(QDialog):
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
         self.autocreate_previous_button = QCheckBox(
-            "vorherige Lerntag-Stapel behalten (unter <code>Vorherige Lerntage</code>)"
+            "vorherige Lerntag-Stapel behalten (unter !VORHERIGE_LERNTAGE)"
         )
         self.autocreate_previous_button.setChecked(True)
         right_layout.addWidget(self.autocreate_previous_button)
@@ -210,11 +210,13 @@ class LernplanManagerDialog(QDialog):
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):
     for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
-            str(i).zfill(3), highyield, lowyield, "Vorherige Lerntage"
+            str(i).zfill(3), highyield, lowyield, "!VORHERIGE_LERNTAGE"
         )
 
 
-def create_lerntag_deck(lerntag, highyield, lowyield, deck_name_prefix=None):
+def create_lerntag_deck(
+    lerntag, highyield, lowyield, deck_name_prefix: str = None
+):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -223,22 +225,23 @@ def create_lerntag_deck(lerntag, highyield, lowyield, deck_name_prefix=None):
 
     tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'tag:"{tag_pattern}"')
+    deck_name = "Lerntag " if deck_name_prefix else "!LERNTAG "
 
     # Select only high-yield cards
     if highyield:
         high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         search += f' tag:"{high_yield_tag}"'
-        deck_name = f"Lerntag {lerntag} - nur high-yield"
+        deck_name += f"{lerntag} - high-yield"
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tag = (
             f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
         )
         search += f' -tag:"{low_yield_tag}"'
-        deck_name = f"Lerntag {lerntag}"
+        deck_name += f"{lerntag}"
     # Don't exclude low-yield cards
     else:
-        deck_name = f"Lerntag {lerntag} - inkl. low-yield"
+        deck_name += f"{lerntag} - inkl. low-yield"
 
     if deck_name_prefix:
         deck_name = f"{deck_name_prefix}::{deck_name}"

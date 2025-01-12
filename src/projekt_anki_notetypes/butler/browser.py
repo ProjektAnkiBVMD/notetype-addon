@@ -47,12 +47,12 @@ def create_dyn_deck_from_tag(
 
     search = col.build_search_string(SearchNode(tag=item.full_name))
     deck_name = format_deck_name(item.name)
-    
+
     if high_yield:
         ankizin_version = get_ankizin_version_string()
         high_yield_tag = f"#Ankizin_{ankizin_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         search += f' tag:"{high_yield_tag}"'
-        deck_name = "high-yield " + deck_name
+        deck_name += " - high-yield"
 
     create_filtered_deck(deck_name, search, unsuspend)
 
