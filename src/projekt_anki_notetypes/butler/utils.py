@@ -100,14 +100,15 @@ def get_ankizin_version_string():
         latest_version = "vAnkihub"
     return latest_version
 
-def create_filtered_deck(deck_name, search):
+def create_filtered_deck(deck_name, search, unsuspend=True):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
     
-    # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
-    cidsToUnsuspend = col.find_cards(search)
-    col.sched.unsuspend_cards(cidsToUnsuspend)
+    if unsuspend:
+        # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
+        cidsToUnsuspend = col.find_cards(search)
+        col.sched.unsuspend_cards(cidsToUnsuspend)
 
     mw.progress.start()
     deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0) #deck_id = 0

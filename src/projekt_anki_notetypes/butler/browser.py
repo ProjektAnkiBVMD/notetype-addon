@@ -18,11 +18,13 @@ def filtered_deck_hk(_sidebar: "SidebarTreeView",  menu: QMenu, item: SidebarIte
         menu.addSeparator()                
         menu.addAction("Ankizin: Auswahlstapel aus Schlagwort erstellen", 
                        lambda: create_dyn_deck_from_tag(item, False))
-        menu.addAction("Ankizin: Auswahlstapel aus High-yield Inhalten erstellen", 
+        menu.addAction("Ankizin: Auswahlstapel aus high-yield Inhalten erstellen", 
                        lambda: create_dyn_deck_from_tag(item, True))
+        menu.addAction("Ankizin: Auswahlstapel aus eingesetzten Inhalten erstellen", 
+                       lambda: create_dyn_deck_from_tag(item, False, unsuspend = False))
 
 
-def create_dyn_deck_from_tag(item: SidebarItem, high_yield = False):
+def create_dyn_deck_from_tag(item: SidebarItem, high_yield = False, unsuspend = True):
     if not item.full_name or len(item.full_name) < 2:
         return
 
@@ -36,9 +38,8 @@ def create_dyn_deck_from_tag(item: SidebarItem, high_yield = False):
         ankizin_version = get_ankizin_version_string()
         high_yield_tag = f"#Ankizin_{ankizin_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         search += f' tag:"{high_yield_tag}"'
-        deck_name = "High-yield " + deck_name
-        
-    create_filtered_deck(deck_name, search)
+        deck_name = "high-yield " + deck_name
+    create_filtered_deck(deck_name, search, unsuspend)
 
 def format_deck_name(tagName: str):
     pieces = tagName.split("_")
