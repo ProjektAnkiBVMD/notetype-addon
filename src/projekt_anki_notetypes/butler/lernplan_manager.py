@@ -40,6 +40,7 @@ class LernplanManagerDialog(QDialog):
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
             autocreate = lernplan_conf.get("autocreate", False)
+            autocreate_previous = lernplan_conf.get("autocreate_previous", True)
             wochentage = lernplan_conf.get("wochentage", [False] * 7)
 
         # Logo
@@ -97,7 +98,7 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_previous_button = QCheckBox(
             "vorherige Lerntag-Stapel behalten (unter !VORHERIGE_LERNTAGE)"
         )
-        self.autocreate_previous_button.setChecked(True)
+        self.autocreate_previous_button.setChecked(autocreate_previous)
         right_layout.addWidget(self.autocreate_previous_button)
 
         # WOCHENTAGE AUSWÄHLEN
