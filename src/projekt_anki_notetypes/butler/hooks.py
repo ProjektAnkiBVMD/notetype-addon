@@ -4,7 +4,7 @@ from aqt.qt import *
 from anki import hooks
 import datetime
 from pathlib import Path
-from .lernplan_manager import create_lerntag_deck
+from .lernplan_manager import create_lerntag_deck, create_previous_lerntag_decks
 
 from .browser import filtered_deck_hk
 
@@ -54,6 +54,11 @@ def lernplan_auto_create():
 
         # Create the filtered deck
         create_lerntag_deck(lerntag, highyield, lowyield)
+
+        # Create the previous filtered decks if necessary
+        if lernplan_conf.get("autocreate_previous", False):
+            create_previous_lerntag_decks(lerntag, highyield, lowyield)
+
         print("Lernplan updated")
 
     else:

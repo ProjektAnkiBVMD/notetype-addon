@@ -87,6 +87,13 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_button.toggled.connect(self.toggle_weekdays)  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
+        # AUTOCREATE PREVIOUS LERNTAG DECK
+        self.autocreate_previous_button = QCheckBox(
+            "vorherige Lerntag-Stapel behalten (unter <code>Vorherige Lerntage</code>)"
+        )
+        self.autocreate_previous_button.setChecked(True)
+        right_layout.addWidget(self.autocreate_previous_button)
+
         # WOCHENTAGE AUSWÄHLEN
         right_layout.addSpacing(10)
         self.weekdays = QGroupBox("Wochentage für den Lernplan:")
@@ -160,6 +167,7 @@ class LernplanManagerDialog(QDialog):
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield = self.highyield_button.isChecked()
         lowyield = self.lowyield_button.isChecked()
+        autocreate_previous = self.autocreate_previous_button.isChecked()
 
         # Save the config
         lernplan_conf["lerntag"] = lerntag
@@ -167,6 +175,7 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
+        lernplan_conf["autocreate_previous"] = autocreate_previous
         lernplan_conf["wochentage"] = [
             button.isChecked() for button in self.weekday_buttons
         ]
@@ -177,18 +186,30 @@ class LernplanManagerDialog(QDialog):
             datetime.datetime.today().weekday()
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return lerntag, highyield, lowyield
+        return lerntag, highyield, lowyield, autocreate_previous
     
     def create_lerntag_deck_wrapper(self):
         # save config + get values
-        lerntag, highyield, lowyield = self.save_config()
+        lerntag, highyield, lowyield, autocreate_previous = self.save_config()
 
         # Create the filtered deck
         create_lerntag_deck(lerntag, highyield, lowyield)
+
+        # Create the previous filtered decks if necessary
+        if autocreate_previous:
+            create_previous_lerntag_decks(lerntag, highyield, lowyield)
+
         self.accept()
 
 
-def create_lerntag_deck(lerntag, highyield, lowyield):
+def create_previous_lerntag_decks(lerntag, highyield, lowyield):
+    for i in range(int(lerntag)-1, 0, -1):
+        create_lerntag_deck(
+            str(i).zfill(3), highyield, lowyield, "Vorherige Lerntage"
+        )
+
+
+def create_lerntag_deck(lerntag, highyield, lowyield, deck_name_prefix=None):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -213,6 +234,9 @@ def create_lerntag_deck(lerntag, highyield, lowyield):
     # Don't exclude low-yield cards
     else:
         deck_name = f"Lerntag {lerntag} - inkl. low-yield"
+
+    if deck_name_prefix:
+        deck_name = f"{deck_name_prefix}::{deck_name}"
 
     create_filtered_deck(deck_name, search)
 
