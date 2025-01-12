@@ -83,7 +83,7 @@ def check_ankizin_installation():
             webbrowser.open("https://rebrand.ly/ankizin")
     return has_ankizin
 
-
+# NOTE: This function is not used in the current codebase due to missing anyward compatibility
 def get_ankizin_version_string():
     col = mw.col
     if col is None:
@@ -114,9 +114,8 @@ def create_filtered_deck(deck_name, search, unsuspend=True):
         col.sched.unsuspend_cards(cidsToUnsuspend)
 
     mw.progress.start()
-    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(
-        0
-    )  # deck_id = 0
+    # deck_id = 0
+    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0)
 
     deck.name = deck_name
     config = deck.config

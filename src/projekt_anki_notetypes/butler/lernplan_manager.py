@@ -221,22 +221,20 @@ def create_lerntag_deck(
     if col is None:
         raise Exception("collection not available")
 
-    latest_version = get_ankizin_version_string()
-
-    tag_pattern = f"#Ankizin_{latest_version}::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
+    tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'tag:"{tag_pattern}"')
     deck_name = "Lerntag " if deck_name_prefix else "!LERNTAG "
 
     # Select only high-yield cards
     if highyield:
-        high_yield_tag = f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        high_yield_tag = (
+            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        )
         search += f' tag:"{high_yield_tag}"'
         deck_name += f"{lerntag} - high-yield"
     # Exclude low-yield cards
     elif not lowyield:
-        low_yield_tag = (
-            f"#Ankizin_{latest_version}::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-        )
+        low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
         search += f' -tag:"{low_yield_tag}"'
         deck_name += f"{lerntag}"
     # Don't exclude low-yield cards
