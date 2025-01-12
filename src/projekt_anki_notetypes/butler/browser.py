@@ -26,11 +26,11 @@ def filtered_deck_hk(
             lambda: create_dyn_deck_from_tag(item, False),
         )
         menu.addAction(
-            "Ankizin: Auswahlstapel aus high-yield Inhalten erstellen",
+            "Ankizin: Auswahlstapel aus high-yield Karten erstellen",
             lambda: create_dyn_deck_from_tag(item, True),
         )
         menu.addAction(
-            "Ankizin: Auswahlstapel aus eingesetzten Inhalten erstellen",
+            "Ankizin: Auswahlstapel aus eingesetzten Karten erstellen",
             lambda: create_dyn_deck_from_tag(item, False, unsuspend=False),
         )
 

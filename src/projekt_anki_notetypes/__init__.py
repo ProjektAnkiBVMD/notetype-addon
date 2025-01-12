@@ -94,7 +94,7 @@ def maybe_show_notetypes_update_notice():
         return
 
     answer = askUserDialog(
-        title="Ankizin Notiztyp Update",
+        title="Ankizin Notiztypen-Update",
         text="Es ist eine neue Version der Ankizin Notiztypen verfügbar!<br>"
         "Du kannst dich im neuen Fenster gleich entscheiden, ob du sie herunterladen willst.<br>"
         "(Button '<code>Aktualisiere Notiztypen</code>')<br><br>"
@@ -263,7 +263,7 @@ def on_browser_will_show_context_menu(
 ) -> None:
     selected_nids = browser.selectedNotes()
     action = context_menu.addAction(
-        "Ankizin Notiztypen: Felder automatisch aufdecken",
+        "Ankizin: Felder automatisch aufdecken",
         lambda: on_auto_reveal_fields_action(browser, selected_nids),
     )
     context_menu.addAction(action)
@@ -346,14 +346,15 @@ def on_editor_will_show_context_menu(
     else:
         data = webview.page().contextMenuData()
     if data.mediaUrl().isValid():
+        menu.addSeparator()
         blur_image_action = (
             QAction(
-                "Ankizin Notiztypen: Bild nicht mehr weichzeichnen",
+                "Ankizin: Bild nicht mehr weichzeichnen",
                 menu,
             )
             if is_blur_image()
             else QAction(
-                "Ankizin Notiztypen: Bild weichzeichnen",
+                "Ankizin: Bild weichzeichnen",
                 menu,
             )
         )
@@ -362,17 +363,18 @@ def on_editor_will_show_context_menu(
 
         invert_image_action = (
             QAction(
-                "Ankizin Notiztypen: Bild nicht mehr invertieren",
+                "Ankizin: Bild nicht mehr invertieren",
                 menu,
             )
             if is_invert_image()
             else QAction(
-                "Ankizin Notiztypen: Bild invertieren",
+                "Ankizin: Bild invertieren",
                 menu,
             )
         )
         qconnect(invert_image_action.triggered, on_invert_image)
         menu.addAction(invert_image_action)
+        menu.addSeparator()
 
 
 if mw is not None:

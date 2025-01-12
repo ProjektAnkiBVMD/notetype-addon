@@ -145,7 +145,7 @@ class NotetypesConfigWindow:
 
     def _setup_window_settings(self, window: ConfigWindow):
         self.__class__.window = window
-        window.setWindowTitle("Ankizin Notiztypen")
+        window.setWindowTitle("Ankizin Notiztypen-Konfigurator")
         window.setMinimumHeight(500)
         window.setMinimumWidth(500)
 
