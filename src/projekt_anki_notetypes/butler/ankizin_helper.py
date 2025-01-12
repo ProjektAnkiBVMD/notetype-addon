@@ -209,9 +209,9 @@ class AnkizinHelper:
 
     def handle_first_time_options_op(self):
         CollectionOp(
-                parent=mw, op=lambda _: self.handle_first_time_options()
-            ).success(AnkizinHelper.on_success).run_in_background()
-        
+            parent=mw, op=lambda _: self.handle_first_time_options()
+        ).success(AnkizinHelper.on_success).run_in_background()
+
     def handle_update_options(self):
         if self.suspend_new_cards:
             cids = self.find_new_cards_from_update()
@@ -223,9 +223,9 @@ class AnkizinHelper:
 
     def handle_update_options_op(self):
         CollectionOp(
-                parent=mw, op=lambda _: self.handle_update_options()
-            ).success(AnkizinHelper.on_success).run_in_background()
-        
+            parent=mw, op=lambda _: self.handle_update_options()
+        ).success(AnkizinHelper.on_success).run_in_background()
+
     @staticmethod
     def on_success(out: OpChanges) -> None:
         AnkizinHelper.general_housekeeping()  # always run this
@@ -244,7 +244,6 @@ class AnkizinHelper:
                 label="Erstelle Backup...",
                 immediate=True,
             )
-            
 
     def find_new_cards_from_update(self):
         collection = mw.col
@@ -281,4 +280,3 @@ class AnkizinHelper:
                 label="Erstelle Backup...",
                 immediate=True,
             )
-            

@@ -35,7 +35,8 @@ class FirstSetupConfigDialog(QDialog):
 
         # Explanatory text
         info_label = QLabel(
-            "Neu bei Ankizin? Herzlich Willkommen!<br>Aller Anfang ist schwer. Um dein Leben etwas leichter zu machen, kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
+            "Neu bei Ankizin? Herzlich Willkommen!<br>"
+            "Aller Anfang ist schwer. Um dein Leben etwas leichter zu machen, kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
         )
         info_label.setWordWrap(True)
         right_layout.addWidget(info_label)
@@ -104,7 +105,8 @@ class UpdateConfigDialog(QDialog):
 
         # Explanatory text
         info_label = QLabel(
-            "Frisch eine neue Version von Ankizin heruntergeladen?<br>Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
+            "Frisch eine neue Version von Ankizin heruntergeladen?<br>"
+            "Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
         )
         info_label.setWordWrap(True)
         right_layout.addWidget(info_label)

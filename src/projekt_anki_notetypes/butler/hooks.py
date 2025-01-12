@@ -1,4 +1,3 @@
-
 from aqt import gui_hooks, mw
 from aqt.qt import *
 from anki import hooks
@@ -28,13 +27,13 @@ def lernplan_auto_create():
         ).date()
         today = datetime.datetime.today().date()
         if not last_updated < today:
-            return # Lernplan is up to date
+            return  # Lernplan is up to date
 
         # Check if this weekday is in the list of weekdays
         weekdays = lernplan_conf["wochentage"]
         today_weekday = today.weekday()
         if not weekdays[today_weekday]:
-            return # Today is not a lernplan day
+            return  # Today is not a lernplan day
 
         # Increase the Lerntag
         lerntag = int(lernplan_conf.get("lerntag", "001"))
@@ -65,8 +64,10 @@ def lernplan_auto_create():
         # Lernplan is not set up
         return None
 
+
 def profile_loaded_hk():
     lernplan_auto_create()
+
 
 def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)

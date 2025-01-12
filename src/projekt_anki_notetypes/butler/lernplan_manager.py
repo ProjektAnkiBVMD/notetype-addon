@@ -10,7 +10,11 @@ from anki.scheduler import FilteredDeckForUpdate
 from anki.errors import FilteredDeckError
 from aqt.utils import showWarning
 
-from .utils import check_ankizin_installation, create_filtered_deck, get_ankizin_version_string
+from .utils import (
+    check_ankizin_installation,
+    create_filtered_deck,
+    get_ankizin_version_string,
+)
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
@@ -22,7 +26,7 @@ class LernplanManagerDialog(QDialog):
 
         main_layout = QHBoxLayout(self)
         main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
-    
+
         # Get the config
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
@@ -84,7 +88,9 @@ class LernplanManagerDialog(QDialog):
             "Lerntag-Stapel jeden Tag automatisch erstellen"
         )
         self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.toggled.connect(self.toggle_weekdays)  # Changed signal
+        self.autocreate_button.toggled.connect(
+            self.toggle_weekdays
+        )  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
@@ -121,14 +127,13 @@ class LernplanManagerDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
-       
-       
+
     def toggle_weekdays(self, checked):
         self.weekdays.setVisible(checked)
         self.updateGeometry()
         self.resize(0, 0)
         self.adjustSize()
-        
+
     def closeEvent(self, event):
         self.save_config()
         event.ignore()
@@ -187,7 +192,7 @@ class LernplanManagerDialog(QDialog):
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return lerntag, highyield, lowyield, autocreate_previous
-    
+
     def create_lerntag_deck_wrapper(self):
         # save config + get values
         lerntag, highyield, lowyield, autocreate_previous = self.save_config()
@@ -203,7 +208,7 @@ class LernplanManagerDialog(QDialog):
 
 
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):
-    for i in range(int(lerntag)-1, 0, -1):
+    for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
             str(i).zfill(3), highyield, lowyield, "Vorherige Lerntage"
         )
@@ -240,11 +245,12 @@ def create_lerntag_deck(lerntag, highyield, lowyield, deck_name_prefix=None):
 
     create_filtered_deck(deck_name, search)
 
+
 def open_lernplan_manager(self):
     # Check if Ankizin is installed
     if not check_ankizin_installation():
         return
 
     dialog = LernplanManagerDialog(mw)
-    #dialog.setFixedSize(dialog.sizeHint())
+    # dialog.setFixedSize(dialog.sizeHint())
     dialog.exec()
