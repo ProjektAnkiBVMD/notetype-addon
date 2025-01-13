@@ -83,6 +83,7 @@ def check_ankizin_installation():
             webbrowser.open("https://rebrand.ly/ankizin")
     return has_ankizin
 
+
 # NOTE: This function is not used in the current codebase due to missing anyward compatibility
 def get_ankizin_version_string():
     col = mw.col
@@ -107,6 +108,11 @@ def create_filtered_deck(deck_name, search, unsuspend=True):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
+
+    deck_id = col.decks.id_for_name(deck_name)
+    if deck_id != None:
+        col.sched.rebuild_filtered_deck(deck_id)
+        return
 
     if unsuspend:
         # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
@@ -139,4 +145,18 @@ def create_filtered_deck(deck_name, search, unsuspend=True):
         print(f"Error: {e}")
         showWarning(f"Error: {e}")
 
+    mw.reset()
+
+
+def remove_filtered_deck(deck_id):
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    mw.progress.start()
+
+    col.sched.empty_filtered_deck(deck_id)
+    col.decks.remove([deck_id])
+
+    mw.progress.finish()
     mw.reset()

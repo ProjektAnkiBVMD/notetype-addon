@@ -13,7 +13,7 @@ from aqt.utils import showWarning
 from .utils import (
     check_ankizin_installation,
     create_filtered_deck,
-    get_ankizin_version_string,
+    remove_filtered_deck,
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
@@ -198,6 +198,9 @@ class LernplanManagerDialog(QDialog):
         # save config + get values
         lerntag, highyield, lowyield, autocreate_previous = self.save_config()
 
+        # Remove previous filtered decks
+        remove_previous_lerntag_decks()
+
         # Create the filtered deck
         create_lerntag_deck(lerntag, highyield, lowyield)
 
@@ -206,6 +209,17 @@ class LernplanManagerDialog(QDialog):
             create_previous_lerntag_decks(lerntag, highyield, lowyield)
 
         self.accept()
+
+
+def remove_previous_lerntag_decks():
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    # match only main Lerntage
+    for deck in mw.col.decks.all_names_and_ids():
+        if deck.name.startswith("!LERNTAG ") and col.decks.is_filtered(deck.id):
+            remove_filtered_deck(deck.id)
 
 
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):

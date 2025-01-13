@@ -3,7 +3,11 @@ from aqt.qt import *
 from anki import hooks
 import datetime
 from pathlib import Path
-from .lernplan_manager import create_lerntag_deck, create_previous_lerntag_decks
+from .lernplan_manager import (
+    create_lerntag_deck,
+    create_previous_lerntag_decks,
+    remove_previous_lerntag_decks,
+)
 
 from .browser import filtered_deck_hk
 
@@ -50,6 +54,9 @@ def lernplan_auto_create():
         # Get the yield settings
         highyield = lernplan_conf.get("highyield", False)
         lowyield = lernplan_conf.get("lowyield", False)
+
+        # Remove previous filtered decks
+        remove_previous_lerntag_decks()
 
         # Create the filtered deck
         create_lerntag_deck(lerntag, highyield, lowyield)
