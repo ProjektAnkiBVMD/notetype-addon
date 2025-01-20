@@ -34,7 +34,13 @@ def init_ankizin_helper(menu):
 
 
 def add_lernplan_manager(menu):
-    action = QAction("Lernplan-Manager", mw)
+    action = QAction("Lernplan-Manager (automatisch)", mw)
+    action.triggered.connect(open_lernplan_manager)
+    menu.addAction(action)
+
+
+def add_lerntag_deck_creator(menu):
+    action = QAction("spezifisches Lerntag-Deck erstellen", mw)
     action.triggered.connect(open_lernplan_manager)
     menu.addAction(action)
 
@@ -43,5 +49,6 @@ def menu_init():
     menu = get_ankizin_menu()
     menu.addSeparator()
     add_lernplan_manager(menu)
+    add_lerntag_deck_creator(menu)
     menu.addSeparator()
     init_ankizin_helper(menu)

@@ -22,7 +22,7 @@ ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 class LernplanManagerDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setWindowTitle("Lernplan-Manager")
+        self.setWindowTitle("Lernplan-Manager (automatisch)")
 
         main_layout = QHBoxLayout(self)
         main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
@@ -211,6 +211,122 @@ class LernplanManagerDialog(QDialog):
         self.accept()
 
 
+class LerntagDeckCreatorDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setWindowTitle("spezifisches Lerntag-Deck erstellen")
+
+        main_layout = QHBoxLayout(self)
+        main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+
+        # Get the config
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            lerntag = 0  # 0-indexed
+            highyield, normyield, lowyield = False, True, False
+        else:
+            lernplan_conf = conf.get("lernplan", {})
+            # config contains e.g. "035" but we want 0-indexed
+            lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
+            highyield = lernplan_conf.get("highyield", False)
+            normyield = lernplan_conf.get("normyield", True)
+            lowyield = lernplan_conf.get("lowyield", False)
+
+        # Logo
+        logo_label = QLabel()
+        logo_pixmap = QPixmap("icons:ankizin.png")
+        logo_label.setPixmap(
+            logo_pixmap.scaled(
+                100,
+                100,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+        main_layout.addWidget(logo_label)
+
+        # Right side layout
+        right_layout = QVBoxLayout()
+
+        right_layout.addWidget(QLabel("Lerntag:"))
+        self.lerntag_combo = QComboBox()
+        for number, topic in self.get_lerntag_list():
+            display_text = f"{number} - {topic.replace('_', ' ')}"
+            self.lerntag_combo.addItem(display_text, number)
+        self.lerntag_combo.setCurrentIndex(lerntag)
+        right_layout.addWidget(self.lerntag_combo)
+
+        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
+        self.highyield_button.setChecked(highyield)
+        right_layout.addWidget(self.highyield_button)
+
+        self.standard_button = QRadioButton(
+            "STANDARD Karten (high-yield und normal)"
+        )
+        self.standard_button.setChecked(normyield)
+        right_layout.addWidget(self.standard_button)
+
+        self.lowyield_button = QRadioButton(
+            "ALLE Karten (high-yield, normal UND low-yield)"
+        )
+        self.lowyield_button.setChecked(lowyield)
+        right_layout.addWidget(self.lowyield_button)
+
+        # Confirm button
+        confirm_btn = QPushButton("Stapel erstellen!")
+        confirm_btn.setFixedWidth(150)
+        right_layout.addWidget(
+            confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+        confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
+
+        main_layout.addLayout(right_layout)
+
+        self.setWindowIcon(QIcon("icons:ankizin.png"))
+
+    def toggle_weekdays(self, checked):
+        self.weekdays.setVisible(checked)
+        self.updateGeometry()
+        self.resize(0, 0)
+        self.adjustSize()
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.reject()
+
+    def get_lerntag_list(self):
+        col = mw.col
+        # match only main Lerntag tags
+        lerntag_pattern = re.compile(
+            r"#Ankizin_v(?:\d+|Ankihub)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
+        )
+        lerntag_tags = [
+            tag for tag in col.tags.all() if lerntag_pattern.match(tag)
+        ]
+
+        unique_lerntag = {}
+        for tag in lerntag_tags:
+            match = lerntag_pattern.match(tag)
+            if match:
+                number, topic = match.group(1), match.group(2)
+                if number not in unique_lerntag:
+                    unique_lerntag[number] = topic
+
+        lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
+        return lerntag_list
+
+    def create_lerntag_deck_wrapper(self):
+        # save config + get values
+        lerntag = self.lerntag_combo.currentData().zfill(3)
+        highyield = self.highyield_button.isChecked()
+        lowyield = self.lowyield_button.isChecked()
+
+        # Create the filtered deck
+        create_lerntag_deck(lerntag, highyield, lowyield, "Lerntag ")
+
+        self.accept()
+
+
 def remove_previous_lerntag_decks():
     col = mw.col
     if col is None:
@@ -268,5 +384,15 @@ def open_lernplan_manager(self):
         return
 
     dialog = LernplanManagerDialog(mw)
+    # dialog.setFixedSize(dialog.sizeHint())
+    dialog.exec()
+
+
+def open_lerntag_deck_creator(self):
+    # Check if Ankizin is installed
+    if not check_ankizin_installation():
+        return
+
+    dialog = LerntagDeckCreatorDialog(mw)
     # dialog.setFixedSize(dialog.sizeHint())
     dialog.exec()
