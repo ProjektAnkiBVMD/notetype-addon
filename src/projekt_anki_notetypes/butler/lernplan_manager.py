@@ -125,7 +125,6 @@ class LernplanManagerDialog(QDialog):
             self.weekday_buttons.append(button)
             weekdays_layout.addWidget(button)
         self.weekdays.setLayout(weekdays_layout)
-        self.weekdays.setVisible(autocreate)
         right_layout.addWidget(self.weekdays)
 
         # Confirm button
