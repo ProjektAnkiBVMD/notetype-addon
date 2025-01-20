@@ -59,7 +59,19 @@ class LernplanManagerDialog(QDialog):
         # Right side layout
         right_layout = QVBoxLayout()
 
-        right_layout.addWidget(QLabel("Lerntag:"))
+        # EXPLANATION
+        right_layout.addWidget(
+            QLabel(
+                "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag erstellen.<br>"
+                "Du kannst wählen, ob nur HIGH-YIELD Karten oder auch normale und low-yield Karten enthalten sein sollen.<br>"
+                "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Stapel.<br>"
+                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach !VORHERIGE_LERNTAGE verschoben werden sollen."
+            )
+        )
+        right_layout.addSpacing(30)
+
+        # LERNTAG SELECTION MENU
+        right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
         self.lerntag_combo = QComboBox()
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
@@ -96,7 +108,7 @@ class LernplanManagerDialog(QDialog):
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
         self.autocreate_previous_button = QCheckBox(
-            "vorherige Lerntag-Stapel behalten (unter !VORHERIGE_LERNTAGE)"
+            "vorherige Lerntag-Stapel nach !VORHERIGE_LERNTAGE verschieben (empfohlen)"
         )
         self.autocreate_previous_button.setChecked(autocreate_previous)
         right_layout.addWidget(self.autocreate_previous_button)
@@ -248,7 +260,16 @@ class LerntagDeckCreatorDialog(QDialog):
         # Right side layout
         right_layout = QVBoxLayout()
 
-        right_layout.addWidget(QLabel("Lerntag:"))
+        # EXPLANATION
+        right_layout.addWidget(
+            QLabel(
+                "Erstelle einen spezifischen Lerntag-Stapel unabhängig vom automatischen Lernplan-Managers."
+            )
+        )
+        right_layout.addSpacing(30)
+
+        # LERNTAG SELECTION MENU
+        right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
         self.lerntag_combo = QComboBox()
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
@@ -283,12 +304,6 @@ class LerntagDeckCreatorDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
-
-    def toggle_weekdays(self, checked):
-        self.weekdays.setVisible(checked)
-        self.updateGeometry()
-        self.resize(0, 0)
-        self.adjustSize()
 
     def closeEvent(self, event):
         event.ignore()
