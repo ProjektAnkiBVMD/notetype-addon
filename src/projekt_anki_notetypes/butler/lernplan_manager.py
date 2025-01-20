@@ -83,8 +83,13 @@ class LernplanManagerDialog(QDialog):
         )  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
+        # CREATE FRAME TO HOLD SETTINGS
+        self.settings_frame = QFrame()
+        self.settings_frame.setVisible(autocreate)
+        settings_layout = QVBoxLayout()
+
         # WOCHENTAGE AUSWÄHLEN
-        right_layout.addSpacing(10)
+        settings_layout.addSpacing(10)
         self.weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
@@ -96,71 +101,60 @@ class LernplanManagerDialog(QDialog):
             self.weekday_buttons.append(button)
             weekdays_layout.addWidget(button)
         self.weekdays.setLayout(weekdays_layout)
-        self.weekdays.setVisible(autocreate)
-        right_layout.addWidget(self.weekdays)
+        settings_layout.addWidget(self.weekdays)
 
         # LERNTAG SELECTION MENU
-        right_layout.addSpacing(10)
+        settings_layout.addSpacing(10)
         self.lerntag_combo_label = QLabel("<b>Aktueller Lerntag:</b>")
-        self.lerntag_combo_label.setVisible(autocreate)
-        right_layout.addWidget(self.lerntag_combo_label)
+        settings_layout.addWidget(self.lerntag_combo_label)
 
         self.lerntag_combo = QComboBox()
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
         self.lerntag_combo.setCurrentIndex(lerntag)
-        self.lerntag_combo.setVisible(autocreate)
-        right_layout.addWidget(self.lerntag_combo)
+        settings_layout.addWidget(self.lerntag_combo)
 
         self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
         self.highyield_button.setChecked(highyield)
-        self.highyield_button.setVisible(autocreate)
-        right_layout.addWidget(self.highyield_button)
+        settings_layout.addWidget(self.highyield_button)
 
         self.standard_button = QRadioButton(
             "STANDARD Karten (high-yield und normal)"
         )
         self.standard_button.setChecked(normyield)
-        self.standard_button.setVisible(autocreate)
-        right_layout.addWidget(self.standard_button)
+        settings_layout.addWidget(self.standard_button)
 
         self.lowyield_button = QRadioButton(
             "ALLE Karten (high-yield, normal UND low-yield)"
         )
         self.lowyield_button.setChecked(lowyield)
-        self.lowyield_button.setVisible(autocreate)
-        right_layout.addWidget(self.lowyield_button)
+        settings_layout.addWidget(self.lowyield_button)
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
-        right_layout.addSpacing(10)
+        settings_layout.addSpacing(10)
         self.autocreate_previous_button = QCheckBox(
-            "vorherige Lerntag-Auswahlstapel nach einem Tag nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
+            "Lerntag-Auswahlstapel nach einem Tag nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
         )
         self.autocreate_previous_button.setChecked(autocreate_previous)
-        self.autocreate_previous_button.setVisible(autocreate)
-        right_layout.addWidget(self.autocreate_previous_button)
+        settings_layout.addWidget(self.autocreate_previous_button)
 
         # Confirm button
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
-        right_layout.addWidget(
+        settings_layout.addWidget(
             confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
         )
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
 
+        self.settings_frame.setLayout(settings_layout)
+        right_layout.addWidget(self.settings_frame)
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
 
     def toggle_settings(self, checked):
-        self.weekdays.setVisible(checked)
-        self.lerntag_combo_label.setVisible(checked)
-        self.lerntag_combo.setVisible(checked)
-        self.highyield_button.setVisible(checked)
-        self.standard_button.setVisible(checked)
-        self.lowyield_button.setVisible(checked)
-        self.autocreate_previous_button.setVisible(checked)
+        self.settings_frame.setVisible(checked)
         self.updateGeometry()
         self.resize(0, 0)
         self.adjustSize()
