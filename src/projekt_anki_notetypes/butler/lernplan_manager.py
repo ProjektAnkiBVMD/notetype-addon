@@ -84,6 +84,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(self.autocreate_button)
 
         # WOCHENTAGE AUSWÄHLEN
+        right_layout.addSpacing(10)
         self.weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
@@ -99,7 +100,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(self.weekdays)
 
         # LERNTAG SELECTION MENU
-        right_layout.addSpacing(20)
+        right_layout.addSpacing(10)
         self.lerntag_combo_label = QLabel("<b>Aktueller Lerntag:</b>")
         self.lerntag_combo_label.setVisible(autocreate)
         right_layout.addWidget(self.lerntag_combo_label)
@@ -132,6 +133,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(self.lowyield_button)
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
+        right_layout.addSpacing(10)
         self.autocreate_previous_button = QCheckBox(
             "vorherige Lerntag-Auswahlstapel nach einem Tag nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
         )
@@ -141,7 +143,7 @@ class LernplanManagerDialog(QDialog):
 
         # Confirm button
         confirm_btn = QPushButton("Speichern und loslernen!")
-        confirm_btn.setFixedWidth(150)
+        confirm_btn.setFixedWidth(200)
         right_layout.addWidget(
             confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
         )
