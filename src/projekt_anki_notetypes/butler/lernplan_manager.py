@@ -87,6 +87,7 @@ class LernplanManagerDialog(QDialog):
         self.settings_frame = QFrame()
         self.settings_frame.setVisible(autocreate)
         settings_layout = QVBoxLayout()
+        settings_layout.setContentsMargins(0, 0, 0, 0)
 
         # WOCHENTAGE AUSWÄHLEN
         settings_layout.addSpacing(10)
