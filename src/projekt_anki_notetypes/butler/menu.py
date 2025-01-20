@@ -9,7 +9,7 @@ from aqt.utils import showInfo
 from aqt import mw
 
 from .ankizin_helper import AnkizinHelper
-from .lernplan_manager import open_lernplan_manager
+from .lernplan_manager import open_lernplan_manager, open_lerntag_deck_creator
 
 from ..gui.projekt_anki_menu import get_ankizin_menu
 
@@ -41,7 +41,7 @@ def add_lernplan_manager(menu):
 
 def add_lerntag_deck_creator(menu):
     action = QAction("spezifisches Lerntag-Deck erstellen", mw)
-    action.triggered.connect(open_lernplan_manager)
+    action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
 
