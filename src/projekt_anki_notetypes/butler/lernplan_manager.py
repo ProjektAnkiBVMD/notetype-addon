@@ -72,48 +72,18 @@ class LernplanManagerDialog(QDialog):
         )
         right_layout.addSpacing(20)
 
-        # LERNTAG SELECTION MENU
-        right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
-        self.lerntag_combo = QComboBox()
-        for number, topic in self.get_lerntag_list():
-            display_text = f"{number} - {topic.replace('_', ' ')}"
-            self.lerntag_combo.addItem(display_text, number)
-        self.lerntag_combo.setCurrentIndex(lerntag)
-        right_layout.addWidget(self.lerntag_combo)
-
-        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
-        self.highyield_button.setChecked(highyield)
-        right_layout.addWidget(self.highyield_button)
-
-        self.standard_button = QRadioButton(
-            "STANDARD Karten (high-yield und normal)"
-        )
-        self.standard_button.setChecked(normyield)
-        right_layout.addWidget(self.standard_button)
-
-        self.lowyield_button = QRadioButton(
-            "ALLE Karten (high-yield, normal UND low-yield)"
-        )
-        self.lowyield_button.setChecked(lowyield)
-        right_layout.addWidget(self.lowyield_button)
-
         # AUTOCREATE LERNTAG DECK
-        right_layout.addSpacing(30)
+        right_layout.addWidget(QLabel("<b>Lernplan-Manager aktivieren:</b>"))
         self.autocreate_button = QCheckBox(
             "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
         )
         self.autocreate_button.setChecked(autocreate)
+        self.autocreate_button.toggled.connect(
+            self.toggle_settings
+        )  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
-        # AUTOCREATE PREVIOUS LERNTAG DECK
-        self.autocreate_previous_button = QCheckBox(
-            "vorherige Lerntag-Auswahlstapel nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
-        )
-        self.autocreate_previous_button.setChecked(autocreate_previous)
-        right_layout.addWidget(self.autocreate_previous_button)
-
         # WOCHENTAGE AUSWÄHLEN
-        right_layout.addSpacing(10)
         self.weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
@@ -125,10 +95,52 @@ class LernplanManagerDialog(QDialog):
             self.weekday_buttons.append(button)
             weekdays_layout.addWidget(button)
         self.weekdays.setLayout(weekdays_layout)
+        self.weekdays.setVisible(autocreate)
         right_layout.addWidget(self.weekdays)
 
+        # LERNTAG SELECTION MENU
+        right_layout.addSpacing(20)
+        self.lerntag_combo_label = QLabel("<b>Aktueller Lerntag:</b>")
+        self.lerntag_combo_label.setVisible(autocreate)
+        right_layout.addWidget(self.lerntag_combo_label)
+
+        self.lerntag_combo = QComboBox()
+        for number, topic in self.get_lerntag_list():
+            display_text = f"{number} - {topic.replace('_', ' ')}"
+            self.lerntag_combo.addItem(display_text, number)
+        self.lerntag_combo.setCurrentIndex(lerntag)
+        self.lerntag_combo.setVisible(autocreate)
+        right_layout.addWidget(self.lerntag_combo)
+
+        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
+        self.highyield_button.setChecked(highyield)
+        self.highyield_button.setVisible(autocreate)
+        right_layout.addWidget(self.highyield_button)
+
+        self.standard_button = QRadioButton(
+            "STANDARD Karten (high-yield und normal)"
+        )
+        self.standard_button.setChecked(normyield)
+        self.standard_button.setVisible(autocreate)
+        right_layout.addWidget(self.standard_button)
+
+        self.lowyield_button = QRadioButton(
+            "ALLE Karten (high-yield, normal UND low-yield)"
+        )
+        self.lowyield_button.setChecked(lowyield)
+        self.lowyield_button.setVisible(autocreate)
+        right_layout.addWidget(self.lowyield_button)
+
+        # AUTOCREATE PREVIOUS LERNTAG DECK
+        self.autocreate_previous_button = QCheckBox(
+            "vorherige Lerntag-Auswahlstapel nach einem Tag nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
+        )
+        self.autocreate_previous_button.setChecked(autocreate_previous)
+        self.autocreate_previous_button.setVisible(autocreate)
+        right_layout.addWidget(self.autocreate_previous_button)
+
         # Confirm button
-        confirm_btn = QPushButton("Stapel erstellen!")
+        confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(150)
         right_layout.addWidget(
             confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
@@ -138,6 +150,18 @@ class LernplanManagerDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
+
+    def toggle_settings(self, checked):
+        self.weekdays.setVisible(checked)
+        self.lerntag_combo_label.setVisible(checked)
+        self.lerntag_combo.setVisible(checked)
+        self.highyield_button.setVisible(checked)
+        self.standard_button.setVisible(checked)
+        self.lowyield_button.setVisible(checked)
+        self.autocreate_previous_button.setVisible(checked)
+        self.updateGeometry()
+        self.resize(0, 0)
+        self.adjustSize()
 
     def closeEvent(self, event):
         self.save_config()
