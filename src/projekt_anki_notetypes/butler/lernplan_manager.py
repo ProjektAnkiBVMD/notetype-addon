@@ -41,7 +41,9 @@ class LernplanManagerDialog(QDialog):
             lowyield = lernplan_conf.get("lowyield", False)
             autocreate = lernplan_conf.get("autocreate", False)
             autocreate_previous = lernplan_conf.get("autocreate_previous", True)
-            wochentage = lernplan_conf.get("wochentage", [False] * 7)
+            wochentage = lernplan_conf.get(
+                "wochentage", [True] * 5 + [False] * 2
+            )
 
         # Logo
         logo_label = QLabel()
@@ -62,13 +64,13 @@ class LernplanManagerDialog(QDialog):
         # EXPLANATION
         right_layout.addWidget(
             QLabel(
-                "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag erstellen.<br>"
-                "Du kannst wählen, ob nur HIGH-YIELD Karten oder auch normale und low-yield Karten enthalten sein sollen.<br>"
-                "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Stapel.<br>"
-                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach !VORHERIGE_LERNTAGE verschoben werden sollen."
+                "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag-Auswahlstapel erstellen.<br>"
+                "Du kannst wählen, ob nur HIGH-YIELD Karten oder auch normale und low-yield Karten<br>enthalten sein sollen.<br>"
+                "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
+                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen."
             )
         )
-        right_layout.addSpacing(30)
+        right_layout.addSpacing(20)
 
         # LERNTAG SELECTION MENU
         right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
@@ -98,17 +100,14 @@ class LernplanManagerDialog(QDialog):
         # AUTOCREATE LERNTAG DECK
         right_layout.addSpacing(30)
         self.autocreate_button = QCheckBox(
-            "Lerntag-Stapel jeden Tag automatisch erstellen"
+            "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
         )
         self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.toggled.connect(
-            self.toggle_weekdays
-        )  # Changed signal
         right_layout.addWidget(self.autocreate_button)
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
         self.autocreate_previous_button = QCheckBox(
-            "vorherige Lerntag-Stapel nach !VORHERIGE_LERNTAGE verschieben (empfohlen)"
+            "vorherige Lerntag-Auswahlstapel nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
         )
         self.autocreate_previous_button.setChecked(autocreate_previous)
         right_layout.addWidget(self.autocreate_previous_button)
@@ -140,12 +139,6 @@ class LernplanManagerDialog(QDialog):
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
-
-    def toggle_weekdays(self, checked):
-        self.weekdays.setVisible(checked)
-        self.updateGeometry()
-        self.resize(0, 0)
-        self.adjustSize()
 
     def closeEvent(self, event):
         self.save_config()
@@ -226,7 +219,7 @@ class LernplanManagerDialog(QDialog):
 class LerntagDeckCreatorDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setWindowTitle("spezifisches Lerntag-Deck erstellen")
+        self.setWindowTitle("Lerntag-Auswahlstapel erstellen")
 
         main_layout = QHBoxLayout(self)
         main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
@@ -263,10 +256,10 @@ class LerntagDeckCreatorDialog(QDialog):
         # EXPLANATION
         right_layout.addWidget(
             QLabel(
-                "Erstelle einen spezifischen Lerntag-Stapel unabhängig vom automatischen Lernplan-Managers."
+                "Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom<br>automatischen Lernplan-Manager."
             )
         )
-        right_layout.addSpacing(30)
+        right_layout.addSpacing(20)
 
         # LERNTAG SELECTION MENU
         right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
@@ -356,7 +349,7 @@ def remove_previous_lerntag_decks():
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):
     for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
-            str(i).zfill(3), highyield, lowyield, "!VORHERIGE_LERNTAGE"
+            str(i).zfill(3), highyield, lowyield, "!VORHERIGE LERNTAGE"
         )
 
 

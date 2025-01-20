@@ -22,15 +22,15 @@ def filtered_deck_hk(
             return
         menu.addSeparator()
         menu.addAction(
-            "Ankizin: Auswahlstapel aus Schlagwort erstellen",
+            "Ankizin: Auswahlstapel aus Schlagwort erstellen (alle einsetzen)",
             lambda: create_dyn_deck_from_tag(item, False),
         )
         menu.addAction(
-            "Ankizin: Auswahlstapel aus high-yield Karten erstellen",
+            "Ankizin: Auswahlstapel aus high-yield Karten erstellen (alle einsetzen)",
             lambda: create_dyn_deck_from_tag(item, True),
         )
         menu.addAction(
-            "Ankizin: Auswahlstapel aus eingesetzten Karten erstellen",
+            "Ankizin: Auswahlstapel nur aus eingesetzten Karten erstellen",
             lambda: create_dyn_deck_from_tag(item, False, unsuspend=False),
         )
 

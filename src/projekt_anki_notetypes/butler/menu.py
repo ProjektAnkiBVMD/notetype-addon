@@ -40,7 +40,7 @@ def add_lernplan_manager(menu):
 
 
 def add_lerntag_deck_creator(menu):
-    action = QAction("spezifisches Lerntag-Deck erstellen", mw)
+    action = QAction("Lerntag-Auswahlstapel erstellen (manuell)", mw)
     action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
