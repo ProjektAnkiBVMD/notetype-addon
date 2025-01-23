@@ -54,6 +54,7 @@ def create_dyn_deck_from_tag(
         deck_name += " - high-yield"
 
     create_filtered_deck(deck_name, search, unsuspend)
+    mw.reset()
 
 
 def format_deck_name(tagName: str):

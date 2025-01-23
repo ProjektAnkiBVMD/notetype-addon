@@ -23,7 +23,7 @@ class AnkizinHelper:
         self.delete_outdated_cards = True
         self.update_deck_config = False
         self.suspend_all_cards = True
-        self.suspend_new_cards = False
+        self.suspend_new_cards = True
 
     def set_delete_outdated_cards(self, state):
         self.delete_outdated_cards = state
@@ -247,22 +247,28 @@ class AnkizinHelper:
 
     def find_new_cards_from_update(self):
         collection = mw.col
-        version_pattern = re.compile(r"#Ankizin_v(\d+)::§NEW_CARDS::v\d+")
+        # Pattern to match both version numbers
+        version_pattern = re.compile(r"#Ankizin_v(\d+)::§NEW_CARDS::v(\d+)")
 
-        # Extract all version numbers from tags
-        versions = [
-            int(match.group(1))
-            for tag in collection.tags.all()
-            if (match := version_pattern.match(tag))
-        ]
+        # Group tags by Ankizin version
+        version_groups = {}
+        for tag in collection.tags.all():
+            if match := version_pattern.match(tag):
+                ankizin_ver, cards_ver = map(int, match.groups())
+                if ankizin_ver not in version_groups:
+                    version_groups[ankizin_ver] = []
+                version_groups[ankizin_ver].append(cards_ver)
 
-        if not versions:
+        if not version_groups:
             return []
 
-        latest_version = max(versions)
-        target_tag = (
-            f"#Ankizin_v{latest_version}::§NEW_CARDS::v{latest_version}"
-        )
+        # Find latest Ankizin version
+        latest_ankizin = max(version_groups.keys())
+        # Find latest NEW_CARDS version within that Ankizin version
+        latest_cards = max(version_groups[latest_ankizin])
+
+        target_tag = f"#Ankizin_v{latest_ankizin}::§NEW_CARDS::v{latest_cards}"
+        print(f"Target tag: {target_tag}")
         return collection.find_cards(f"tag:{target_tag}")
 
     def run_ankizin_update_setup(self):

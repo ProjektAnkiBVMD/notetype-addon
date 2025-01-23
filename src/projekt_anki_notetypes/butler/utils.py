@@ -104,7 +104,7 @@ def get_ankizin_version_string():
     return latest_version
 
 
-def create_filtered_deck(deck_name, search, unsuspend=True):
+def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -119,7 +119,8 @@ def create_filtered_deck(deck_name, search, unsuspend=True):
         cidsToUnsuspend = col.find_cards(search)
         col.sched.unsuspend_cards(cidsToUnsuspend)
 
-    mw.progress.start()
+    if not silent:
+        mw.progress.start()
     # deck_id = 0
     deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0)
 
@@ -138,14 +139,14 @@ def create_filtered_deck(deck_name, search, unsuspend=True):
     del config.search_terms[:]
     config.search_terms.extend(terms)
 
-    mw.progress.finish()
+    if not silent:
+        mw.progress.finish()
     try:
         col.sched.add_or_update_filtered_deck(deck)
     except FilteredDeckError as e:
         print(f"Error: {e}")
-        showWarning(f"Error: {e}")
-
-    mw.reset()
+        if not silent:
+            showWarning(f"Error: {e}")
 
 
 def remove_filtered_deck(deck_id):

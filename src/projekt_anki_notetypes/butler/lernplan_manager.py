@@ -3,12 +3,11 @@ import re
 from pathlib import Path
 
 import anki
+import aqt
 from aqt import mw
 from aqt.qt import *
-from anki.decks import FilteredDeckConfig
-from anki.scheduler import FilteredDeckForUpdate
-from anki.errors import FilteredDeckError
-from aqt.utils import showWarning
+from aqt.operations import CollectionOp
+from anki.collection import OpChanges
 
 from .utils import (
     check_ankizin_installation,
@@ -218,7 +217,11 @@ class LernplanManagerDialog(QDialog):
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return lerntag, highyield, lowyield, autocreate_previous
-
+    
+    @staticmethod
+    def on_success(changes: OpChanges):
+        pass
+    
     def create_lerntag_deck_wrapper(self):
         # save config + get values
         lerntag, highyield, lowyield, autocreate_previous = self.save_config()
@@ -231,9 +234,12 @@ class LernplanManagerDialog(QDialog):
 
         # Create the previous filtered decks if necessary
         if autocreate_previous:
-            create_previous_lerntag_decks(lerntag, highyield, lowyield)
-
+            CollectionOp(parent=aqt.mw, op=lambda _: create_previous_lerntag_decks(lerntag, highyield, lowyield)).success(
+                LernplanManagerDialog.on_success
+            ).run_in_background()
+            
         self.accept()
+        mw.reset()
 
 
 class LerntagDeckCreatorDialog(QDialog):
@@ -250,7 +256,7 @@ class LerntagDeckCreatorDialog(QDialog):
             lerntag = 0  # 0-indexed
             highyield, normyield, lowyield = False, True, False
         else:
-            lernplan_conf = conf.get("lernplan", {})
+            lernplan_conf = conf.get("man_lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             highyield = lernplan_conf.get("highyield", False)
@@ -343,16 +349,35 @@ class LerntagDeckCreatorDialog(QDialog):
         lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
         return lerntag_list
 
-    def create_lerntag_deck_wrapper(self):
-        # save config + get values
+    def save_config(self):
+        # Get the config
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            conf = {}
+        if "man_lernplan" not in conf:
+            conf["man_lernplan"] = {}
+        lernplan_conf = conf["man_lernplan"]
+
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield = self.highyield_button.isChecked()
         lowyield = self.lowyield_button.isChecked()
 
-        # Create the filtered deck
-        create_lerntag_deck(lerntag, highyield, lowyield, "Lerntag ")
+        # Save the config
+        lernplan_conf["lerntag"] = lerntag
+        lernplan_conf["highyield"] = highyield
+        lernplan_conf["normyield"] = self.standard_button.isChecked()
+        lernplan_conf["lowyield"] = lowyield        
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        return lerntag, highyield, lowyield
+    
+    def create_lerntag_deck_wrapper(self):
+        # save config + get values
+        lerntag, highyield, lowyield = self.save_config()
 
+        # Create the filtered deck
+        create_lerntag_deck(lerntag, highyield, lowyield)
         self.accept()
+        mw.reset()
 
 
 def remove_previous_lerntag_decks():
@@ -369,12 +394,13 @@ def remove_previous_lerntag_decks():
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):
     for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
-            str(i).zfill(3), highyield, lowyield, "!VORHERIGE LERNTAGE"
+            str(i).zfill(3), highyield, lowyield, "!VORHERIGE LERNTAGE", silent=True
         )
+    return OpChanges()
 
 
 def create_lerntag_deck(
-    lerntag, highyield, lowyield, deck_name_prefix: str = None
+    lerntag, highyield, lowyield, deck_name_prefix: str = None, silent=False
 ):
     col = mw.col
     if col is None:
@@ -403,7 +429,7 @@ def create_lerntag_deck(
     if deck_name_prefix:
         deck_name = f"{deck_name_prefix}::{deck_name}"
 
-    create_filtered_deck(deck_name, search)
+    create_filtered_deck(deck_name, search, silent=silent)
 
 
 def open_lernplan_manager(self):
