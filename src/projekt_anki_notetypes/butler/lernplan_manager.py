@@ -217,11 +217,11 @@ class LernplanManagerDialog(QDialog):
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return lerntag, highyield, lowyield, autocreate_previous
-    
+
     @staticmethod
     def on_success(changes: OpChanges):
         pass
-    
+
     def create_lerntag_deck_wrapper(self):
         # save config + get values
         lerntag, highyield, lowyield, autocreate_previous = self.save_config()
@@ -234,10 +234,13 @@ class LernplanManagerDialog(QDialog):
 
         # Create the previous filtered decks if necessary
         if autocreate_previous:
-            CollectionOp(parent=aqt.mw, op=lambda _: create_previous_lerntag_decks(lerntag, highyield, lowyield)).success(
-                LernplanManagerDialog.on_success
-            ).run_in_background()
-            
+            CollectionOp(
+                parent=aqt.mw,
+                op=lambda _: create_previous_lerntag_decks(
+                    lerntag, highyield, lowyield
+                ),
+            ).success(LernplanManagerDialog.on_success).run_in_background()
+
         self.accept()
         mw.reset()
 
@@ -366,10 +369,10 @@ class LerntagDeckCreatorDialog(QDialog):
         lernplan_conf["lerntag"] = lerntag
         lernplan_conf["highyield"] = highyield
         lernplan_conf["normyield"] = self.standard_button.isChecked()
-        lernplan_conf["lowyield"] = lowyield        
+        lernplan_conf["lowyield"] = lowyield
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return lerntag, highyield, lowyield
-    
+
     def create_lerntag_deck_wrapper(self):
         # save config + get values
         lerntag, highyield, lowyield = self.save_config()
@@ -394,7 +397,11 @@ def remove_previous_lerntag_decks():
 def create_previous_lerntag_decks(lerntag, highyield, lowyield):
     for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
-            str(i).zfill(3), highyield, lowyield, "!VORHERIGE LERNTAGE", silent=True
+            str(i).zfill(3),
+            highyield,
+            lowyield,
+            "!VORHERIGE LERNTAGE",
+            silent=True,
         )
     return OpChanges()
 

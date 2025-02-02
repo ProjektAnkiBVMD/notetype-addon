@@ -49,7 +49,9 @@ def create_dyn_deck_from_tag(
     deck_name = format_deck_name(item.name)
 
     if high_yield:
-        high_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        high_yield_tag = (
+            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        )
         search += f' tag:"{high_yield_tag}"'
         deck_name += " - high-yield"
 
