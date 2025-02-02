@@ -13,6 +13,7 @@ from .utils import (
     check_ankizin_installation,
     create_filtered_deck,
     remove_filtered_deck,
+    get_ankizin_versions
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
@@ -66,7 +67,8 @@ class LernplanManagerDialog(QDialog):
                 "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag-Auswahlstapel erstellen.<br>"
                 "Du kannst wählen, ob nur HIGH-YIELD Karten oder auch normale und low-yield Karten<br>enthalten sein sollen.<br>"
                 "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
-                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen."
+                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen.<br><br>"
+                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: V4 / AnkiHub)."
             )
         )
         right_layout.addSpacing(20)

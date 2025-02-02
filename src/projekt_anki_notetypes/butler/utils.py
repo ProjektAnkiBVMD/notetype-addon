@@ -85,23 +85,21 @@ def check_ankizin_installation():
 
 
 # NOTE: This function is not used in the current codebase due to missing anyward compatibility
-def get_ankizin_version_string():
+# other than to display the version in the settings dialog
+def get_ankizin_versions() -> list:
     col = mw.col
     if col is None:
         raise Exception("collection not available")
 
     # Determine the latest Ankizin_v version dynamically
-    pattern = re.compile(r"#Ankizin_v(\d+)::")
+    pattern = re.compile(r"#Ankizin_v(\d+|Ankihub)::")
     versions = []
     for tag in col.tags.all():
         match = pattern.match(tag)
         if match:
-            versions.append(int(match.group(1)))
-    if versions:
-        latest_version = f"v{max(versions)}"
-    else:
-        latest_version = "vAnkihub"
-    return latest_version
+            versions.append("v" + match.group(1))
+
+    return versions
 
 
 def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from aqt.browser import SidebarTreeView  # type: ignore
 
-from .utils import create_filtered_deck, get_ankizin_version_string
+from .utils import create_filtered_deck
 
 
 def filtered_deck_hk(

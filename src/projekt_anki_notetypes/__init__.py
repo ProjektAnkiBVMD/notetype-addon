@@ -133,7 +133,7 @@ def maybe_show_deck_update_notice():
         text="<h1>Ankizin Add-On-Update — Jetzt mit Lernplan-Manager!</h1>"
         "<h2>Wir waren die letzten Wochen hart am arbeiten und machen euch die StEx-Vorbereitung nun noch einfacher!</h2>"
         "Der Lernplan-Manager kümmert sich vollautomatisch darum dir stets die richtigen Karten für deinen heutigen Lerntag zu zeigen.<br>"
-        "Einmal eingerichtet, musst du dich um (fast) nichts mehr kümmern.<br><br>"
+        "Einmal eingerichtet, musst du dich um (fast) nichts mehr kümmern."
         "<h2>Was ist neu?</h2>"
         "<ul>"
         "<li>Neuer Lernplan-Manager!</li>"
