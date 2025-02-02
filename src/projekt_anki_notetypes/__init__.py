@@ -122,51 +122,46 @@ def maybe_show_deck_update_notice():
         return
 
     # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 4
+    latest_version = 4.1
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if latest_version == conf.get("latest_notified_deck_version"):
         return
 
     update_dialog = askUserDialog(
-        title="Ankizin Deck Update",
-        text="<h1>Ankizin V4 — Release am heiligen Abend!</h1>"
-        "<h2>Als kleines Weihnachtsgeschenk ist ein neuer Major Release von Ankizin verfügbar!</h2>"
-        "Mit V4 steht nicht nur Heiligabend vor der Tür, sondern auch die Vorklinik:"
+        title="Ankizin Add-On-Update",
+        text="<h1>Ankizin Add-On-Update — Jetzt mit Lernplan-Manager!</h1>"
+        "<h2>Wir waren die letzten Wochen hart am arbeiten und machen euch die StEx-Vorbereitung nun noch einfacher!</h2>"
+        "Der Lernplan-Manager kümmert sich vollautomatisch darum dir stets die richtigen Karten für deinen heutigen Lerntag zu zeigen.<br>"
+        "Einmal eingerichtet, musst du dich um (fast) nichts mehr kümmern.<br><br>"
+        "<h2>Was ist neu?</h2>"
         "<ul>"
-        "<li>Vorklinik: ~1800 M1-Karten zu finden unter <code>#Ankizin_v4::#M1_Vorklinik_(work_in_progress)</code></li>"
-        "<li>Klinik: ~4000 M2-Karten neu geschrieben / geupdatet, v.a. Einarbeitungen des Lernplan-Updates H2024 und Updates älterer Kapitel</li></ul>"
+        "<li>Neuer Lernplan-Manager!</li>"
+        "<li>Utilities um Updates und Deck-Installation zu erleichtern</li>"
+        "<li>Verbesserte Karten- und Notiztypen</li>"
         "</ul>"
-        "<h3>Kein AnkiHub?</h3>"
-        "Wenn du kein AnkiHub nutzt, solltest du unten auf 'Ja, ankizin.de öffnen' klicken, um über unsere Ankizin-Webseite die neueste Version herunterladen. "
-        "<h3>AnkiHub-Nutzer*in?</h3>"
-        "Wenn du AnkiHub nutzt, brauchst du nichts weiter machen. Die Karten hast du bereits in den letzten Wochen automatisch erhalten. "
-        "(Um sicherzugehen: manueller AnkiHub-Sync via '<code>AnkiHub</code>' &rarr; '<code>Sync with AnkiHub</code>'.)"
-        "<h2>Add-On-Updates:</h2>"
-        "<ul>"
-        "<li>3(!) neue Notiztypen: <code>Vocab</code> (für Termi & Co), [Preview: <code>AnatomieTrainer</code> (für mehr als nur Muskeln), <code>IO</code> (für IO-Bilder)] "
-        "... und alle davon haben 1b1-Cloze-Support ;) [Tech-Tutorial folgt]</li>"
-        "<li>Vorder- und Rückseite haben nun konsolidierte Einstellungen, sowie kleine Styling-Fixes hier und da</li>"
-        "</ul>",
+        "<h2>Was musst du tun?</h2>"
+        "Nichts!<br>"
+        "Aber wenn du die neuen Features erklärt haben möchtest, klicke auf den Button unten und schau dir das kurze Video an.",
         buttons=reversed(
             [
-                "Nein, ich habe schon die neueste Version",
+                # "Nein, ich habe schon die neueste Version",
                 "Erinnere mich später!",
             ]
         ),
     )
-    update_dialog.setIconPixmap(QPixmap("icons:sternisanta.png"))
+    update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
-        "Ja, ankizin.de öffnen", QMessageBox.ButtonRole.RejectRole
+        "Ja, Erklärvideo öffnen (WIP)", QMessageBox.ButtonRole.RejectRole
     )
     link_button_url = "https://www.ankizin.de/wiki/howto-update-deck/"
     link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
     if (
-        answer == "Ja, ankizin.de öffnen"
-        or answer == "Nein, ich habe schon die neueste Version"
+        answer == "Ja, Erklärvideo öffnen (WIP)"
+        # or answer == "Nein, ich habe schon die neueste Version"
     ):
         conf["latest_notified_deck_version"] = latest_version
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
