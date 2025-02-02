@@ -378,7 +378,9 @@ class LerntagDeckCreatorDialog(QDialog):
         lerntag, highyield, lowyield = self.save_config()
 
         # Create the filtered deck
-        create_lerntag_deck(lerntag, highyield, lowyield)
+        create_lerntag_deck(
+            lerntag, highyield, lowyield, deck_name_prefix="Lerntag "
+        )
         self.accept()
         mw.reset()
 
@@ -400,14 +402,19 @@ def create_previous_lerntag_decks(lerntag, highyield, lowyield):
             str(i).zfill(3),
             highyield,
             lowyield,
-            "!VORHERIGE LERNTAGE",
+            sup_deck_name="!VORHERIGE LERNTAGE",
             silent=True,
         )
     return OpChanges()
 
 
 def create_lerntag_deck(
-    lerntag, highyield, lowyield, deck_name_prefix: str = None, silent=False
+    lerntag,
+    highyield,
+    lowyield,
+    deck_name_prefix: str = None,
+    sup_deck_name: str = None,
+    silent=False,
 ):
     col = mw.col
     if col is None:
@@ -415,7 +422,7 @@ def create_lerntag_deck(
 
     tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'tag:"{tag_pattern}"')
-    deck_name = "Lerntag " if deck_name_prefix else "!LERNTAG "
+    deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
 
     # Select only high-yield cards
     if highyield:
@@ -433,8 +440,8 @@ def create_lerntag_deck(
     else:
         deck_name += f"{lerntag} - inkl. low-yield"
 
-    if deck_name_prefix:
-        deck_name = f"{deck_name_prefix}::{deck_name}"
+    if sup_deck_name:
+        deck_name = f"{sup_deck_name}::{deck_name}"
 
     create_filtered_deck(deck_name, search, silent=silent)
 
