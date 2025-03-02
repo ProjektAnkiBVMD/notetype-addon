@@ -122,7 +122,7 @@ def maybe_show_deck_update_notice():
         return
 
     # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 4.1
+    latest_version = 5
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if latest_version == conf.get("latest_notified_deck_version"):
@@ -136,13 +136,13 @@ def maybe_show_deck_update_notice():
         "Einmal eingerichtet, musst du dich um (fast) nichts mehr kümmern."
         "<h2>Was ist neu?</h2>"
         "<ul>"
-        "<li>Neuer Lernplan-Manager!</li>"
+        "<li>Neuer Lernplan-Manager! (siehe Erklärvideo)</li>"
         "<li>Utilities um Updates und Deck-Installation zu erleichtern</li>"
         "<li>Verbesserte Karten- und Notiztypen</li>"
         "</ul>"
         "<h2>Was musst du tun?</h2>"
         "Nichts!<br>"
-        "Aber wenn du die neuen Features erklärt haben möchtest, klicke auf den Button unten und schau dir das kurze Video an.",
+        "Aber wenn du die neuen Features erklärt haben möchtest, klicke auf den Button unten und schau dir das Video an.",
         buttons=reversed(
             [
                 # "Nein, ich habe schon die neueste Version",
@@ -153,14 +153,14 @@ def maybe_show_deck_update_notice():
     update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
-        "Ja, Erklärvideo öffnen (WIP)", QMessageBox.ButtonRole.RejectRole
+        "Erklärvideo öffnen!", QMessageBox.ButtonRole.RejectRole
     )
-    link_button_url = "https://www.ankizin.de/wiki/howto-update-deck/"
+    link_button_url = "https://www.youtube.com/watch?v=3CKUXRVaiLs"
     link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
     if (
-        answer == "Ja, Erklärvideo öffnen (WIP)"
+        answer == "Erklärvideo öffnen!"
         # or answer == "Nein, ich habe schon die neueste Version"
     ):
         conf["latest_notified_deck_version"] = latest_version

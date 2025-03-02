@@ -173,7 +173,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "file": "back",
             "regex": rf'var +clozeHider +=[^"]+"({QUOT_STR_RE}*?)"',
             "section": "Lücken",
-            "default": "[ _ ]",
+            "default": "[&nbsp;_&nbsp;]",
         },
         "selective_one_by_one": {
             "text": "Selektives OneByOne",
