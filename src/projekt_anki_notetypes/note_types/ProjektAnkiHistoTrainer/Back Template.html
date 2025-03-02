@@ -1,4 +1,4 @@
-<!-- version 17ddb37 -->
+<!-- version 30642d9 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -263,7 +263,7 @@
 
     {{#Smart Zoom}}
     <span id="hint-smartzoom-link" onclick="event.stopPropagation()" style="display: none;">
-      <a href="{{text:Präparat}}">
+      <a href="{{text:Smart Zoom}}">
         <button id="button-smartzoom" class="button-general">
           <img src="__microscope.svg" style="height: 10px;"> Smart Zoom
         </button>
@@ -292,7 +292,7 @@
 
     <!-- LINEBREAKS IF BUTTONS EXIST -->
     <script>
-      var array = [`{{text:Eigene Notizen & Bilder}}`, `{{text:Eigene Prüfungsfragen}}`, `{{text:Definitionen}}`, `{{text:Merksprüche}}`, `{{text:Klinik}}`, `{{text:Präparat}}`, `{{text:Memes}}`];
+      var array = [`{{Eigene Notizen & Bilder}}`, `{{Eigene Prüfungsfragen}}`, `{{Definitionen}}`, `{{Merksprüche}}`, `{{Präparat}}`, `{{Virtuelle Mikroskopie}}`, `{{Smart Zoom}}`, `{{Klinik}}`, `{{HistoTrainer}}`, `{{Memes}}`];
       var anyistrue = (element) => element;
       if (array.some(anyistrue)) {
         document.getElementById("linebreaksIfButtons").innerHTML = "<br>";
@@ -450,6 +450,36 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <script>
   var tagContainer = document.getElementById("tags-container")
 
+  function formatTag(tag) {
+    // remove unnecessary whitespace
+    tag = tag.trim()
+
+    // numTagLevelsToShow == 0 means the whole tag should be shown
+    if (numTagLevelsToShow != 0) {
+      tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
+    }
+
+    // Ankizin / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
+    if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) return null;
+    if (tag.split("::")[1] == "§NEW_CARDS") return null;
+    if (tag.split("::")[1] == "§Projekt_Anki") return null;
+    if (tag.split("::")[0] == "AnkiHub_Subdeck") return null;
+
+    // improve legibility of tags
+    // remove unnecessary prefixes
+    tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "")
+    tag = tag.replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
+    // clean duplicated prefixes
+    tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Vorklinik::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::").replaceAll("#M1_Vorklinik_(work_in_progress)::", "Vorklinik::");
+    // clean unncessarily long "Lernplan" tags
+    tag = tag.replaceAll("M1-50-Tage-Lernplan_Intensiv", "M1_50_Tage_Intensiv").replaceAll("M1-30-Tage-Lernplan_Turbo", "M1_30_Tage_Turbo").replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
+    tag = tag.replaceAll("M1-30-T_", "").replaceAll("M1-50-I_", "").replaceAll("M2_Lerntag", "Lerntag")
+    // change HTML symbols
+    tag = tag.replaceAll("::", " →&nbsp;").replaceAll("-", "&#8209;").replaceAll("_", " ");
+
+    return tag.trim();
+  }
+
   if (tagContainer.childElementCount == 0) {
     var tagList = tagContainer.innerHTML.trim().split(" ");
     var kbdList = [];
@@ -458,28 +488,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
     for (var i = 0; i < tagList.length; i++) {
       var newTag = document.createElement("kbd");
       var tag = tagList[i];
-      // numTagLevelsToShow == 0 means the whole tag should be shown
-      if (numTagLevelsToShow != 0) {
-        tag = tag.split("::").slice(-numTagLevelsToShow).join("::");
-      }
 
-      // Ankizin / Ankiphil specific functionality to disable showing irrelevant university-specific curriculum tags
-      if (((tag.split("::")[1] == "#UNIVERSITÄTEN") || (tag.split("::")[1] == "#Universitäten")) && (tag.split("::")[2] != tagUniversity)) continue;
-      if (tag.split("::")[1] == "§NEW_CARDS") continue;
-      if (tag.split("::")[1] == "§Projekt_Anki") continue;
-      if (tag.split("::")[0] == "AnkiHub_Subdeck") continue;
+      formattedTag = formatTag(tag);
+      if (formattedTag == null) continue;
 
-      // improve legibility of tags
-      // remove unnecessary prefixes
-      tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "")
-      tag = tag.replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
-      // clean duplicated prefixes
-      tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Vorklinik::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::").replaceAll("#M1_Vorklinik_(work_in_progress)::", "Vorklinik::");
-      // clean unncessarily long "Lernplan" tags
-      tag = tag.replaceAll("M1-50-Tage-Lernplan_Intensiv", "M1_50_Tage_Intensiv").replaceAll("M1-30-Tage-Lernplan_Turbo", "M1_30_Tage_Turbo").replaceAll("M2-100-Tage-Lernplan", "M2_100_Tage").replaceAll("M3-Kenntnisprüfung", "M3");
-      tag = tag.replaceAll("M1-30-T_", "").replaceAll("M1-50-I_", "").replaceAll("M2_Lerntag", "Lerntag")
-      // change HTML symbols
-      newTag.innerHTML = tag.replaceAll("::", " →&nbsp;").replaceAll("-", "&#8209;").replaceAll("_", " ");
+      newTag.innerHTML = formattedTag;
       newTagContent.append(newTag)
     }
 
@@ -509,10 +522,17 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       showtags();
     }
   });
-</script>
-<script>
-  for (const tag of document.getElementsByTagName('kbd')) {
-    tag.innerHTML = tag.innerHTML.replace(/::/g, '::<wbr>')
+
+  var elements = document.getElementsByTagName('kbd');
+  for (index = elements.length - 1; index >= 0; index--) {
+    formattedTag = formatTag(elements[index].innerHTML);
+
+    if (formattedTag == null) {
+      elements[index].remove();
+      continue;
+    }
+
+    elements[index].innerHTML = formattedTag;
   }
 </script>
 {{/Tags}}
@@ -644,7 +664,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 </script>
 
 <script>
-  var buttonIds = ["extra", "image", "hint-zusatz", "hint-definition", "hint-hammer", "hint-klinik", "hint-praeparat", "hint-microscope", "hint-smartzoom", "hint-histotrainer", "hint-uafi", "hint-merksprueche", "hint-memes", "hint-image", "hint-amboss", "hint-thieme", "hint-meditricks", "hint-linkcontainer"]
+  var buttonIds = ["extra", "image", "hint-zusatz", "hint-definition", "hint-hammer", "hint-klinik", "hint-praeparat-link", "hint-microscope-link", "hint-smartzoom-link", "hint-histotrainer", "hint-uafi", "hint-merksprueche", "hint-memes", "hint-image", "hint-amboss", "hint-thieme", "hint-meditricks", "hint-linkcontainer"]
 
   for (const button in buttonIds) {
     try {

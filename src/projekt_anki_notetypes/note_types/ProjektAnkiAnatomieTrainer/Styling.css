@@ -98,6 +98,7 @@
 /* TIMER ON/OFF */
 .timer {
   display: block;
+  padding-left: 5px;
   /* ‘none’ or ‘block’ */
 }
 
