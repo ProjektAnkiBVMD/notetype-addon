@@ -25,11 +25,18 @@ def lernplan_auto_create():
         if not lernplan_conf.get("autocreate", False):
             return
 
-        # Check if the lernplan is outdated
+        # Check if the lernplan is outdated and it is after rollover
+        rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
         last_updated = datetime.datetime.fromisoformat(
             lernplan_conf["last_updated"]
         ).date()
-        today = datetime.datetime.today().date()
+        now = datetime.datetime.now()
+        today = now.date()
+
+        # Adjust date for rollover - if before rollover time, still considered previous day
+        if now.hour < rollover:
+            today = today - datetime.timedelta(days=1)
+
         if not last_updated < today:
             return  # Lernplan is up to date
 
@@ -72,8 +79,25 @@ def lernplan_auto_create():
         return None
 
 
+def auto_rebuild_filtered_decks():
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    mw.progress.start()
+
+    # match only decks that have "REBUILD" in their name
+    for deck in mw.col.decks.all_names_and_ids():
+        if "REBUILD" in deck.name and col.decks.is_filtered(deck.id):
+            col.sched.rebuild_filtered_deck(deck.id)
+
+    mw.progress.finish()
+    mw.reset()
+
+
 def profile_loaded_hk():
     lernplan_auto_create()
+    auto_rebuild_filtered_decks()
 
 
 def hooks_init():
