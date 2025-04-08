@@ -1,4 +1,4 @@
-<!-- version 30642d9 -->
+<!-- version 1313d34 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -254,7 +254,7 @@
       <button id="button-zusatz" class="button-general" onclick="toggleHintBtn('hint-zusatz'); event.stopPropagation()">
         <img src="__zusatz.svg" style="height: 10px;"> Eigene Notizen & Bilder
       </button>
-      <div id="zusatz" class="hints" style="display: none;">{{edit:Eigene Notizen & Bilder}}</div>
+      <div dir="auto" id="zusatz" class="hints" style="display: none;">{{edit:Eigene Notizen & Bilder}}</div>
     </span>
     {{/Eigene Notizen & Bilder}}
 
@@ -263,7 +263,7 @@
       <button id="button-hammer" class="button-general" onclick="toggleHintBtn('hint-hammer'); event.stopPropagation()">
         <img src="__hammer.svg" style="height: 10px;"> Eigene Prüfungsfragen
       </button>
-      <div id="hammer" class="hints" style="display: none;">{{edit:Eigene Prüfungsfragen}}</div>
+      <div dir="auto" id="hammer" class="hints" style="display: none;">{{edit:Eigene Prüfungsfragen}}</div>
     </span>
     {{/Eigene Prüfungsfragen}}
 
@@ -273,7 +273,7 @@
         onclick="toggleHintBtn('hint-definition'); event.stopPropagation()">
         <img src="__explanation.svg" style="height: 10px;"> Definitionen
       </button>
-      <div id="definition" class="hints" style="display: none;">{{edit:Definitionen}}</div>
+      <div dir="auto" id="definition" class="hints" style="display: none;">{{edit:Definitionen}}</div>
     </span>
     {{/Definitionen}}
 
@@ -283,7 +283,7 @@
         onclick="toggleHintBtn('hint-merksprueche'); event.stopPropagation()">
         <img src="__merkhilfe.svg" style="height: 10px;"> Merksprüche
       </button>
-      <div id="merksprueche" class="hints" style="display: none;">{{edit:Merksprüche}}</div>
+      <div dir="auto" id="merksprueche" class="hints" style="display: none;">{{edit:Merksprüche}}</div>
     </span>
     {{/Merksprüche}}
 
@@ -292,7 +292,7 @@
       <button id="button-klinik" class="button-general" onclick="toggleHintBtn('hint-klinik'); event.stopPropagation()">
         <img src="__stethoscope.svg" style="height: 10px;"> Klinik
       </button>
-      <div id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
+      <div dir="auto" id="klinik" class="hints" style="display: none;">{{edit:Klinik}}</div>
     </span>
     {{/Klinik}}
 
@@ -332,7 +332,7 @@
         onclick="toggleHintBtn('hint-praeparat'); event.stopPropagation()">
         <img src="__microscope.svg" style="height: 10px;"> Präparat
       </button>
-      <div id="praeparat" class="hints" style="display: none;">{{edit:Präparat}}</div>
+      <div dir="auto" id="praeparat" class="hints" style="display: none;">{{edit:Präparat}}</div>
     </span>
     {{/Präparat}}
 
@@ -341,7 +341,7 @@
       <button id="button-memes" class="button-general" onclick="toggleHintBtn('hint-memes'); event.stopPropagation()">
         <img src="__sonstiges.svg" style="height: 10px;"> Memes
       </button>
-      <div id="memes" class="hints" style="display: none;">{{edit:Memes}}</div>
+      <div dir="auto" id="memes" class="hints" style="display: none;">{{edit:Memes}}</div>
     </span>
     {{/Memes}}
 
@@ -464,7 +464,7 @@
         onclick="toggleHintBtn('hint-meditricks'); event.stopPropagation()">
         <img src="__meditricks.svg" style="height: 10px;"> Meditricks
       </button>
-      <div id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
+      <div dir="auto" id="meditricks" class="hints" style="display: none;">{{edit:Meditricks}}</div>
     </span>
     {{/Meditricks}}
 
@@ -802,7 +802,10 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       var arr = document.getElementsByTagName('a');
       for (var i = 0; i < arr.length; i++) {
         var el = arr[i];
-        if (el.style.display === 'none') {
+        if (
+          window.getComputedStyle(el).display === 'none' ||
+          window.getComputedStyle(el.parentElement).display === 'none'
+        ) {
           continue;
         }
         if (el.classList.contains("hint")) {
@@ -1027,9 +1030,15 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   }
 </script>
 
+<!-- AUTOFLIP BACK SCRIPT -->
+<script>
+  // autoflip hides card in front template
+  document.getElementById("qa").style.removeProperty("display")
+</script>
+
 <!-- CLOZE ONE BY ONE SCRIPT -->
 <style>
-  .cloze[data-content]:hover {
+  .cloze-replacer:hover {
     cursor: pointer;
   }
 
@@ -1040,36 +1049,31 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   .cloze-replacer .hidden {
     display: none;
   }
+
+  #extra.hidden {
+    display: none;
+  }
 </style>
 
-<!-- AUTOFLIP BACK SCRIPT -->
-<script>
-  // autoflip hides card in front template
-  document.getElementById("qa").style.removeProperty("display")
-</script>
+<!--
+ Based on the AnKing Notetype, but expanded and modified by phyn.
+ Credit to the original authors, except where modified or otherwise indicated.
+-->
 
 <script>
-    /**
-     * Based on the AnKing Notetype, but expanded and modified by phyn.
-     * Credit to the original authors, except where modified or otherwise indicated.
-     */
-
     (function () {
+      // enables cloze one-by-one even when one-by-one field is empty
+      // minNumberOfClozes is still considered in this case
+      // overridden in importance by selectiveOneByOne
       var clozeOneByOneEnabled = true;
-
-      const clozeHints = Persistence.getItem("clozeHints");
-      Persistence.clear();
 
       // remove the clickAnywhere function from global scope
       document.documentElement.removeAttribute("onclick")
 
-      // needed for amboss to recognize first word in .cloze-hidden
-      const CLOZE_REPLACER_SEP = "<span class='hidden'> </span>"
-
       // --- CHECK IF ONE BY ONE IS GENERALLY ENABLED FOR THIS NOTE ---
-      var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
+      var oneByOneFieldNotEmpty = "{{One by one}}" !== "";
       try {
-        clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty
+        clozeOneByOneEnabled = alwaysOneByOne || oneByOneFieldNotEmpty;
       } catch (exception) {
         console.log(exception)
       }
@@ -1175,21 +1179,28 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
 
       // parse the cloze numbers for which selectiveOneByOne is enabled
-      cardNumberIsOneByOne = `{{One by one}}`.split(',').filter(element => element).map(Number).includes(parseInt(getCardNumber()))
+      var clozeNumbers = "{{One by one}}".split(',').filter(element => element).map(Number)
+      var cardNumberIsOneByOne = !clozeNumbers.filter(n => !Number.isNaN(n)).length || clozeNumbers.includes(parseInt(getCardNumber()))
 
       // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
-      numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+      var numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
 
       // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
       // -> show normal backside
-      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes))) {
+      if (!alwaysOneByOne && ((selectiveOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldNotEmpty && (numClozesForNumber < minNumberOfClozes)))) {
         clozeOneByOneEnabled = false
+      }
+
+      if (!clozeOneByOneEnabled) {
         showExtra()
         showExtraButtons()
         document.getElementById("onebyone-buttons").style.display = "none"
         document.getElementById("qa").style.removeProperty("display")
         return
       }
+
+      // Needed for amboss to recognize first word in .cloze-hidden
+      const CLOZE_REPLACER_SEP = "<span class='hidden'> </span>"
 
       const hideAllCloze = function (initial) {
         let clozes = document.getElementsByClassName("cloze")
@@ -1212,6 +1223,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           cloze.appendChild(clozeReplacer)
           cloze.appendChild(clozeHidden)
 
+          var clozeHints = Persistence.getItem("clozeHints");
           if (clozeHints && clozeHints[count]) {
             clozeReplacer.classList.add("cloze-hint")
             clozeReplacer.innerHTML = clozeHints[count] + CLOZE_REPLACER_SEP

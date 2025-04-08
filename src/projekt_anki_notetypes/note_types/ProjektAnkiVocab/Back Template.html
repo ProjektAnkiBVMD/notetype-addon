@@ -1,4 +1,4 @@
-<!-- version 30642d9 -->
+<!-- version 1313d34 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -150,7 +150,7 @@
         onclick="toggleHintBtn('hint-definition'); event.stopPropagation()">
         <img src="__explanation.svg" style="height: 10px;"> Tabellen
       </button>
-      <div id="definition" class="hints" style="display: none;">{{edit:Tabellen}}</div>
+      <div dir="auto" id="definition" class="hints" style="display: none;">{{edit:Tabellen}}</div>
     </span>
     {{/Tabellen}}
 
@@ -377,7 +377,10 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       var arr = document.getElementsByTagName('a');
       for (var i = 0; i < arr.length; i++) {
         var el = arr[i];
-        if (el.style.display === 'none') {
+        if (
+          window.getComputedStyle(el).display === 'none' ||
+          window.getComputedStyle(el.parentElement).display === 'none'
+        ) {
           continue;
         }
         if (el.classList.contains("hint")) {
