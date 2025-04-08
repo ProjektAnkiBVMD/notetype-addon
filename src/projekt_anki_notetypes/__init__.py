@@ -151,6 +151,7 @@ def maybe_show_deck_update_notice():
         ),
     )
     update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
+    update_dialog.setMaximumHeight(600)
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
         "Erklärvideo öffnen!", QMessageBox.ButtonRole.RejectRole

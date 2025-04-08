@@ -13,7 +13,6 @@ from .utils import (
     check_ankizin_installation,
     create_filtered_deck,
     remove_filtered_deck,
-    get_ankizin_versions
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
@@ -136,9 +135,8 @@ class LernplanManagerDialog(QDialog):
         # AUTOCREATE PREVIOUS LERNTAG DECK
         settings_layout.addSpacing(10)
         self.autocreate_previous_button = QCheckBox(
-            "Lerntag-Auswahlstapel nach einem Tag nach !VORHERIGE LERNTAGE verschieben (empfohlen)"
+            "Alte Lerntag-Auswahlstapel unter !VORHERIGE LERNTAGE behalten"
         )
-        self.autocreate_previous_button.setChecked(autocreate_previous)
         settings_layout.addWidget(self.autocreate_previous_button)
 
         # Confirm button
