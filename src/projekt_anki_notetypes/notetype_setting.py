@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Callable, Dict, OrderedDict, Union
+from typing import Any, Callable, Dict, OrderedDict, Union, List
 
 from .ankiaddonconfig import ConfigLayout, ConfigManager
 from .notetype_setting_definitions import projekt_anki_notetype_names
@@ -83,12 +83,10 @@ class NotetypeSetting(ABC):
 
     def is_present(self, model: "NotetypeDict") -> bool:
         # returns True if the section related to the setting is present on the model
-        relevant_template_texts = self._relevant_template_texts(model)
-        relevant_template_text_present = [
-            bool(re.search(self.config["regex"], text))
-            for text in relevant_template_texts
-        ]
-        return bool(all(relevant_template_text_present))
+        return all(
+            bool(re.search(self.config["regex"], relevant_template_text))
+            for relevant_template_text in self._relevant_template_texts(model)
+        )
 
     # can raise NotetypeSettingException
     def setting_value(self, model: "NotetypeDict") -> Any:
@@ -165,8 +163,10 @@ class NotetypeSetting(ABC):
         # returns the config key of this setting for the notetype in the config
         return f"{notetype_base_name}.{self.name()}"
 
-    def _relevant_template_sections(self, model: "NotetypeDict"):
+    def _relevant_template_sections(self, model: "NotetypeDict") -> List[str]:
         results = []
+        # if the notetype has multiple templates, we need to check all of them
+        # to find the correct section
         for t_idx, _ in enumerate(model["tmpls"]):
             template_texts = self._relevant_template_texts(model, t_idx)
             section_results = []
@@ -194,7 +194,7 @@ class NotetypeSetting(ABC):
 
     def _relevant_template_texts(
         self, model: "NotetypeDict", t_idx: int = 0
-    ) -> list[str]:
+    ) -> List[str]:
         templates = model["tmpls"]
 
         # all the AnKing notetypes have one template each
@@ -515,8 +515,9 @@ class ElementOrderSetting(NotetypeSetting):
         offset = 0
         name_to_match = self._name_to_match_odict(section)
         if set(setting_value) != set(name_to_match.keys()):
-            raise NotetypeSettingException(
-                f"invalid value: {setting_value}\nexpected elements: {list(name_to_match.keys())}"
+            setting_value = order_names(
+                new_names=list(name_to_match.keys()),
+                current_names=setting_value,
             )
 
         for i, name in enumerate(setting_value):
@@ -536,15 +537,42 @@ class ElementOrderSetting(NotetypeSetting):
             m
             for m in re.finditer(self.config["elem_re"], str(section_text))
             if re.search(self.config["has_to_contain"], m.group(0))
-            and "OME"
-            not in m.group(
-                0
-            )  # OME banner has to be excluded from the order setting
         ]
         result = OrderedDict(
-            [
-                (re.search(self.config["name_re"], m.group(0)).group(1), m)
-                for m in matches
-            ]
+            [(self._get_element_name(m.group(0)), m) for m in matches]
         )
         return result
+
+    def _get_element_name(self, element_string: str) -> str:
+        patterns = self.config["name_res"]
+        for pattern in patterns:
+            m = re.search(pattern, element_string)
+            if m:
+                return m.group(1)
+
+        raise NotetypeSettingException(
+            f"Could not find name in {element_string}"
+        )
+
+
+def order_names(
+    new_names: List[str],
+    current_names: List[str],
+) -> List[str]:
+    """Order new names based on the order of current names.
+    All new_names will be included in output, ordered based on the current_names,
+    and if they are not in current names, they are appended to the end.
+
+    Args:
+        current_names: List defining preferred ordering
+        new_names: List of names to be reordered
+
+    Returns:
+        List[str]: Reordered new_names list
+    """
+    if not current_names:
+        return new_names
+
+    existing_names = [name for name in current_names if name in new_names]
+    missing_names = [name for name in new_names if name not in current_names]
+    return existing_names + missing_names

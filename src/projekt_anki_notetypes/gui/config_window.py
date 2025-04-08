@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from aqt import mw
 from aqt.clayout import CardLayout
-from aqt.qt import QWidget
+from aqt.qt import QHBoxLayout, QLabel, QWidget
 from aqt.utils import askUser, showInfo, tooltip
 
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
@@ -163,15 +163,32 @@ class NotetypesConfigWindow:
             )
 
         # add anking links layouts
-        widget = QWidget()
-        window.main_layout.insertWidget(0, widget)
-        ProjektAnkiIconsLayout(widget)
+        self.projekt_anki_icons_widget = QWidget()
+        ProjektAnkiIconsLayout(self.projekt_anki_icons_widget)
+        window.main_layout.insertWidget(0, self.projekt_anki_icons_widget)
 
-        widget = QWidget()
-        window.main_layout.addWidget(widget)
-        GithubLinkLayout(
-            widget, href="https://github.com/ProjektAnki/notetype-addon/issues"
+        # add tutorial label with link to youtube video
+        self.tutorial_label = QLabel(
+            """
+            Wenn du unsicher bist, wie das hier funktioniert, schau dir gerne das <a href="https://www.youtube.com/watch?v=XrEjeMHMA1k">Anleitungsvideo</a> an.
+            """
         )
+        self.tutorial_label.setOpenExternalLinks(True)
+
+        self.tutorial_label_layout = QHBoxLayout()
+        self.tutorial_label_layout.addStretch()
+        self.tutorial_label_layout.addWidget(self.tutorial_label)
+        self.tutorial_label_layout.addStretch()
+
+        window.main_layout.addLayout(self.tutorial_label_layout)
+
+        # add github link layout
+        self.github_links_widget = QWidget()
+        GithubLinkLayout(
+            self.github_links_widget,
+            href="https://github.com/ProjektAnki/notetype-addon/issues",
+        )
+        window.main_layout.addWidget(self.github_links_widget)
 
     # tabs and NotetypeSettings (ntss)
     def _add_notetype_settings_tab(
@@ -249,14 +266,13 @@ class NotetypesConfigWindow:
             "Aktualisiere Notiztypen",
             on_click=self._update_all_notetypes_to_newest_version_and_reload_ui,
         )
+        tab.button(
+            "Setze allgemeine Einstellungen aller Notiztypen zurück",
+            on_click=self._reset_general_settings_and_reload_ui,
+        )
 
         if not models_with_available_updates():
             update_btn.setDisabled(True)
-
-        reset_btn = tab.button(
-            "Setze alle Notiztypen zurück",
-            on_click=self._reset_all_notetypes_and_reload_ui,
-        )
 
     def _add_nts_widgets_to_layout(
         self,
@@ -396,7 +412,7 @@ class NotetypesConfigWindow:
 
         tooltip("Notiztyp wurde zurückgesetzt", parent=self.window, period=1200)
 
-    def _reset_all_notetypes_and_reload_ui(self):
+    def _reset_general_settings_and_reload_ui(self):
         if not askUser(
             "Willst du wirklich alle Notiztypen auf Originaleinstellungen zurücksetzen?<br><br>"
             "Du musst danach eine Vollsynchronisierung mit AnkiWeb machen.<br>"
@@ -406,13 +422,19 @@ class NotetypesConfigWindow:
             return
 
         for notetype_base_name in projekt_anki_notetype_names():
-            if _note_type_versions(notetype_base_name):
-                for model_version in _note_type_versions(notetype_base_name):
-                    update_notetype_to_newest_version(
-                        model_version, notetype_base_name
-                    )
-                    mw.col.models.update_dict(model_version)  # type: ignore
+            model = _most_basic_notetype_version(notetype_base_name)
+            if not model:
+                continue
 
+            settings_defaults = general_settings_defaults_dict()
+            for nts in general_ntss():
+                value = settings_defaults[nts.name()]
+                self.conf[nts.key(notetype_base_name)] = value
+                self.conf.set(
+                    f"general.{nts.name()}", value, on_change_trigger=False
+                )
+
+        self._apply_setting_changes_for_all_notetypes()
         self._reload_tab("Allgemein")
 
         tooltip(

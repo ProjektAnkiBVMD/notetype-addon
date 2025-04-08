@@ -8,7 +8,7 @@ from aqt.utils import askUser, tooltip
 
 from ..constants import NOTETYPE_COPY_RE
 from ..notetype_setting_definitions import projekt_anki_notetype_names
-from ..utils import adjust_field_ords, create_backup
+from ..utils import adjust_fields, create_backup
 
 
 def handle_extra_notetype_versions() -> None:
@@ -72,22 +72,22 @@ def convert_extra_notetypes(
         for copy_mid in copy_mids:
             model_copy = mw.col.models.get(copy_mid)  # type: ignore
 
-            # First change the <model_copy> to be exactly like <notetype> to then be able to
-            # change the note type of notes of type <model_copy> without problems
+            # First change the <notetype_copy> to be exactly like <notetype> to then be able to
+            # change the note type of notes of type <notetype_copy> without problems
             new_model = deepcopy(model)
             new_model["id"] = model_copy["id"]
             new_model["name"] = model_copy["name"]  # to prevent duplicates
             new_model["usn"] = -1  # triggers full sync
-            new_model = adjust_field_ords(model_copy, new_model)
+            new_model["flds"] = adjust_fields(model_copy["flds"], new_model["flds"])
             mw.col.models.update_dict(new_model)
 
-            # change the notes of type <model_copy> to type <notetype>
-            nids_with_model_copy_type = mw.col.find_notes(
+            # change the notes of type <notetype_copy> to type <notetype>
+            nids_with_notetype_copy_type = mw.col.find_notes(
                 f'"note:{model_copy["name"]}"'
             )
             mw.col.models.change(
                 model_copy,
-                nids_with_model_copy_type,  # type: ignore
+                nids_with_notetype_copy_type,  # type: ignore
                 model,
                 {i: i for i in range(len(model["flds"]))},
                 None,
