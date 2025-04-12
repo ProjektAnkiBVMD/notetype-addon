@@ -1,4 +1,4 @@
-<!-- version 1313d34 -->
+<!-- version 200b913 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -932,7 +932,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
       // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
       // -> show normal backside
-      if (!alwaysOneByOne && ((selectiveOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldNotEmpty && (numClozesForNumber < minNumberOfClozes)))) {
+      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || ((!oneByOneFieldEmpty || alwaysOneByOne) && (numClozesForNumber < minNumberOfClozes))) {
         clozeOneByOneEnabled = false
       }
 

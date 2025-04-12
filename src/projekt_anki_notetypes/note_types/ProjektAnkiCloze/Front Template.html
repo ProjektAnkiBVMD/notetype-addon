@@ -1,4 +1,4 @@
-<!-- version 1313d34 -->
+<!-- version 200b913 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -759,6 +759,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     function processSelective1b1() {
       if (alreadyRendered) return;
+
       // parse the cloze numbers for which selectiveOneByOne is enabled
       var clozeNumbers = "{{One by one}}".split(',').filter(element => element).map(Number)
       var cardNumberIsOneByOne = !clozeNumbers.filter(n => !Number.isNaN(n)).length || clozeNumbers.includes(parseInt(getCardNumber()))
@@ -768,11 +769,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
       // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
       // -> show normal backside
-      if (!alwaysOneByOne && ((selectiveOneByOne && !cardNumberIsOneByOne) || (oneByOneFieldNotEmpty && (numClozesForNumber < minNumberOfClozes)))) {
+      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || ((!oneByOneFieldEmpty || alwaysOneByOne) && (numClozesForNumber < minNumberOfClozes))) {
         clozeOneByOneEnabled = false
       }
 
-      if (autoflip) {
+      if (autoflip && clozeOneByOneEnabled) {
         if (window.pycmd || window.showAnswer) {
           // avoid flickering. Must unset this in the back.
           document.getElementById("qa").style.display = "none";
@@ -782,6 +783,8 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         } else if (window.showAnswer) {
           showAnswer()
         }
+      } else {
+        document.getElementById("qa").style.removeProperty("display")
       }
       // AnkiMobile JS API doesn't have one for show answer.
       // Best alternative is to use Taps/Swipes to show answer.
