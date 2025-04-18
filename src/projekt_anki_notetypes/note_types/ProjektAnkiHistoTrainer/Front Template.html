@@ -1,4 +1,4 @@
-<!-- version 200b913 -->
+<!-- version bcc911b -->
 {{#Markierung 1}}
 <script>
   // ############## USER CONFIGURATION START ##############
@@ -284,6 +284,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
   // use a function for the EventListener in line 284
   function doIndentText() {
+    if (!indentation) { return; }
     indentText(document.getElementById("container-content").getElementsByTagName("div"));
     indentText(document.getElementById("container-buttons").getElementsByTagName("div"));
     // remove uneeded EventListener
