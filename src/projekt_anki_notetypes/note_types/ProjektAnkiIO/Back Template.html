@@ -1,4 +1,4 @@
-<!-- version 438ffde -->
+<!-- version 4b06cea -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -923,12 +923,28 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         }
       }
 
+      var clozeType = "imageOcclusionBack"
       // parse the cloze numbers for which selectiveOneByOne is enabled
       var clozeNumbers = "{{One by one}}".split(',').filter(element => element).map(Number)
       var cardNumberIsOneByOne = !clozeNumbers.filter(n => !Number.isNaN(n)).length || clozeNumbers.includes(parseInt(getCardNumber()))
 
-      // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
-      var numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
+      var numClozesForNumber = 0;
+
+      // Only count if minNumberOfClozes is set (truthy)
+      if (minNumberOfClozes) {
+        const clozeFieldExists = document.querySelector('.clozefield') !== null; // Check if any element with the class 'clozefield' exists
+
+        if (clozeFieldExists && clozeType == "cloze") { // If 'clozefield' exists, count '.cloze' elements within it
+          numClozesForNumber = document.querySelectorAll('.clozefield .cloze').length;
+        } else if (clozeType == "cloze") {
+          numClozesForNumber = document.querySelectorAll('.cloze').length;
+        } else if (clozeType == "imageOcclusion") {
+          numClozesForNumber = document.querySelectorAll(".cloze[data-ordinal='" + getCardNumber() + "']").length;
+        } else if (clozeType == "imageOcclusionBack") {
+          numClozesForNumber = document.querySelectorAll('.cloze-highlight').length;
+        }
+      }
+      // If minNumberOfClozes is not set (falsy), numClozesForNumber remains 0
 
       // | alwaysOneByOne | selectiveOneByOne | !oneByOneFieldEmpty | minNumberOfClozes reached | cardNumberIsOneByOne | OneByOne |
       // |----------------|-------------------|---------------------|---------------------------|----------------------|----------|
