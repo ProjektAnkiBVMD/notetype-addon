@@ -6,6 +6,7 @@ from pathlib import Path
 from .lernplan_manager import (
     create_lerntag_deck,
     create_previous_lerntag_decks,
+    create_lerntag_due_deck,
     remove_previous_lerntag_decks,
 )
 
@@ -69,6 +70,10 @@ def lernplan_auto_create():
         create_lerntag_deck(lerntag, highyield, lowyield)
 
         # Create the previous filtered decks if necessary
+        if lernplan_conf.get("autocreate_due", False):
+            # Create the previous filtered decks
+            create_lerntag_due_deck(lerntag, highyield, lowyield)
+
         if lernplan_conf.get("autocreate_previous", False):
             create_previous_lerntag_decks(lerntag, highyield, lowyield)
 

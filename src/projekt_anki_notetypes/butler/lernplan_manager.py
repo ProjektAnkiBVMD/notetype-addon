@@ -39,7 +39,10 @@ class LernplanManagerDialog(QDialog):
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
             autocreate = lernplan_conf.get("autocreate", False)
-            autocreate_previous = lernplan_conf.get("autocreate_previous", True)
+            autocreate_due = lernplan_conf.get("autocreate_due", True)
+            autocreate_previous = lernplan_conf.get(
+                "autocreate_previous", False
+            )
             wochentage = lernplan_conf.get(
                 "wochentage", [True] * 5 + [False] * 2
             )
@@ -132,11 +135,20 @@ class LernplanManagerDialog(QDialog):
         self.lowyield_button.setChecked(lowyield)
         settings_layout.addWidget(self.lowyield_button)
 
+        # AUTOCREATE DUE LERNTAG DECK
+        settings_layout.addSpacing(10)
+        self.autocreate_due_button = QCheckBox(
+            "Automatisch Auswahlstapel für fällige Lerntag-Karten erstellen"
+        )
+        self.autocreate_due_button.setChecked(autocreate_due)
+        settings_layout.addWidget(self.autocreate_due_button)
+
         # AUTOCREATE PREVIOUS LERNTAG DECK
         settings_layout.addSpacing(10)
         self.autocreate_previous_button = QCheckBox(
-            "Alte Lerntag-Auswahlstapel unter !VORHERIGE LERNTAGE behalten"
+            "Alte Lerntag-Auswahlstapel unter !VORHERIGE LERNTAGE behalten und neu auffüllen"
         )
+        self.autocreate_previous_button.setChecked(autocreate_previous)
         settings_layout.addWidget(self.autocreate_previous_button)
 
         # Confirm button
@@ -197,6 +209,7 @@ class LernplanManagerDialog(QDialog):
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield = self.highyield_button.isChecked()
         lowyield = self.lowyield_button.isChecked()
+        autocreate_due = self.autocreate_due_button.isChecked()
         autocreate_previous = self.autocreate_previous_button.isChecked()
 
         # Save the config
@@ -205,6 +218,7 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
+        lernplan_conf["autocreate_due"] = autocreate_due
         lernplan_conf["autocreate_previous"] = autocreate_previous
         lernplan_conf["wochentage"] = [
             button.isChecked() for button in self.weekday_buttons
@@ -406,6 +420,35 @@ def create_previous_lerntag_decks(lerntag, highyield, lowyield):
             silent=True,
         )
     return OpChanges()
+
+
+def create_lerntag_due_deck(
+    lerntag,
+    highyield,
+    lowyield,
+    silent=False,
+):
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    lerntage = "|".join([str(i).zfill(3) for i in range(1, int(lerntag))])
+    tag_pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({lerntage})"
+    search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
+    deck_name = f"!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
+
+    # Select only high-yield cards
+    if highyield:
+        high_yield_tag = (
+            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        )
+        search += f' tag:"{high_yield_tag}"'
+    # Exclude low-yield cards
+    elif not lowyield:
+        low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
+        search += f' -tag:"{low_yield_tag}"'
+
+    create_filtered_deck(deck_name, search, silent=silent)
 
 
 def create_lerntag_deck(
