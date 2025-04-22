@@ -1,4 +1,4 @@
-<!-- version bcc911b -->
+<!-- version 438ffde -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -768,10 +768,64 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       // check the amount of clozes -> disable OneByOne if less than minimum value wanted (minNumberOfClozes)
       var numClozesForNumber = (minNumberOfClozes) ? document.querySelectorAll('.clozefield .cloze').length : 0
 
-      // stop OneByOne if selectiveOneByOne is not enabled for this specific card OR if OneByOne is disabled some other way
-      // -> show normal backside
-      if ((selectiveOneByOne && !alwaysOneByOne && !cardNumberIsOneByOne) || ((!oneByOneFieldEmpty || alwaysOneByOne) && (numClozesForNumber < minNumberOfClozes))) {
-        clozeOneByOneEnabled = false
+      // | alwaysOneByOne | selectiveOneByOne | !oneByOneFieldEmpty | minNumberOfClozes reached | cardNumberIsOneByOne | OneByOne |
+      // |----------------|-------------------|---------------------|---------------------------|----------------------|----------|
+      // | TRUE           | TRUE              | TRUE                | TRUE                      | TRUE                 | TRUE     |
+      // | TRUE           | TRUE              | TRUE                | TRUE                      | FALSE                | TRUE     |
+      // | TRUE           | TRUE              | TRUE                | FALSE                     | TRUE                 | TRUE     |
+      // | TRUE           | TRUE              | TRUE                | FALSE                     | FALSE                | TRUE     |
+      // | TRUE           | TRUE              | FALSE               | TRUE                      | TRUE                 | FALSE    | // S && !F
+      // | TRUE           | TRUE              | FALSE               | TRUE                      | FALSE                | FALSE    | // S && !F
+      // | TRUE           | TRUE              | FALSE               | FALSE                     | TRUE                 | FALSE    | // S && !F
+      // | TRUE           | TRUE              | FALSE               | FALSE                     | FALSE                | FALSE    | // S && !F
+      // |----------------|-------------------|---------------------|---------------------------|----------------------|----------|
+      // | TRUE           | FALSE             | TRUE                | TRUE                      | TRUE                 | TRUE     |
+      // | TRUE           | FALSE             | TRUE                | TRUE                      | FALSE                | TRUE     |
+      // | TRUE           | FALSE             | TRUE                | FALSE                     | TRUE                 | FALSE    | // A && !S && !M
+      // | TRUE           | FALSE             | TRUE                | FALSE                     | FALSE                | FALSE    | // A && !S && !M
+      // | TRUE           | FALSE             | FALSE               | TRUE                      | TRUE                 | TRUE     |
+      // | TRUE           | FALSE             | FALSE               | TRUE                      | FALSE                | TRUE     |
+      // | TRUE           | FALSE             | FALSE               | FALSE                     | TRUE                 | FALSE    | // A && !S && !M
+      // | TRUE           | FALSE             | FALSE               | FALSE                     | FALSE                | FALSE    | // A && !S && !M
+      // |----------------|-------------------|---------------------|---------------------------|----------------------|----------|
+      // | FALSE          | TRUE              | TRUE                | TRUE                      | TRUE                 | TRUE     |
+      // | FALSE          | TRUE              | TRUE                | TRUE                      | FALSE                | TRUE     |
+      // | FALSE          | TRUE              | TRUE                | FALSE                     | TRUE                 | TRUE     |
+      // | FALSE          | TRUE              | TRUE                | FALSE                     | FALSE                | FALSE    | // !A && S && F && !M && !C
+      // | FALSE          | TRUE              | FALSE               | TRUE                      | TRUE                 | FALSE    | // S && !F
+      // | FALSE          | TRUE              | FALSE               | TRUE                      | FALSE                | FALSE    | // S && !F
+      // | FALSE          | TRUE              | FALSE               | FALSE                     | TRUE                 | FALSE    | // S && !F
+      // | FALSE          | TRUE              | FALSE               | FALSE                     | FALSE                | FALSE    | // S && !F
+      // |----------------|-------------------|---------------------|---------------------------|----------------------|----------|
+      // | FALSE          | FALSE             | TRUE                | TRUE                      | TRUE                 | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | TRUE                | TRUE                      | FALSE                | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | TRUE                | FALSE                     | TRUE                 | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | TRUE                | FALSE                     | FALSE                | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | FALSE               | TRUE                      | TRUE                 | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | FALSE               | TRUE                      | FALSE                | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | FALSE               | FALSE                     | TRUE                 | FALSE    | // !A && !S
+      // | FALSE          | FALSE             | FALSE               | FALSE                     | FALSE                | FALSE    | // !A && !S
+
+      // Determine if OneByOne should be disabled based on the logic table.
+      // The condition below evaluates to TRUE when OneByOne should be DISABLED (clozeOneByOneEnabled = false),
+      // corresponding to the rows where 'OneByOne' is FALSE in the table.
+      // Variables mapping: A=alwaysOneByOne, S=selectiveOneByOne, F=!oneByOneFieldEmpty, M=(numClozesForNumber >= minNumberOfClozes), C=cardNumberIsOneByOne
+      // Code variables: oneByOneFieldEmpty (!F), (numClozesForNumber < minNumberOfClozes) (!M)
+
+      if (
+        // Case 1: !A && !S (Covers all rows where A=F, S=F)
+        (!alwaysOneByOne && !selectiveOneByOne) ||
+
+        // Case 2: A && !S && !M (Covers rows where A=T, S=F, M=F)
+        (alwaysOneByOne && !selectiveOneByOne && (numClozesForNumber < minNumberOfClozes)) ||
+
+        // Case 3: S && !F (Covers rows where S=T, F=F; In code: selectiveOneByOne && oneByOneFieldEmpty)
+        (selectiveOneByOne && oneByOneFieldEmpty) ||
+
+        // Case 4: !A && S && F && !M && !C (Covers row A=F, S=T, F=T, M=F, C=F; In code: !A && S && !oneByOneFieldEmpty && !M && !C)
+        (!alwaysOneByOne && selectiveOneByOne && !oneByOneFieldEmpty && (numClozesForNumber < minNumberOfClozes) && !cardNumberIsOneByOne)
+      ) {
+        clozeOneByOneEnabled = false;
       }
 
       if (autoflip && clozeOneByOneEnabled) {
