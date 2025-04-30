@@ -141,7 +141,6 @@ class LernplanManagerDialog(QDialog):
         yield_group_box.setLayout(yield_buttons_layout)
         settings_layout.addWidget(yield_group_box)
 
-
         # AUTOCREATE OPTIONS LAYOUT
         settings_layout.addSpacing(10)
         autocreate_group_box = QGroupBox()
@@ -152,10 +151,15 @@ class LernplanManagerDialog(QDialog):
         due_layout = QHBoxLayout()
         self.autocreate_due_button = QRadioButton()
         self.autocreate_due_button.setChecked(autocreate_due)
-        due_label = QLabel("ℹ️ Ich will die relevanten Lernplan-Karten im Anki-Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)") # fmt: skip
-        due_label.setToolTip("Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.")  # fmt: skip
+        due_tooltip = (
+            "Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER "
+            "LERNTAGE</code>) mit allen fälligen Karten aus vergangenen "
+            "Lerntagen."
+        )
+        due_label = QLabel("Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)") # fmt: skip
         due_label.setWordWrap(True)
         due_layout.addWidget(self.autocreate_due_button, 0)
+        due_layout.insertWidget(1, self._info_icon_label(due_tooltip))
         due_layout.addWidget(due_label, 1)
         autocreate_options_layout.addLayout(due_layout)
 
@@ -163,13 +167,16 @@ class LernplanManagerDialog(QDialog):
         previous_layout = QHBoxLayout()
         self.autocreate_previous_button = QRadioButton()
         self.autocreate_previous_button.setChecked(autocreate_previous)
-        previous_label = QLabel("ℹ️ Ich will einzelne Lerntage später nochmal spezifisch wiederholen.") # fmt: skip
-        previous_label.setToolTip(
-            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
-            "Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
+        previous_tooltip = (
+            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden "
+            "Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
+            "Die lange Liste an Lerntag-Stapeln ist dann unter "
+            "<code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
         )
+        previous_label = QLabel("Ich will einzelne Lerntage später nochmal spezifisch wiederholen.") # fmt: skip
         previous_label.setWordWrap(True)
         previous_layout.addWidget(self.autocreate_previous_button, 0)
+        previous_layout.insertWidget(1, self._info_icon_label(previous_tooltip))
         previous_layout.addWidget(previous_label, 1)
         autocreate_options_layout.addLayout(previous_layout)
 
@@ -177,13 +184,16 @@ class LernplanManagerDialog(QDialog):
         no_previous_layout = QHBoxLayout()
         self.autocreate_no_previous_button = QRadioButton()
         self.autocreate_no_previous_button.setChecked(autocreate_no_previous)
-        no_previous_label = QLabel("ℹ️ Ich will nur die relevanten Lernplan-Karten ausgewählt haben.") # fmt: skip
-        no_previous_label.setToolTip(
-            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>"
-            "Macht eigentlich nur Sinn, wenn du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst."
+        noprev_tooltip = (
+            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten "
+            "Karten fallen in die ganz normale Rotation zurück.<br>Macht "
+            "eigentlich nur Sinn, wenn du schon seit dem 5. Semester mit "
+            "Ankizin lernst und im Lernplan nur auffrischst."
         )
+        no_previous_label = QLabel("Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.") # fmt: skip
         no_previous_label.setWordWrap(True)
         no_previous_layout.addWidget(self.autocreate_no_previous_button, 0)
+        no_previous_layout.insertWidget(1, self._info_icon_label(noprev_tooltip)) # fmt: skip
         no_previous_layout.addWidget(no_previous_label, 1)
         autocreate_options_layout.addLayout(no_previous_layout)
 
@@ -191,7 +201,7 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_button_group = QButtonGroup(self)
         self.autocreate_button_group.addButton(self.autocreate_due_button)
         self.autocreate_button_group.addButton(self.autocreate_previous_button)
-        self.autocreate_button_group.addButton(self.autocreate_no_previous_button)
+        self.autocreate_button_group.addButton(self.autocreate_no_previous_button) # fmt: skip
 
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
@@ -266,7 +276,8 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["autocreate_previous"] = autocreate_previous
         lernplan_conf["autocreate_no_previous"] = autocreate_no_previous
         lernplan_conf["wochentage"] = [
-            button.isChecked() for button in self.weekday_buttons]
+            button.isChecked() for button in self.weekday_buttons
+        ]
         lernplan_conf["last_updated"] = (
             datetime.datetime.today().date().isoformat()
         )
@@ -301,6 +312,18 @@ class LernplanManagerDialog(QDialog):
 
         self.accept()
         mw.reset()
+
+    def _info_icon_label(self, tooltip: str) -> QLabel:
+        dummy = QCheckBox()
+        icon = dummy.style().standardIcon(
+            QStyle.StandardPixmap.SP_MessageBoxInformation
+        )
+        result = QLabel("")
+        pixmap = icon.pixmap(dummy.iconSize())
+        result.setPixmap(pixmap)
+        result.setToolTip(tooltip)
+        result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        return result
 
 
 class LerntagDeckCreatorDialog(QDialog):
