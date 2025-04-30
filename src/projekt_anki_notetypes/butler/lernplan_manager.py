@@ -40,12 +40,9 @@ class LernplanManagerDialog(QDialog):
             lowyield = lernplan_conf.get("lowyield", False)
             autocreate = lernplan_conf.get("autocreate", False)
             autocreate_due = lernplan_conf.get("autocreate_due", True)
-            autocreate_previous = lernplan_conf.get(
-                "autocreate_previous", False
-            )
-            wochentage = lernplan_conf.get(
-                "wochentage", [True] * 5 + [False] * 2
-            )
+            autocreate_previous = lernplan_conf.get("autocreate_previous", False) # fmt: skip
+            autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False) # fmt: skip
+            wochentage = lernplan_conf.get("wochentage", [True] * 5 + [False] * 2) # fmt: skip
 
         # Logo
         logo_label = QLabel()
@@ -81,9 +78,8 @@ class LernplanManagerDialog(QDialog):
             "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
         )
         self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.toggled.connect(
-            self.toggle_settings
-        )  # Changed signal
+        self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!LERNTAG&nbsp;XX</code>.")  # fmt: skip
+        self.autocreate_button.toggled.connect(self.toggle_settings)
         right_layout.addWidget(self.autocreate_button)
 
         # CREATE FRAME TO HOLD SETTINGS
@@ -119,44 +115,91 @@ class LernplanManagerDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         settings_layout.addWidget(self.lerntag_combo)
 
+        # YIELD SELECTION
+        yield_group_box = QGroupBox()
+        yield_buttons_layout = QVBoxLayout()
+        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
+
         self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
         self.highyield_button.setChecked(highyield)
-        settings_layout.addWidget(self.highyield_button)
+        yield_buttons_layout.addWidget(self.highyield_button)
 
-        self.standard_button = QRadioButton(
-            "STANDARD Karten (high-yield und normal)"
-        )
+        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
         self.standard_button.setChecked(normyield)
-        settings_layout.addWidget(self.standard_button)
+        yield_buttons_layout.addWidget(self.standard_button)
 
-        self.lowyield_button = QRadioButton(
-            "ALLE Karten (high-yield, normal UND low-yield)"
-        )
+        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
         self.lowyield_button.setChecked(lowyield)
-        settings_layout.addWidget(self.lowyield_button)
+        yield_buttons_layout.addWidget(self.lowyield_button)
+
+        # Explicitly group yield buttons
+        self.yield_button_group = QButtonGroup(self)
+        self.yield_button_group.addButton(self.highyield_button)
+        self.yield_button_group.addButton(self.standard_button)
+        self.yield_button_group.addButton(self.lowyield_button)
+
+        yield_group_box.setLayout(yield_buttons_layout)
+        settings_layout.addWidget(yield_group_box)
+
+
+        # AUTOCREATE OPTIONS LAYOUT
+        settings_layout.addSpacing(10)
+        autocreate_group_box = QGroupBox()
+        autocreate_options_layout = QVBoxLayout()
+        autocreate_options_layout.setContentsMargins(5, 5, 5, 5)
 
         # AUTOCREATE DUE LERNTAG DECK
-        settings_layout.addSpacing(10)
-        self.autocreate_due_button = QCheckBox(
-            "Automatisch Auswahlstapel für fällige Lerntag-Karten erstellen"
-        )
+        due_layout = QHBoxLayout()
+        self.autocreate_due_button = QRadioButton()
         self.autocreate_due_button.setChecked(autocreate_due)
-        settings_layout.addWidget(self.autocreate_due_button)
+        due_label = QLabel("ℹ️ Ich will die relevanten Lernplan-Karten im Anki-Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)") # fmt: skip
+        due_label.setToolTip("Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.")  # fmt: skip
+        due_label.setWordWrap(True)
+        due_layout.addWidget(self.autocreate_due_button, 0)
+        due_layout.addWidget(due_label, 1)
+        autocreate_options_layout.addLayout(due_layout)
 
         # AUTOCREATE PREVIOUS LERNTAG DECK
-        settings_layout.addSpacing(10)
-        self.autocreate_previous_button = QCheckBox(
-            "Alte Lerntag-Auswahlstapel unter !VORHERIGE LERNTAGE behalten und neu auffüllen"
-        )
+        previous_layout = QHBoxLayout()
+        self.autocreate_previous_button = QRadioButton()
         self.autocreate_previous_button.setChecked(autocreate_previous)
-        settings_layout.addWidget(self.autocreate_previous_button)
+        previous_label = QLabel("ℹ️ Ich will einzelne Lerntage später nochmal spezifisch wiederholen.") # fmt: skip
+        previous_label.setToolTip(
+            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
+            "Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
+        )
+        previous_label.setWordWrap(True)
+        previous_layout.addWidget(self.autocreate_previous_button, 0)
+        previous_layout.addWidget(previous_label, 1)
+        autocreate_options_layout.addLayout(previous_layout)
+
+        # AUTOCREATE NO PREVIOUS LERNTAG DECKS
+        no_previous_layout = QHBoxLayout()
+        self.autocreate_no_previous_button = QRadioButton()
+        self.autocreate_no_previous_button.setChecked(autocreate_no_previous)
+        no_previous_label = QLabel("ℹ️ Ich will nur die relevanten Lernplan-Karten ausgewählt haben.") # fmt: skip
+        no_previous_label.setToolTip(
+            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>"
+            "Macht eigentlich nur Sinn, wenn du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst."
+        )
+        no_previous_label.setWordWrap(True)
+        no_previous_layout.addWidget(self.autocreate_no_previous_button, 0)
+        no_previous_layout.addWidget(no_previous_label, 1)
+        autocreate_options_layout.addLayout(no_previous_layout)
+
+        # Explicitly group autocreate buttons
+        self.autocreate_button_group = QButtonGroup(self)
+        self.autocreate_button_group.addButton(self.autocreate_due_button)
+        self.autocreate_button_group.addButton(self.autocreate_previous_button)
+        self.autocreate_button_group.addButton(self.autocreate_no_previous_button)
+
+        autocreate_group_box.setLayout(autocreate_options_layout)
+        settings_layout.addWidget(autocreate_group_box)
 
         # Confirm button
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
-        settings_layout.addWidget(
-            confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
-        )
+        settings_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
 
         self.settings_frame.setLayout(settings_layout)
@@ -211,6 +254,7 @@ class LernplanManagerDialog(QDialog):
         lowyield = self.lowyield_button.isChecked()
         autocreate_due = self.autocreate_due_button.isChecked()
         autocreate_previous = self.autocreate_previous_button.isChecked()
+        autocreate_no_previous = self.autocreate_no_previous_button.isChecked()
 
         # Save the config
         lernplan_conf["lerntag"] = lerntag
@@ -220,9 +264,9 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
         lernplan_conf["autocreate_due"] = autocreate_due
         lernplan_conf["autocreate_previous"] = autocreate_previous
+        lernplan_conf["autocreate_no_previous"] = autocreate_no_previous
         lernplan_conf["wochentage"] = [
-            button.isChecked() for button in self.weekday_buttons
-        ]
+            button.isChecked() for button in self.weekday_buttons]
         lernplan_conf["last_updated"] = (
             datetime.datetime.today().date().isoformat()
         )
@@ -317,24 +361,18 @@ class LerntagDeckCreatorDialog(QDialog):
         self.highyield_button.setChecked(highyield)
         right_layout.addWidget(self.highyield_button)
 
-        self.standard_button = QRadioButton(
-            "STANDARD Karten (high-yield und normal)"
-        )
+        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
         self.standard_button.setChecked(normyield)
         right_layout.addWidget(self.standard_button)
 
-        self.lowyield_button = QRadioButton(
-            "ALLE Karten (high-yield, normal UND low-yield)"
-        )
+        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
         self.lowyield_button.setChecked(lowyield)
         right_layout.addWidget(self.lowyield_button)
 
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
         confirm_btn.setFixedWidth(150)
-        right_layout.addWidget(
-            confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft
-        )
+        right_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
 
         main_layout.addLayout(right_layout)
