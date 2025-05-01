@@ -3,6 +3,10 @@ from aqt.qt import *
 from anki import hooks
 import datetime
 from pathlib import Path
+from aqt.operations.scheduling import add_or_update_filtered_deck
+from anki.scheduler import FilteredDeckForUpdate
+from aqt.operations import QueryOp
+from .menu import get_rebuild_config
 from .lernplan_manager import (
     create_lerntag_deck,
     create_previous_lerntag_decks,
@@ -11,6 +15,8 @@ from .lernplan_manager import (
 )
 
 from .browser import filtered_deck_hk
+
+from ..gui.projekt_anki_menu import get_ankizin_menu
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
@@ -83,7 +89,17 @@ def lernplan_auto_create():
         # Lernplan is not set up
         return None
 
-
+def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
+    searchterm_entry = filtered_deck.config.search_terms[0]
+    if "is:new" in searchterm_entry.search or "is:due" in searchterm_entry.search: # already finetuned
+        print("deck alread yhas filter")
+        mw.col.sched.rebuild_filtered_deck(filtered_deck.id)
+    else:
+        # rebuild with is:new or is:due filter
+        print("Rebuilding deck with is:new or is:due filter")
+        searchterm_entry.search = f"{searchterm_entry.search} (is:new or is:due)"
+        add_or_update_filtered_deck(parent=mw, deck=filtered_deck).run_in_background()
+            
 def auto_rebuild_filtered_decks():
     col = mw.col
     if col is None:
@@ -91,10 +107,25 @@ def auto_rebuild_filtered_decks():
 
     mw.progress.start()
 
+    config = get_rebuild_config()
+    rebuild_all = config.get("autoRebuildDecksOnStartup", True)
+    print("Auto rebuild filtered decks (Ankizin):", rebuild_all)
     # match only decks that have "REBUILD" in their name
     for deck in mw.col.decks.all_names_and_ids():
-        if "REBUILD" in deck.name and col.decks.is_filtered(deck.id):
-            col.sched.rebuild_filtered_deck(deck.id)
+        if col.decks.is_filtered(deck.id):
+            if "REBUILD" in deck.name:
+                col.sched.rebuild_filtered_deck(deck.id)
+            elif rebuild_all:
+                # rebuild with is:new or is:due filter
+                print(f"Rebuilding deck {deck.name} with is:new or is:due filter")
+                # QueryOp(
+                #     parent=mw,
+                #     op=lambda col: col.sched.get_or_create_filtered_deck(deck_id=deck.id),
+                #     success=try_rebuild_filtered_deck,
+                # ).run_in_background()
+                deck_res =col.sched.get_or_create_filtered_deck(deck_id=deck.id)
+                deck_res.allow_empty = True # for some reason this is not set when i call get_or_create_filtered_deck?! no time to investigate
+                try_rebuild_filtered_deck(deck_res)
 
     mw.progress.finish()
     mw.reset()
@@ -103,6 +134,7 @@ def auto_rebuild_filtered_decks():
 def profile_loaded_hk():
     lernplan_auto_create()
     auto_rebuild_filtered_decks()
+    
 
 
 def hooks_init():

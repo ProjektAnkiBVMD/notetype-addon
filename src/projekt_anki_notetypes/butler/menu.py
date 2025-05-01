@@ -1,12 +1,14 @@
+from pathlib import Path
+import aqt
 from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo, askUser
+import anki
 import anki.hooks
 import re
 import webbrowser
-import anki
 from aqt.utils import showInfo
-from aqt import mw
+import aqt.forms.preferences
 
 from .ankizin_helper import AnkizinHelper
 from .lernplan_manager import open_lernplan_manager, open_lerntag_deck_creator
@@ -44,6 +46,68 @@ def add_lerntag_deck_creator(menu):
     action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
+def get_rebuild_config():
+    conf = mw.addonManager.getConfig(str(Path(__file__).parent.parent.name))
+    if conf is None:
+        conf = {}
+    key = "autoRebuildDecksOnStartup" # todo: move this init to a prper function, but i only have 43 more minutes to finish this
+    if key not in conf:
+            conf[key] = True # always rebuild by default
+    return conf
+
+def on_auto_rebuild_checkbox_changed(checked: bool):
+    """Called when the user clicks the checkbox in Preferences."""
+    conf = get_rebuild_config()
+    key = "autoRebuildDecksOnStartup"
+    conf[key] = checked
+    
+    mw.addonManager.writeConfig(str(Path(__file__).parent.parent.name), conf)
+    print("Auto rebuild setting changed:", conf[key])
+    
+def setup_rebuild_settings_toggle():
+    # monkey patch the setupUi method of the Preferences dialog 
+    original_form_setupUi = aqt.forms.preferences.Ui_Preferences.setupUi
+    
+    def preferences_ui_with_ankizin(self, PreferencesDialog):        
+        # og call
+        original_form_setupUi(self, PreferencesDialog)
+
+        try:
+            # Find the target widget (the 'Render LaTeX' checkbox) in the review tab we usee as refernce
+            target_widget = self.render_latex
+            if not isinstance(target_widget, QCheckBox):
+                raise AttributeError("Target widget 'render_latex' is not a QCheckBox.")
+
+            parent_widget = target_widget.parentWidget()
+            layout = parent_widget.layout() if parent_widget else None
+
+            if not isinstance(layout, QLayout):
+                return
+
+            # Find the index of the target widget within the layout
+            target_index = -1
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                if item and item.widget() == target_widget:
+                    target_index = i
+                    break
+
+            if target_index == -1:
+                return
+
+            config = get_rebuild_config()
+            auto_rebuild_checkbox = QCheckBox(f"Auswahlstapel automatisch organisieren (Ankizin)")
+            auto_rebuild_checkbox.setChecked(config.get("autoRebuildDecksOnStartup", True))
+            auto_rebuild_checkbox.setToolTip(
+                "Wenn du diese Option aktivierst, werden Auswahlstapel automatisch bei jedem Ankistart neu organisiert"
+            )
+            qconnect(auto_rebuild_checkbox.stateChanged, on_auto_rebuild_checkbox_changed)
+            layout.insertWidget(target_index + 1, auto_rebuild_checkbox)
+
+        except Exception as e:
+            print(f"Ankizin Settings Hook error': {e}")
+        
+    aqt.forms.preferences.Ui_Preferences.setupUi = preferences_ui_with_ankizin
 
 def menu_init():
     menu = get_ankizin_menu()
@@ -52,3 +116,6 @@ def menu_init():
     add_lerntag_deck_creator(menu)
     menu.addSeparator()
     init_ankizin_helper(menu)
+    
+    # Setup preferences hook, could be moved to hooks maybe but this is a menu item so idk
+    setup_rebuild_settings_toggle()
