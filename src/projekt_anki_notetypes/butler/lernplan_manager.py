@@ -285,7 +285,7 @@ class LernplanManagerDialog(QDialog):
             datetime.datetime.today().weekday()
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return lerntag, highyield, lowyield, autocreate_previous
+        return lerntag, highyield, lowyield, autocreate_previous, autocreate_due
 
     @staticmethod
     def on_success(changes: OpChanges):
@@ -293,7 +293,7 @@ class LernplanManagerDialog(QDialog):
 
     def create_lerntag_deck_wrapper(self):
         # save config + get values
-        lerntag, highyield, lowyield, autocreate_previous = self.save_config()
+        lerntag, highyield, lowyield, _previous, _due = self.save_config()
 
         # Remove previous filtered decks
         remove_previous_lerntag_decks()
@@ -301,8 +301,12 @@ class LernplanManagerDialog(QDialog):
         # Create the filtered deck
         create_lerntag_deck(lerntag, highyield, lowyield)
 
+        # Create the previous due deck if necessary
+        if _due:
+            create_lerntag_due_deck(lerntag, highyield, lowyield)
+
         # Create the previous filtered decks if necessary
-        if autocreate_previous:
+        if _previous:
             CollectionOp(
                 parent=aqt.mw,
                 op=lambda _: create_previous_lerntag_decks(
@@ -467,7 +471,10 @@ def remove_previous_lerntag_decks():
 
     # match only main Lerntage
     for deck in mw.col.decks.all_names_and_ids():
-        if deck.name.startswith("!LERNTAG ") and col.decks.is_filtered(deck.id):
+        if (
+            deck.name.startswith("!LERNTAG ")
+            or deck.name.startswith("!FÄLLIGE KARTEN VERGANGENER LERNTAGE")
+        ) and col.decks.is_filtered(deck.id):
             remove_filtered_deck(deck.id)
 
 

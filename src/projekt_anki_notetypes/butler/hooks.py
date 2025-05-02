@@ -18,22 +18,18 @@ from .browser import filtered_deck_hk
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
-def lernplan_auto_create():
-    # Set up the lernplan
-    # Check if the lernplan is already set up / config is available
+def run_today_setup():
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if conf is not None and "lernplan" in conf:
-        lernplan_conf = conf["lernplan"]
+        last_updated = conf["lernplan"].get("last_updated", None)
 
-        # Check if the lernplan should be autocreated
-        if not lernplan_conf.get("autocreate", False):
-            return
+        if last_updated is None:
+            # No last_updated date available, so we assume the setup should be run
+            return True
 
-        # Check if the lernplan is outdated and it is after rollover
+        # Check if the rebuild hooks should be run right now
         rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
-        last_updated = datetime.datetime.fromisoformat(
-            lernplan_conf["last_updated"]
-        ).date()
+        last_updated = datetime.datetime.fromisoformat(last_updated).date()
         now = datetime.datetime.now()
         today = now.date()
 
@@ -42,11 +38,31 @@ def lernplan_auto_create():
             today = today - datetime.timedelta(days=1)
 
         if not last_updated < today:
-            return  # Lernplan is up to date
+            return False  # Lernplan is up to date
+
+    else:
+        # No config available, so we assume the setup should be run
+        return True
+
+    return True  # No config available, so we assume the setup should be run
+
+
+def lernplan_auto_create():
+    # Set up the lernplan
+    # Check if the lernplan is already set up / config is available
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+
+    # Check if the setup should be run today
+    if run_today_setup():
+        lernplan_conf = conf["lernplan"]
+
+        # Check if the lernplan should be autocreated
+        if not lernplan_conf.get("autocreate", False):
+            return
 
         # Check if this weekday is in the list of weekdays
         weekdays = lernplan_conf["wochentage"]
-        today_weekday = today.weekday()
+        today_weekday = datetime.datetime.now().date().weekday()
         if not weekdays[today_weekday]:
             return  # Today is not a lernplan day
 
@@ -59,7 +75,7 @@ def lernplan_auto_create():
         # Save the config
         lerntag = str(lerntag).zfill(3)
         lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["last_updated"] = today.isoformat()
+        lernplan_conf["last_updated"] = datetime.datetime.now().isoformat()
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         # Get the yield settings
@@ -74,7 +90,6 @@ def lernplan_auto_create():
 
         # Create the previous filtered decks if necessary
         if lernplan_conf.get("autocreate_due", False):
-            # Create the previous filtered decks
             create_lerntag_due_deck(lerntag, highyield, lowyield)
 
         if lernplan_conf.get("autocreate_previous", False):
@@ -110,6 +125,10 @@ def auto_rebuild_filtered_decks():
     col = mw.col
     if col is None:
         raise Exception("collection not available")
+
+    # Check if the setup should be run today
+    if not run_today_setup():
+        return
 
     mw.progress.start()
 

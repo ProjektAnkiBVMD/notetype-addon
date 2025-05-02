@@ -17,6 +17,8 @@ from ..gui.projekt_anki_menu import get_ankizin_menu
 
 ankizin_helper = None
 
+ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
+
 
 def init_ankizin_helper(menu):
     global ankizin_helper
@@ -48,7 +50,7 @@ def add_lerntag_deck_creator(menu):
 
 
 def get_rebuild_config():
-    conf = mw.addonManager.getConfig(str(Path(__file__).parent.parent.name))
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
 
     if conf is None:
         conf = {}
@@ -65,7 +67,7 @@ def on_auto_rebuild_checkbox_changed(checked: bool):
     key = "autoRebuildDecksOnStartup"
     conf[key] = checked
 
-    mw.addonManager.writeConfig(str(Path(__file__).parent.parent.name), conf)
+    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     print("Auto rebuild setting changed:", conf[key])
 
 
