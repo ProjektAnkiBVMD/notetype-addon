@@ -131,6 +131,7 @@ class AnkizinHelper:
 
             # Update deck configurations
             if default_conf:
+                # fmt: off
                 # New cards settings
                 default_conf["new"]["perDay"] = 50
 
@@ -139,37 +140,26 @@ class AnkizinHelper:
 
                 # Learning steps
                 default_conf["new"]["delays"] = [15.0]  # 15 minutes
-                default_conf["lapse"]["delays"] = [
-                    15.0
-                ]  # 15 minutes for relearning
+                default_conf["lapse"]["delays"] = [15.0]  # 15 minutes for relearning
 
                 # Leech settings
                 default_conf["lapse"]["leechFails"] = 15
                 default_conf["lapse"]["leechAction"] = 1  # 1 = tag only
 
                 # Display order settings
-                default_conf["new"][
-                    "order"
-                ] = 3  # DeckConfig_Config_NewCardGatherPriority.HIGHEST_POSITION
-                default_conf["newSortOrder"] = (
-                    1  # Sortierreihenfolge neuer Karten: Sammelreihenfolge (und Sammelreihenfolge ist typischerweise "Stapel")
-                )
+                default_conf["new"]["order"] = 3  # DeckConfig_Config_NewCardGatherPriority.HIGHEST_POSITION
+                default_conf["newSortOrder"] = 1  # Sortierreihenfolge neuer Karten: Sammelreihenfolge (und Sammelreihenfolge ist typischerweise "Stapel")
                 default_conf["newGatherPriority"] = 2  # ascending
-                default_conf["reviewOrder"] = (
-                    4  # DeckConfig_Config_ReviewCardOrder.INTERVALS_DESCENDING
-                )
-                default_conf["newMix"] = (
-                    1  # Reihenfolge Neu/Wiederholung: Nach Wiederholungen anzeigen
-                )
+                default_conf["reviewOrder"] = 4  # DeckConfig_Config_ReviewCardOrder.INTERVALS_DESCENDING
+                default_conf["newMix"] = 1  # Reihenfolge Neu/Wiederholung: Nach Wiederholungen anzeigen
 
                 # Sibling settings
                 default_conf["new"]["bury"] = True  # Bury new siblings
                 default_conf["rev"]["bury"] = True  # Bury review siblings
-                default_conf["buryInterdayLearning"] = (
-                    True  # Bury interday learning cards
-                )
+                default_conf["buryInterdayLearning"] = True  # Bury interday learning cards
+                # fmt: on
 
-                # Für daniel
+                # für Daniel
                 default_conf["rev"]["maxIvl"] = 180  # 180 days
                 print("settings updated")
                 # Save the configuration
