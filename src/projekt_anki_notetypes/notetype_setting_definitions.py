@@ -25,9 +25,7 @@ CONDITIONAL_FIELD_RE = lambda field_name_re=".+?": (  # noqa: E731
     rf"(?:<!-- ?)?{FIELD_BOUNDARY_RE('#', field_name_re)}[\w\W]+?{FIELD_BOUNDARY_RE('/', field_name_re)}(?: ?-->)?"
 )
 
-CONFIGURABLE_FIELD_HAS_TO_CONTAIN_RE = (
-    r'(class="hint"|id="extra"|id="dermnet"|id="ome"|id="ca1")'
-)
+CONFIGURABLE_FIELD_HAS_TO_CONTAIN_RE = r'(class="hints"|id="extra")'
 
 CONFIGURABLE_FIELD_NAME_RE = r'data-name="([\w\W]+?)"'
 CONFIGURABLE_FIELD_FALLBACK_NAME_RE = r"\{\{#(.+?)\}\}"
@@ -337,9 +335,12 @@ setting_configs: Dict[str, Any] = OrderedDict(
         },
         "back_tts": {
             "text": "Back TTS",
-            "tooltip": """if you enable this and want to use the shortcut for revealing hint buttons one by one
-you may have to change the \"Toggle next Button\" shortcut to something else than "H"
-(it is in the Hint Buttons section)""",
+            "tooltip": (
+                "if you enable this and want to use the shortcut for revealing "
+                'hint buttons one by one you may have to change the "Toggle '
+                'next Button" shortcut to something else than "H" (it is in '
+                "the Hint Buttons section)"
+            ),
             "type": "re_checkbox",
             "file": "back",
             "regex": r"(<!--|{{)tts.+?(-->|}})",
@@ -855,7 +856,9 @@ def all_btns_setting_configs():
     for notetype_name in projekt_anki_notetype_templates().keys():
         fields = configurable_fields_for_notetype(notetype_name)
         for field_name in fields:
-            shortcut = btn_name_to_shortcut_odict(notetype_name).get(field_name, None)
+            shortcut = btn_name_to_shortcut_odict(notetype_name).get(
+                field_name, None
+            )
             result.update(configurable_field_configs(field_name, shortcut))
     return result
 
@@ -912,11 +915,13 @@ def configurable_field_configs(
     if default_shortcut_if_hint_button is not None:
         result.update(
             {
-                f"btn_shortcut_{name_in_snake_case}": button_shortcut_setting_config(
-                    name, default_shortcut_if_hint_button
+                f"btn_shortcut_{name_in_snake_case}": (
+                    button_shortcut_setting_config(
+                        name, default_shortcut_if_hint_button
+                    )
                 ),
-                f"autoreveal_{name_in_snake_case}": button_auto_reveal_setting_config(
-                    name, False
+                f"autoreveal_{name_in_snake_case}": (
+                    button_auto_reveal_setting_config(name, False)
                 ),
             }
         )
