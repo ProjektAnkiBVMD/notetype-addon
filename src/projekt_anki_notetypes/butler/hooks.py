@@ -37,14 +37,13 @@ def run_today_setup():
         if now.hour < rollover:
             today = today - datetime.timedelta(days=1)
 
-        if not last_updated < today:
-            return False  # Lernplan is up to date
+        if last_updated < today:
+            return True
+        else:
+            return False  # Last updated date is today or in the future
 
-    else:
-        # No config available, so we assume the setup should be run
-        return True
-
-    return True  # No config available, so we assume the setup should be run
+    # No config available, so we assume the setup shouldn't be run
+    return False
 
 
 def lernplan_auto_create():
