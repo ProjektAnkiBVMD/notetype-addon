@@ -496,6 +496,10 @@ def create_lerntag_due_deck(
     lowyield,
     silent=False,
 ):
+    # Due cards only make sense if there is a past Lerntag
+    if int(lerntag) < 2:
+        return
+    
     col = mw.col
     if col is None:
         raise Exception("collection not available")
