@@ -149,7 +149,25 @@ def auto_rebuild_filtered_decks():
     mw.progress.finish()
     mw.reset()
 
+# There is a bug in the Amboss website query that accidentally excludes Ankizin notes. We fix it for them here :)
+def browser_search_hk(context: SearchContext): # type: ignore
+    search_term = context.search
+    
+    target_string = "note:Ankiphil*"
+    
+    has_ankiphil = target_string in search_term
+    has_amboss_field = "AMBOSS*:" in search_term 
+    has_ankizin = "note:ProjektAnki*" in search_term
 
+    if has_ankiphil and has_amboss_field and not has_ankizin:
+        replacement_string = "(note:Ankiphil* OR note:ProjektAnki*)"
+        
+        modified_search_term = search_term.replace(
+            target_string, replacement_string, 1
+        )
+        context.search = modified_search_term
+
+        
 def profile_loaded_hk():
     lernplan_auto_create()
     auto_rebuild_filtered_decks()
@@ -158,3 +176,4 @@ def profile_loaded_hk():
 def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
+    gui_hooks.browser_will_search.append(browser_search_hk)
