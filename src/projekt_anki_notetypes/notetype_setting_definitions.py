@@ -109,8 +109,8 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "default": "'",
         },
         "autoscroll_to_button": {
-            "text": "Automatisch zum Button scrollen",
-            "tooltip": "",
+            "text": "Automatisch zu den Buttons scrollen",
+            "tooltip": "CAVE: Kann bei Karten mit langen Notizen / Bildern beim Anzeigen der Antwort dafür sorgen, dass der Bildschirm nach ganz unten springt.",
             "type": "checkbox",
             "file": "back",
             "regex": r"var +ScrollToButton += +(false|true)",

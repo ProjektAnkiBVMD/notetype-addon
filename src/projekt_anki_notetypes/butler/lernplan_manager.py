@@ -499,7 +499,7 @@ def create_lerntag_due_deck(
     # Due cards only make sense if there is a past Lerntag
     if int(lerntag) < 2:
         return
-    
+
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -514,11 +514,11 @@ def create_lerntag_due_deck(
         high_yield_tag = (
             f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         )
-        search += f' tag:"{high_yield_tag}"'
+        search += f' "tag:{high_yield_tag}"'
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-        search += f' -tag:"{low_yield_tag}"'
+        search += f' -"tag:{low_yield_tag}"'
 
     create_filtered_deck(deck_name, search, silent=silent)
 
@@ -536,7 +536,7 @@ def create_lerntag_deck(
         raise Exception("collection not available")
 
     tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
-    search = col.build_search_string(f'tag:"{tag_pattern}"')
+    search = col.build_search_string(f'"tag:{tag_pattern}"')
     deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
 
     # Select only high-yield cards
@@ -544,12 +544,12 @@ def create_lerntag_deck(
         high_yield_tag = (
             f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
         )
-        search += f' tag:"{high_yield_tag}"'
+        search += f' "tag:{high_yield_tag}"'
         deck_name += f"{lerntag} - high-yield"
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-        search += f' -tag:"{low_yield_tag}"'
+        search += f' -"tag:{low_yield_tag}"'
         deck_name += f"{lerntag}"
     # Don't exclude low-yield cards
     else:

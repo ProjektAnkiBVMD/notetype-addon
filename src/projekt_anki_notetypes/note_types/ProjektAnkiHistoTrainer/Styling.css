@@ -533,7 +533,7 @@ a {
 
 .mobile #meditricks,
 .mobile #button-meditricks {
-  display: none !important; /* Add-On funktioniert eh nur auf dem Desktop, Browser aktuell nicht eingeschlossen */
+  display: none; /* Add-On funktioniert eh nur auf dem Desktop, Browser aktuell nicht eingeschlossen */
 }
 
 /* ~~~~~~~~~DETAILS FOR IMAGES~~~~~~~~~ */
