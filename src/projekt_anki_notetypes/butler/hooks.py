@@ -1,5 +1,6 @@
 from aqt import gui_hooks, mw
 from aqt.qt import *
+from aqt.browser import SearchContext
 from anki import hooks
 import datetime
 from pathlib import Path
