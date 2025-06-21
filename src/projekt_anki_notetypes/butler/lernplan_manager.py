@@ -90,7 +90,11 @@ class LernplanManagerDialog(QDialog):
         right_layout.addSpacing(20)
 
         # AUTOCREATE LERNTAG DECK
-        right_layout.addWidget(QLabel("<b>Lernplan-Manager aktivieren:</b>"))
+        right_layout.addWidget(
+            QLabel(
+                "<b>Lernplan-Manager aktivieren:</b> [Haken raus zum Abschalten]"
+            )
+        )
         self.autocreate_button = QCheckBox(
             "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
         )
@@ -136,7 +140,7 @@ class LernplanManagerDialog(QDialog):
         top100_group_box = QGroupBox()
         top100_buttons_layout = QVBoxLayout()
         top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
-        
+
         settings_layout.addSpacing(10)
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
@@ -152,9 +156,7 @@ class LernplanManagerDialog(QDialog):
         yield_buttons_layout = QVBoxLayout()
         yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.highyield_stark_button = QRadioButton(
-            "nur HIGH-YIELD stark (stark gelb)"
-        )
+        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
         self.highyield_stark_button.setChecked(
             highyield_stark and not highyield_leicht
         )
@@ -251,7 +253,7 @@ class LernplanManagerDialog(QDialog):
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
 
-        # Confirm button
+        # Confirm button for when autocreate is enabled
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
         settings_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
@@ -259,15 +261,30 @@ class LernplanManagerDialog(QDialog):
 
         self.settings_frame.setLayout(settings_layout)
         right_layout.addWidget(self.settings_frame)
+
+        # Save button for when autocreate is disabled
+        self.save_button = QPushButton("Speichern")
+        self.save_button.setFixedWidth(120)
+        self.save_button.setVisible(not autocreate)
+        self.save_button.clicked.connect(self.save_and_close)
+        right_layout.addWidget(
+            self.save_button, alignment=Qt.AlignmentFlag.AlignLeft
+        )
+
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
 
     def toggle_settings(self, checked):
         self.settings_frame.setVisible(checked)
+        self.save_button.setVisible(not checked)
         self.updateGeometry()
         self.resize(0, 0)
         self.adjustSize()
+
+    def save_and_close(self):
+        self.save_config()
+        self.accept()
 
     def closeEvent(self, event):
         self.save_config()
@@ -491,9 +508,7 @@ class LerntagDeckCreatorDialog(QDialog):
         )
         right_layout.addWidget(self.top100_button)
 
-        self.highyield_stark_button = QRadioButton(
-            "nur HIGH-YIELD stark gelb"
-        )
+        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
         self.highyield_stark_button.setChecked(
             highyield_stark and not highyield_leicht
         )
