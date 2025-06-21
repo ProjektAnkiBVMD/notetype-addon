@@ -102,7 +102,9 @@ def get_ankizin_versions() -> list:
     return versions
 
 
-def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):
+def create_filtered_deck(
+    deck_name, search, top100=False, duedeck=False, unsuspend=True, silent=False
+):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -143,7 +145,17 @@ def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):
         col.sched.add_or_update_filtered_deck(deck)
     except FilteredDeckError as e:
         print(f"Error: {e}")
-        if not silent:
+        if top100 and not silent:
+            showWarning(
+                "Error: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag."
+            )
+        elif duedeck and not silent:
+            showWarning(
+                "Error: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es fälligen Karten vergangener Lerntage."
+            )
+        elif not silent:
             showWarning(f"Error: {e}")
 
 

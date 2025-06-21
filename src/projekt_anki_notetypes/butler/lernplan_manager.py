@@ -133,13 +133,19 @@ class LernplanManagerDialog(QDialog):
         settings_layout.addWidget(self.lerntag_combo)
 
         # TOP-100 FILTER
+        top100_group_box = QGroupBox()
+        top100_buttons_layout = QVBoxLayout()
+        top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
+        
         settings_layout.addSpacing(10)
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
         self.top100_button.setToolTip(
             "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
         )
-        settings_layout.addWidget(self.top100_button)
+        top100_buttons_layout.addWidget(self.top100_button)
+        top100_group_box.setLayout(top100_buttons_layout)
+        settings_layout.addWidget(top100_group_box)
 
         # YIELD SELECTION
         yield_group_box = QGroupBox()
@@ -486,7 +492,7 @@ class LerntagDeckCreatorDialog(QDialog):
         right_layout.addWidget(self.top100_button)
 
         self.highyield_stark_button = QRadioButton(
-            "nur HIGH-YIELD stark (stark gelb)"
+            "nur HIGH-YIELD stark gelb"
         )
         self.highyield_stark_button.setChecked(
             highyield_stark and not highyield_leicht
@@ -697,7 +703,7 @@ def create_lerntag_due_deck(
         )
         search += f" -({low_yield_search})"
 
-    create_filtered_deck(deck_name, search, silent=silent)
+    create_filtered_deck(deck_name, search, duedeck=True, silent=silent)
 
 
 def create_lerntag_deck(
@@ -766,7 +772,7 @@ def create_lerntag_deck(
     if sup_deck_name:
         deck_name = f"{sup_deck_name}::{deck_name}"
 
-    create_filtered_deck(deck_name, search, silent=silent)
+    create_filtered_deck(deck_name, search, top100=top100, silent=silent)
 
 
 def open_lernplan_manager(self):
