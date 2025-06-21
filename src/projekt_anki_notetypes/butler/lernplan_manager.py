@@ -511,14 +511,25 @@ def create_lerntag_due_deck(
 
     # Select only high-yield cards
     if highyield:
-        high_yield_tag = (
-            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        high_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+        ]
+        high_yield_search = " OR ".join(
+            [f'"tag:{tag}"' for tag in high_yield_tags]
         )
-        search += f' "tag:{high_yield_tag}"'
+        search += f" ({high_yield_search})"
     # Exclude low-yield cards
     elif not lowyield:
-        low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-        search += f' -"tag:{low_yield_tag}"'
+        low_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::04-low_yield_(verzichtbar)_M2",
+        ]
+        low_yield_search = " OR ".join(
+            [f'"tag:{tag}"' for tag in low_yield_tags]
+        )
+        search += f" -({low_yield_search})"
 
     create_filtered_deck(deck_name, search, silent=silent)
 
@@ -541,15 +552,26 @@ def create_lerntag_deck(
 
     # Select only high-yield cards
     if highyield:
-        high_yield_tag = (
-            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        high_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+        ]
+        high_yield_search = " OR ".join(
+            [f'"tag:{tag}"' for tag in high_yield_tags]
         )
-        search += f' "tag:{high_yield_tag}"'
+        search += f" ({high_yield_search})"
         deck_name += f"{lerntag} - high-yield"
     # Exclude low-yield cards
     elif not lowyield:
-        low_yield_tag = f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield"
-        search += f' -"tag:{low_yield_tag}"'
+        low_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::04-low_yield_(verzichtbar)_M2",
+        ]
+        low_yield_search = " OR ".join(
+            [f'"tag:{tag}"' for tag in low_yield_tags]
+        )
+        search += f" -({low_yield_search})"
         deck_name += f"{lerntag}"
     # Don't exclude low-yield cards
     else:
