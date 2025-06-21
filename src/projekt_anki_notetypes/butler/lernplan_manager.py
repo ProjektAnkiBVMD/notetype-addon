@@ -30,14 +30,31 @@ class LernplanManagerDialog(QDialog):
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
             lerntag = 0  # 0-indexed
-            highyield, normyield, lowyield = False, True, False
+            highyield_stark, highyield_leicht, normyield, lowyield = (
+                False,
+                False,
+                True,
+                False,
+            )
+            top100 = False
         else:
             lernplan_conf = conf.get("lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
-            highyield = lernplan_conf.get("highyield", False)
+            # Handle both old "highyield" and new separate options
+            highyield_stark = lernplan_conf.get("highyield_stark", False)
+            highyield_leicht = lernplan_conf.get("highyield_leicht", False)
+            # For backward compatibility with old configs
+            if (
+                lernplan_conf.get("highyield", False)
+                and not highyield_stark
+                and not highyield_leicht
+            ):
+                highyield_stark = True
+                highyield_leicht = True
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
+            top100 = lernplan_conf.get("top100", False)
             autocreate = lernplan_conf.get("autocreate", False)
             autocreate_due = lernplan_conf.get("autocreate_due", True)
             autocreate_previous = lernplan_conf.get("autocreate_previous", False) # fmt: skip
@@ -64,7 +81,7 @@ class LernplanManagerDialog(QDialog):
         right_layout.addWidget(
             QLabel(
                 "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag-Auswahlstapel erstellen.<br>"
-                "Du kannst wählen, ob nur HIGH-YIELD Karten oder auch normale und low-yield Karten<br>enthalten sein sollen.<br>"
+                "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch<br>normale und low-yield Karten enthalten sein sollen.<br>"
                 "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
                 "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen.<br><br>"
                 "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: V4 / AnkiHub)."
@@ -115,14 +132,35 @@ class LernplanManagerDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         settings_layout.addWidget(self.lerntag_combo)
 
+        # TOP-100 FILTER
+        settings_layout.addSpacing(10)
+        self.top100_button = QCheckBox("nur TOP-100 Themen")
+        self.top100_button.setChecked(top100)
+        self.top100_button.setToolTip(
+            "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
+        )
+        settings_layout.addWidget(self.top100_button)
+
         # YIELD SELECTION
         yield_group_box = QGroupBox()
         yield_buttons_layout = QVBoxLayout()
         yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
-        self.highyield_button.setChecked(highyield)
-        yield_buttons_layout.addWidget(self.highyield_button)
+        self.highyield_stark_button = QRadioButton(
+            "nur HIGH-YIELD stark (stark gelb)"
+        )
+        self.highyield_stark_button.setChecked(
+            highyield_stark and not highyield_leicht
+        )
+        yield_buttons_layout.addWidget(self.highyield_stark_button)
+
+        self.highyield_all_button = QRadioButton(
+            "alle HIGH-YIELD Karten (stark + leicht gelb)"
+        )
+        self.highyield_all_button.setChecked(
+            highyield_stark and highyield_leicht
+        )
+        yield_buttons_layout.addWidget(self.highyield_all_button)
 
         self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
         self.standard_button.setChecked(normyield)
@@ -134,7 +172,8 @@ class LernplanManagerDialog(QDialog):
 
         # Explicitly group yield buttons
         self.yield_button_group = QButtonGroup(self)
-        self.yield_button_group.addButton(self.highyield_button)
+        self.yield_button_group.addButton(self.highyield_stark_button)
+        self.yield_button_group.addButton(self.highyield_all_button)
         self.yield_button_group.addButton(self.standard_button)
         self.yield_button_group.addButton(self.lowyield_button)
 
@@ -260,17 +299,23 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf = conf["lernplan"]
 
         lerntag = self.lerntag_combo.currentData().zfill(3)
-        highyield = self.highyield_button.isChecked()
+        highyield_stark = self.highyield_stark_button.isChecked()
+        highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
         lowyield = self.lowyield_button.isChecked()
+        top100 = self.top100_button.isChecked()
         autocreate_due = self.autocreate_due_button.isChecked()
         autocreate_previous = self.autocreate_previous_button.isChecked()
         autocreate_no_previous = self.autocreate_no_previous_button.isChecked()
 
         # Save the config
         lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["highyield"] = highyield
+        lernplan_conf["highyield_stark"] = highyield_stark
+        lernplan_conf["highyield_leicht"] = highyield_leicht
+        # Keep old highyield for backwards compatibility
+        lernplan_conf["highyield"] = highyield_stark or highyield_leicht
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
+        lernplan_conf["top100"] = top100
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
         lernplan_conf["autocreate_due"] = autocreate_due
         lernplan_conf["autocreate_previous"] = autocreate_previous
@@ -285,7 +330,15 @@ class LernplanManagerDialog(QDialog):
             datetime.datetime.today().weekday()
         )
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return lerntag, highyield, lowyield, autocreate_previous, autocreate_due
+        return (
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+            autocreate_previous,
+            autocreate_due,
+        )
 
     @staticmethod
     def on_success(changes: OpChanges):
@@ -293,24 +346,48 @@ class LernplanManagerDialog(QDialog):
 
     def create_lerntag_deck_wrapper(self):
         # save config + get values
-        lerntag, highyield, lowyield, _previous, _due = self.save_config()
+        (
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+            _previous,
+            _due,
+        ) = self.save_config()
 
         # Remove previous filtered decks
         remove_previous_lerntag_decks()
 
         # Create the filtered deck
-        create_lerntag_deck(lerntag, highyield, lowyield)
+        create_lerntag_deck(
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+        )
 
         # Create the previous due deck if necessary
         if _due:
-            create_lerntag_due_deck(lerntag, highyield, lowyield)
+            create_lerntag_due_deck(
+                lerntag,
+                highyield_stark,
+                highyield_leicht,
+                lowyield,
+                top100,
+            )
 
         # Create the previous filtered decks if necessary
         if _previous:
             CollectionOp(
                 parent=aqt.mw,
                 op=lambda _: create_previous_lerntag_decks(
-                    lerntag, highyield, lowyield
+                    lerntag,
+                    highyield_stark,
+                    highyield_leicht,
+                    lowyield,
+                    top100,
                 ),
             ).success(LernplanManagerDialog.on_success).run_in_background()
 
@@ -342,14 +419,31 @@ class LerntagDeckCreatorDialog(QDialog):
         conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
         if conf is None:
             lerntag = 0  # 0-indexed
-            highyield, normyield, lowyield = False, True, False
+            highyield_stark, highyield_leicht, normyield, lowyield = (
+                False,
+                False,
+                True,
+                False,
+            )
+            top100 = False
         else:
             lernplan_conf = conf.get("man_lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
-            highyield = lernplan_conf.get("highyield", False)
+            # Handle both old "highyield" and new separate options
+            highyield_stark = lernplan_conf.get("highyield_stark", False)
+            highyield_leicht = lernplan_conf.get("highyield_leicht", False)
+            # For backward compatibility with old configs
+            if (
+                lernplan_conf.get("highyield", False)
+                and not highyield_stark
+                and not highyield_leicht
+            ):
+                highyield_stark = True
+                highyield_leicht = True
             normyield = lernplan_conf.get("normyield", True)
             lowyield = lernplan_conf.get("lowyield", False)
+            top100 = lernplan_conf.get("top100", False)
 
         # Logo
         logo_label = QLabel()
@@ -384,9 +478,28 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         right_layout.addWidget(self.lerntag_combo)
 
-        self.highyield_button = QRadioButton("nur HIGH-YIELD Karten")
-        self.highyield_button.setChecked(highyield)
-        right_layout.addWidget(self.highyield_button)
+        self.top100_button = QCheckBox("nur TOP-100 Themen")
+        self.top100_button.setChecked(top100)
+        self.top100_button.setToolTip(
+            "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
+        )
+        right_layout.addWidget(self.top100_button)
+
+        self.highyield_stark_button = QRadioButton(
+            "nur HIGH-YIELD stark (stark gelb)"
+        )
+        self.highyield_stark_button.setChecked(
+            highyield_stark and not highyield_leicht
+        )
+        right_layout.addWidget(self.highyield_stark_button)
+
+        self.highyield_all_button = QRadioButton(
+            "alle HIGH-YIELD Karten (stark + leicht gelb)"
+        )
+        self.highyield_all_button.setChecked(
+            highyield_stark and highyield_leicht
+        )
+        right_layout.addWidget(self.highyield_all_button)
 
         self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
         self.standard_button.setChecked(normyield)
@@ -395,6 +508,13 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
         self.lowyield_button.setChecked(lowyield)
         right_layout.addWidget(self.lowyield_button)
+
+        # Explicitly group yield buttons
+        self.yield_button_group = QButtonGroup(self)
+        self.yield_button_group.addButton(self.highyield_stark_button)
+        self.yield_button_group.addButton(self.highyield_all_button)
+        self.yield_button_group.addButton(self.standard_button)
+        self.yield_button_group.addButton(self.lowyield_button)
 
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
@@ -441,24 +561,47 @@ class LerntagDeckCreatorDialog(QDialog):
         lernplan_conf = conf["man_lernplan"]
 
         lerntag = self.lerntag_combo.currentData().zfill(3)
-        highyield = self.highyield_button.isChecked()
+        highyield_stark = self.highyield_stark_button.isChecked()
+        highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
         lowyield = self.lowyield_button.isChecked()
+        top100 = self.top100_button.isChecked()
 
         # Save the config
         lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["highyield"] = highyield
+        lernplan_conf["highyield_stark"] = highyield_stark
+        lernplan_conf["highyield_leicht"] = highyield_leicht
+        # Keep old highyield for backwards compatibility
+        lernplan_conf["highyield"] = highyield_stark or highyield_leicht
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
+        lernplan_conf["top100"] = top100
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return lerntag, highyield, lowyield
+        return (
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+        )
 
     def create_lerntag_deck_wrapper(self):
         # save config + get values
-        lerntag, highyield, lowyield = self.save_config()
+        (
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+        ) = self.save_config()
 
         # Create the filtered deck
         create_lerntag_deck(
-            lerntag, highyield, lowyield, deck_name_prefix="Lerntag "
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100,
+            deck_name_prefix="Lerntag ",
         )
         self.accept()
         mw.reset()
@@ -478,12 +621,20 @@ def remove_previous_lerntag_decks():
             remove_filtered_deck(deck.id)
 
 
-def create_previous_lerntag_decks(lerntag, highyield, lowyield):
+def create_previous_lerntag_decks(
+    lerntag,
+    highyield_stark,
+    highyield_leicht,
+    lowyield,
+    top100=False,
+):
     for i in range(int(lerntag) - 1, 0, -1):
         create_lerntag_deck(
             str(i).zfill(3),
-            highyield,
+            highyield_stark,
+            highyield_leicht,
             lowyield,
+            top100,
             sup_deck_name="!VORHERIGE LERNTAGE",
             silent=True,
         )
@@ -492,8 +643,10 @@ def create_previous_lerntag_decks(lerntag, highyield, lowyield):
 
 def create_lerntag_due_deck(
     lerntag,
-    highyield,
+    highyield_stark,
+    highyield_leicht,
     lowyield,
+    top100=False,
     silent=False,
 ):
     # Due cards only make sense if there is a past Lerntag
@@ -509,13 +662,26 @@ def create_lerntag_due_deck(
     search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
     deck_name = f"!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
 
+    # Filter for TOP-100 themes first (if enabled)
+    if top100:
+        top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
+        search += f' "tag:{top100_tag}"'
+
     # Select only high-yield cards
-    if highyield:
+    if highyield_stark:
         high_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
         ]
+
+        if highyield_leicht:  # "all" button selected
+            high_yield_tags.extend(
+                [
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+                ]
+            )
+
         high_yield_search = " OR ".join(
             [f'"tag:{tag}"' for tag in high_yield_tags]
         )
@@ -523,7 +689,7 @@ def create_lerntag_due_deck(
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
+            "#Ankizin_vAnkihub::!MARKIERE_DIESE_KARTEN::M2_low_yield",
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::04-low_yield_(verzichtbar)_M2",
         ]
         low_yield_search = " OR ".join(
@@ -536,8 +702,10 @@ def create_lerntag_due_deck(
 
 def create_lerntag_deck(
     lerntag,
-    highyield,
+    highyield_stark,
+    highyield_leicht,
     lowyield,
+    top100=False,
     deck_name_prefix: str = None,
     sup_deck_name: str = None,
     silent=False,
@@ -549,19 +717,38 @@ def create_lerntag_deck(
     tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
     search = col.build_search_string(f'"tag:{tag_pattern}"')
     deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
+    deck_name += f"{lerntag}"
+
+    # Filter for TOP-100 themes first (if enabled)
+    if top100:
+        top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
+        search += f' "tag:{top100_tag}"'
+        deck_name += " - TOP-100"
 
     # Select only high-yield cards
-    if highyield:
+    if highyield_stark:
         high_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
         ]
+
+        if highyield_leicht:  # "all" button selected
+            high_yield_tags.extend(
+                [
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+                ]
+            )
+
         high_yield_search = " OR ".join(
             [f'"tag:{tag}"' for tag in high_yield_tags]
         )
         search += f" ({high_yield_search})"
-        deck_name += f"{lerntag} - high-yield"
+
+        if highyield_leicht:
+            deck_name += " - high-yield (alle)"
+        elif highyield_stark:
+            deck_name += " - high-yield (stark gelb)"
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tags = [
@@ -572,10 +759,9 @@ def create_lerntag_deck(
             [f'"tag:{tag}"' for tag in low_yield_tags]
         )
         search += f" -({low_yield_search})"
-        deck_name += f"{lerntag}"
     # Don't exclude low-yield cards
     else:
-        deck_name += f"{lerntag} - inkl. low-yield"
+        deck_name += " - inkl. low-yield"
 
     if sup_deck_name:
         deck_name = f"{sup_deck_name}::{deck_name}"

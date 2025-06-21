@@ -79,21 +79,33 @@ def lernplan_auto_create():
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         # Get the yield settings
-        highyield = lernplan_conf.get("highyield", False)
+        highyield_stark = lernplan_conf.get(
+            "highyield_stark", lernplan_conf.get("highyield", False)
+        )
+        highyield_leicht = lernplan_conf.get(
+            "highyield_leicht", lernplan_conf.get("highyield", False)
+        )
         lowyield = lernplan_conf.get("lowyield", False)
+        top100 = lernplan_conf.get("top100", False)
 
         # Remove previous filtered decks
         remove_previous_lerntag_decks()
 
         # Create the filtered deck
-        create_lerntag_deck(lerntag, highyield, lowyield)
+        create_lerntag_deck(
+            lerntag, highyield_stark, highyield_leicht, lowyield, top100
+        )
 
         # Create the previous filtered decks if necessary
         if lernplan_conf.get("autocreate_due", False):
-            create_lerntag_due_deck(lerntag, highyield, lowyield)
+            create_lerntag_due_deck(
+                lerntag, highyield_stark, highyield_leicht, lowyield, top100
+            )
 
         if lernplan_conf.get("autocreate_previous", False):
-            create_previous_lerntag_decks(lerntag, highyield, lowyield)
+            create_previous_lerntag_decks(
+                lerntag, highyield_stark, highyield_leicht, lowyield, top100
+            )
 
         print("Lernplan updated")
 
@@ -149,25 +161,26 @@ def auto_rebuild_filtered_decks():
     mw.progress.finish()
     mw.reset()
 
+
 # There is a bug in the Amboss website query that accidentally excludes Ankizin notes. We fix it for them here :)
-def browser_search_hk(context: SearchContext): # type: ignore
+def browser_search_hk(context: SearchContext):  # type: ignore
     search_term = context.search
-    
+
     target_string = "note:Ankiphil*"
-    
+
     has_ankiphil = target_string in search_term
-    has_amboss_field = "AMBOSS*:" in search_term 
+    has_amboss_field = "AMBOSS*:" in search_term
     has_ankizin = "note:ProjektAnki*" in search_term
 
     if has_ankiphil and has_amboss_field and not has_ankizin:
         replacement_string = "(note:Ankiphil* OR note:ProjektAnki*)"
-        
+
         modified_search_term = search_term.replace(
             target_string, replacement_string, 1
         )
         context.search = modified_search_term
 
-        
+
 def profile_loaded_hk():
     lernplan_auto_create()
     auto_rebuild_filtered_decks()
