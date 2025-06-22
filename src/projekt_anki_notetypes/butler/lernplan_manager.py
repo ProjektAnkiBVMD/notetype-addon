@@ -45,11 +45,7 @@ class LernplanManagerDialog(QDialog):
             highyield_stark = lernplan_conf.get("highyield_stark", False)
             highyield_leicht = lernplan_conf.get("highyield_leicht", False)
             # For backward compatibility with old configs
-            if (
-                lernplan_conf.get("highyield", False)
-                and not highyield_stark
-                and not highyield_leicht
-            ):
+            if lernplan_conf.get("highyield", False):
                 highyield_stark = True
                 highyield_leicht = True
             normyield = lernplan_conf.get("normyield", True)
@@ -84,7 +80,7 @@ class LernplanManagerDialog(QDialog):
                 "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch<br>normale und low-yield Karten enthalten sein sollen.<br>"
                 "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
                 "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen.<br><br>"
-                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: V4 / AnkiHub)."
+                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: V4+ / AnkiHub)."
             )
         )
         right_layout.addSpacing(20)
@@ -253,19 +249,26 @@ class LernplanManagerDialog(QDialog):
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
 
+        # Buttons layout - confirm and deactivate side by side
+        buttons_layout = QHBoxLayout()
+
         # Confirm button for when autocreate is enabled
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
-        settings_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
+        buttons_layout.addWidget(confirm_btn)
 
         # Deactivate button for when autocreate is enabled
         self.deactivate_button = QPushButton("Lernplan-Manager deaktivieren")
         self.deactivate_button.setFixedWidth(200)
         self.deactivate_button.setVisible(autocreate)
         self.deactivate_button.clicked.connect(self.deactivate_lernplan_manager)
-        settings_layout.addWidget(self.deactivate_button, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
+        buttons_layout.addWidget(self.deactivate_button)
 
+        # Add stretch to push buttons to the left
+        buttons_layout.addStretch()
+
+        settings_layout.addLayout(buttons_layout)
         self.settings_frame.setLayout(settings_layout)
         right_layout.addWidget(self.settings_frame)
 
@@ -293,7 +296,7 @@ class LernplanManagerDialog(QDialog):
     def save_and_close(self):
         self.save_config()
         self.accept()
-        
+
     def deactivate_lernplan_manager(self):
         self.autocreate_button.setChecked(False) # Uncheck the autocreate button
         self.toggle_settings(False) # Trigger the toggle to update UI
@@ -338,6 +341,9 @@ class LernplanManagerDialog(QDialog):
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield_stark = self.highyield_stark_button.isChecked()
         highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
+        # If highyield_leicht is true, highyield_stark must also be true
+        if highyield_leicht:
+            highyield_stark = True
         lowyield = self.lowyield_button.isChecked()
         top100 = self.top100_button.isChecked()
         autocreate_due = self.autocreate_due_button.isChecked()
@@ -348,8 +354,8 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["lerntag"] = lerntag
         lernplan_conf["highyield_stark"] = highyield_stark
         lernplan_conf["highyield_leicht"] = highyield_leicht
-        # Keep old highyield for backwards compatibility
-        lernplan_conf["highyield"] = highyield_stark or highyield_leicht
+        # Keep old highyield for backwards compatibility, but unset it
+        lernplan_conf["highyield"] = None
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["top100"] = top100
@@ -471,11 +477,7 @@ class LerntagDeckCreatorDialog(QDialog):
             highyield_stark = lernplan_conf.get("highyield_stark", False)
             highyield_leicht = lernplan_conf.get("highyield_leicht", False)
             # For backward compatibility with old configs
-            if (
-                lernplan_conf.get("highyield", False)
-                and not highyield_stark
-                and not highyield_leicht
-            ):
+            if lernplan_conf.get("highyield", False):
                 highyield_stark = True
                 highyield_leicht = True
             normyield = lernplan_conf.get("normyield", True)
@@ -598,6 +600,9 @@ class LerntagDeckCreatorDialog(QDialog):
         lerntag = self.lerntag_combo.currentData().zfill(3)
         highyield_stark = self.highyield_stark_button.isChecked()
         highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
+        # If highyield_leicht is true, highyield_stark must also be true
+        if highyield_leicht:
+            highyield_stark = True
         lowyield = self.lowyield_button.isChecked()
         top100 = self.top100_button.isChecked()
 
@@ -605,8 +610,8 @@ class LerntagDeckCreatorDialog(QDialog):
         lernplan_conf["lerntag"] = lerntag
         lernplan_conf["highyield_stark"] = highyield_stark
         lernplan_conf["highyield_leicht"] = highyield_leicht
-        # Keep old highyield for backwards compatibility
-        lernplan_conf["highyield"] = highyield_stark or highyield_leicht
+        # Keep old highyield for backwards compatibility, but unset it
+        lernplan_conf["highyield"] = None
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["top100"] = top100
@@ -706,14 +711,14 @@ def create_lerntag_due_deck(
     if highyield_stark:
         high_yield_tags = [
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
         ]
 
         if highyield_leicht:  # "all" button selected
             high_yield_tags.extend(
                 [
                     "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
                 ]
             )
 
@@ -725,7 +730,7 @@ def create_lerntag_due_deck(
     elif not lowyield:
         low_yield_tags = [
             "#Ankizin_vAnkihub::!MARKIERE_DIESE_KARTEN::M2_low_yield",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::04-low_yield_(verzichtbar)_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
         ]
         low_yield_search = " OR ".join(
             [f'"tag:{tag}"' for tag in low_yield_tags]
@@ -764,14 +769,14 @@ def create_lerntag_deck(
     if highyield_stark:
         high_yield_tags = [
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::01-stark_gelb_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
         ]
 
         if highyield_leicht:  # "all" button selected
             high_yield_tags.extend(
                 [
                     "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::02-leicht_gelb_M2",
+                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
                 ]
             )
 
@@ -788,7 +793,7 @@ def create_lerntag_deck(
     elif not lowyield:
         low_yield_tags = [
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz::04-low_yield_(verzichtbar)_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
         ]
         low_yield_search = " OR ".join(
             [f'"tag:{tag}"' for tag in low_yield_tags]
