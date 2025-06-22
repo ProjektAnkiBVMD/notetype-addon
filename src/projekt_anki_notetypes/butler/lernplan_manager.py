@@ -259,6 +259,13 @@ class LernplanManagerDialog(QDialog):
         settings_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
 
+        # Deactivate button for when autocreate is enabled
+        self.deactivate_button = QPushButton("Lernplan-Manager deaktivieren")
+        self.deactivate_button.setFixedWidth(200)
+        self.deactivate_button.setVisible(autocreate)
+        self.deactivate_button.clicked.connect(self.deactivate_lernplan_manager)
+        settings_layout.addWidget(self.deactivate_button, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
+
         self.settings_frame.setLayout(settings_layout)
         right_layout.addWidget(self.settings_frame)
 
@@ -278,6 +285,7 @@ class LernplanManagerDialog(QDialog):
     def toggle_settings(self, checked):
         self.settings_frame.setVisible(checked)
         self.save_button.setVisible(not checked)
+        self.deactivate_button.setVisible(checked)
         self.updateGeometry()
         self.resize(0, 0)
         self.adjustSize()
@@ -285,6 +293,12 @@ class LernplanManagerDialog(QDialog):
     def save_and_close(self):
         self.save_config()
         self.accept()
+        
+    def deactivate_lernplan_manager(self):
+        self.autocreate_button.setChecked(False) # Uncheck the autocreate button
+        self.toggle_settings(False) # Trigger the toggle to update UI
+        self.save_config() # Save the configuration
+        self.accept() # Save the configuration
 
     def closeEvent(self, event):
         self.save_config()
