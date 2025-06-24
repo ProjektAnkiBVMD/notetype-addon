@@ -122,7 +122,7 @@ def maybe_show_deck_update_notice():
         return
 
     # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 5.3
+    latest_version = 5.31
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if latest_version == conf.get("latest_notified_deck_version"):
@@ -130,7 +130,7 @@ def maybe_show_deck_update_notice():
 
     update_dialog = askUserDialog(
         title="Ankizin Deck-Update",
-        text="<h1>Ankizin v5!</h1>"
+        text="<h1>Ankizin V5 kommt am 28.06.!</h1>"
         "<h2>Neue Karten und verbesserte Tags für eine noch bessere StEx-Vorbereitung!</h2>"
         "<h2>Was ist neu?</h2>"
         "<ul>"
