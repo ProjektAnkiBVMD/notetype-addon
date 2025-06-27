@@ -23,15 +23,15 @@ def filtered_deck_hk(
         menu.addSeparator()
         menu.addAction(
             "Ankizin: Auswahlstapel aus Schlagwort erstellen (alle einsetzen)",
-            lambda: create_dyn_deck_from_tag(item, False),
+            lambda: create_dyn_deck_from_tag(item, high_yield=False),
         )
         menu.addAction(
             "Ankizin: Auswahlstapel aus high-yield Karten erstellen (alle einsetzen)",
-            lambda: create_dyn_deck_from_tag(item, True),
+            lambda: create_dyn_deck_from_tag(item, high_yield=True),
         )
         menu.addAction(
             "Ankizin: Auswahlstapel nur aus eingesetzten Karten erstellen",
-            lambda: create_dyn_deck_from_tag(item, False, unsuspend=False),
+            lambda: create_dyn_deck_from_tag(item, high_yield=False, unsuspend=False),
         )
 
 
@@ -60,7 +60,7 @@ def create_dyn_deck_from_tag(
         search += f" ({high_yield_search})"
         deck_name += " - high-yield"
 
-    create_filtered_deck(deck_name, search, unsuspend)
+    create_filtered_deck(deck_name, search, unsuspend=unsuspend)
     mw.reset()
 
 

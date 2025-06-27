@@ -96,7 +96,7 @@ def get_ankizin_versions() -> list:
     versions = []
     for tag in col.tags.all():
         match = pattern.match(tag)
-        if match:
+        if match and match.group(1) not in [v[1:] for v in versions]:
             versions.append("v" + match.group(1))
 
     return versions
@@ -153,7 +153,7 @@ def create_filtered_deck(
         elif duedeck and not silent:
             showWarning(
                 "Error: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
-                "Höchstwahrscheinlich gibt es fälligen Karten vergangener Lerntage."
+                "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage."
             )
         elif not silent:
             showWarning(f"Error: {e}")

@@ -35,6 +35,7 @@ from .notetype_setting_definitions import (
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.name)
+ADDON_VERSION = "5.4"
 RESOURCES_PATH = Path(__file__).parent / "resources"
 
 from .butler.init import init_butler
@@ -121,11 +122,8 @@ def maybe_show_deck_update_notice():
     if not mw.col:
         return
 
-    # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 5.31
-
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    if latest_version == conf.get("latest_notified_deck_version"):
+    if ADDON_VERSION == conf.get("latest_notified_deck_version"):
         return
 
     update_dialog = askUserDialog(
