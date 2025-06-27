@@ -127,20 +127,22 @@ def setup_rebuild_settings_toggle():
 
 
 def init_version_info(menu):
-    """Add version info to the menu."""
+    """Add version info to a DEBUG submenu."""
     note_version = note_type_version(projekt_anki_notetype_models()[0])
     if not note_version:
         return
 
+    # Create DEBUG submenu
     menu.addSeparator()
+    debug_menu = menu.addMenu("DEBUG")
 
     note_version_info = QAction(f"Notiztyp-Version: {note_version}", mw)
     note_version_info.setEnabled(False)  # Make it non-clickable
-    menu.addAction(note_version_info)
+    debug_menu.addAction(note_version_info)
 
     addon_version_info = QAction(f"AddOn-Version: {ADDON_VERSION}", mw)
     addon_version_info.setEnabled(False)  # Make it non-clickable
-    menu.addAction(addon_version_info)
+    debug_menu.addAction(addon_version_info)
 
 
 def update_version_info():
@@ -150,15 +152,25 @@ def update_version_info():
     if ankizin_versions:
         ankizin_versions_text = ", ".join(ankizin_versions)
 
-    # Check if action already exists and remove it
+    # Find DEBUG submenu
+    debug_menu = None
     for action in menu.actions():
-        if action.text().startswith("Ankizin-Versionen:"):
-            menu.removeAction(action)
+        if action.text() == "DEBUG" and action.menu():
+            debug_menu = action.menu()
             break
 
-    ankizin_versions_info = QAction(ankizin_versions_text, mw)
+    if not debug_menu:
+        return
+
+    # Check if action already exists and remove it
+    for action in debug_menu.actions():
+        if action.text().startswith("Ankizin-Versionen:"):
+            debug_menu.removeAction(action)
+            break
+
+    ankizin_versions_info = QAction(f"Ankizin-Versionen: {ankizin_versions_text}", mw)
     ankizin_versions_info.setEnabled(False)
-    menu.addAction(ankizin_versions_info)
+    debug_menu.addAction(ankizin_versions_info)
 
 
 def menu_init():
