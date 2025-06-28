@@ -18,6 +18,27 @@ from .utils import (
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
+def _get_effective_today():
+    """Get today's date adjusted for rollover time"""
+    rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
+    now = datetime.datetime.now()
+    today = now.date()
+    # Adjust date for rollover - if before rollover time, still considered previous day
+    if now.hour < rollover:
+        today = today - datetime.timedelta(days=1)
+    return today
+
+
+def _extract_yield_settings(lernplan_conf):
+    """Extract yield settings from config"""
+    return (
+        lernplan_conf.get("highyield_stark", lernplan_conf.get("highyield", False)),
+        lernplan_conf.get("highyield_leicht", lernplan_conf.get("highyield", False)),
+        lernplan_conf.get("lowyield", False),
+        lernplan_conf.get("top100", False),
+    ) # fmt: skip
+
+
 class LernplanManagerDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -42,15 +63,8 @@ class LernplanManagerDialog(QDialog):
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             # Handle both old "highyield" and new separate options
-            highyield_stark = lernplan_conf.get("highyield_stark", False)
-            highyield_leicht = lernplan_conf.get("highyield_leicht", False)
-            # For backward compatibility with old configs
-            if lernplan_conf.get("highyield", False):
-                highyield_stark = True
-                highyield_leicht = True
+            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf)
             normyield = lernplan_conf.get("normyield", True)
-            lowyield = lernplan_conf.get("lowyield", False)
-            top100 = lernplan_conf.get("top100", False)
             autocreate = lernplan_conf.get("autocreate", False)
             autocreate_due = lernplan_conf.get("autocreate_due", True)
             autocreate_previous = lernplan_conf.get("autocreate_previous", False) # fmt: skip
@@ -366,9 +380,7 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["wochentage"] = [
             button.isChecked() for button in self.weekday_buttons
         ]
-        lernplan_conf["last_updated"] = (
-            datetime.datetime.today().date().isoformat()
-        )
+        lernplan_conf["last_updated"] = _get_effective_today().isoformat()
         lernplan_conf["lernplan_started_on"] = (
             datetime.datetime.today().weekday()
         )
@@ -474,15 +486,8 @@ class LerntagDeckCreatorDialog(QDialog):
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             # Handle both old "highyield" and new separate options
-            highyield_stark = lernplan_conf.get("highyield_stark", False)
-            highyield_leicht = lernplan_conf.get("highyield_leicht", False)
-            # For backward compatibility with old configs
-            if lernplan_conf.get("highyield", False):
-                highyield_stark = True
-                highyield_leicht = True
+            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf)
             normyield = lernplan_conf.get("normyield", True)
-            lowyield = lernplan_conf.get("lowyield", False)
-            top100 = lernplan_conf.get("top100", False)
 
         # Logo
         logo_label = QLabel()

@@ -19,6 +19,27 @@ from .browser import filtered_deck_hk
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
+def _get_effective_today():
+    """Get today's date adjusted for rollover time"""
+    rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
+    now = datetime.datetime.now()
+    today = now.date()
+    # Adjust date for rollover - if before rollover time, still considered previous day
+    if now.hour < rollover:
+        today = today - datetime.timedelta(days=1)
+    return today
+
+
+def _extract_yield_settings(lernplan_conf):
+    """Extract yield settings from config"""
+    return (
+        lernplan_conf.get("highyield_stark", lernplan_conf.get("highyield", False)),
+        lernplan_conf.get("highyield_leicht", lernplan_conf.get("highyield", False)),
+        lernplan_conf.get("lowyield", False),
+        lernplan_conf.get("top100", False),
+    ) # fmt: skip
+
+
 def run_today_setup():
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if conf is not None and "lernplan" in conf:
@@ -29,14 +50,8 @@ def run_today_setup():
             return True
 
         # Check if the rebuild hooks should be run right now
-        rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
         last_updated = datetime.datetime.fromisoformat(last_updated).date()
-        now = datetime.datetime.now()
-        today = now.date()
-
-        # Adjust date for rollover - if before rollover time, still considered previous day
-        if now.hour < rollover:
-            today = today - datetime.timedelta(days=1)
+        today = _get_effective_today()
 
         if last_updated < today:
             return True
@@ -79,14 +94,9 @@ def lernplan_auto_create():
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         # Get the yield settings
-        highyield_stark = lernplan_conf.get(
-            "highyield_stark", lernplan_conf.get("highyield", False)
+        highyield_stark, highyield_leicht, lowyield, top100 = (
+            _extract_yield_settings(lernplan_conf)
         )
-        highyield_leicht = lernplan_conf.get(
-            "highyield_leicht", lernplan_conf.get("highyield", False)
-        )
-        lowyield = lernplan_conf.get("lowyield", False)
-        top100 = lernplan_conf.get("top100", False)
 
         # Remove previous filtered decks
         remove_previous_lerntag_decks()
@@ -97,11 +107,6 @@ def lernplan_auto_create():
         )
 
         # Create the previous filtered decks if necessary
-        if lernplan_conf.get("autocreate_due", False):
-            create_lerntag_due_deck(
-                lerntag, highyield_stark, highyield_leicht, lowyield, top100
-            )
-
         if lernplan_conf.get("autocreate_previous", False):
             create_previous_lerntag_decks(
                 lerntag, highyield_stark, highyield_leicht, lowyield, top100
@@ -112,6 +117,57 @@ def lernplan_auto_create():
     else:
         # Lernplan is not set up
         return None
+
+
+def lernplan_due_deck_auto_create():
+    """Create due deck every day regardless of lernplan weekdays"""
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+
+    # Only proceed if we have config and autocreate_due is enabled
+    if conf is None or "lernplan" not in conf:
+        return
+
+    lernplan_conf = conf["lernplan"]
+
+    # Check if due deck autocreation is enabled
+    if not lernplan_conf.get("autocreate_due", False):
+        return
+
+    # Check if we should run today (same logic as run_today_setup but separate tracking)
+    # Backwards compatibility: fall back to last_updated if last_due_updated doesn't exist
+    last_due_updated = lernplan_conf.get("last_due_updated", lernplan_conf.get("last_updated", None))
+
+    today = _get_effective_today()
+
+    # Skip if already updated today
+    if last_due_updated is not None:
+        last_due_date = datetime.datetime.fromisoformat(last_due_updated).date()
+        if last_due_date >= today:
+            return  # Already updated today
+
+    # Get current lerntag
+    lerntag = lernplan_conf.get("lerntag", "001")
+
+    # Get the yield settings
+    highyield_stark, highyield_leicht, lowyield, top100 = (
+        _extract_yield_settings(lernplan_conf)
+    )
+
+    # Create the due deck
+    create_lerntag_due_deck(
+        lerntag,
+        highyield_stark,
+        highyield_leicht,
+        lowyield,
+        top100,
+        silent=True,
+    )
+
+    # Update the last_due_updated timestamp
+    lernplan_conf["last_due_updated"] = today.isoformat()
+    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+
+    print("Due deck updated")
 
 
 def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
@@ -183,6 +239,7 @@ def browser_search_hk(context: SearchContext):  # type: ignore
 
 def profile_loaded_hk():
     lernplan_auto_create()
+    lernplan_due_deck_auto_create()
     auto_rebuild_filtered_decks()
 
 
