@@ -151,7 +151,6 @@ class LernplanManagerDialog(QDialog):
         top100_buttons_layout = QVBoxLayout()
         top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
-        settings_layout.addSpacing(10)
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
         self.top100_button.setToolTip(
@@ -199,7 +198,6 @@ class LernplanManagerDialog(QDialog):
         settings_layout.addWidget(yield_group_box)
 
         # AUTOCREATE OPTIONS LAYOUT
-        settings_layout.addSpacing(10)
         autocreate_group_box = QGroupBox()
         autocreate_options_layout = QVBoxLayout()
         autocreate_options_layout.setContentsMargins(5, 5, 5, 5)
@@ -522,18 +520,30 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         right_layout.addWidget(self.lerntag_combo)
 
+        # TOP-100 FILTER
+        top100_group_box = QGroupBox()
+        top100_buttons_layout = QVBoxLayout()
+        top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
+
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
         self.top100_button.setToolTip(
             "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
         )
-        right_layout.addWidget(self.top100_button)
+        top100_buttons_layout.addWidget(self.top100_button)
+        top100_group_box.setLayout(top100_buttons_layout)
+        right_layout.addWidget(top100_group_box)
+
+        # YIELD SELECTION
+        yield_group_box = QGroupBox()
+        yield_buttons_layout = QVBoxLayout()
+        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
         self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
         self.highyield_stark_button.setChecked(
             highyield_stark and not highyield_leicht
         )
-        right_layout.addWidget(self.highyield_stark_button)
+        yield_buttons_layout.addWidget(self.highyield_stark_button)
 
         self.highyield_all_button = QRadioButton(
             "alle HIGH-YIELD Karten (stark + leicht gelb)"
@@ -541,15 +551,15 @@ class LerntagDeckCreatorDialog(QDialog):
         self.highyield_all_button.setChecked(
             highyield_stark and highyield_leicht
         )
-        right_layout.addWidget(self.highyield_all_button)
+        yield_buttons_layout.addWidget(self.highyield_all_button)
 
         self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
         self.standard_button.setChecked(normyield)
-        right_layout.addWidget(self.standard_button)
+        yield_buttons_layout.addWidget(self.standard_button)
 
         self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
         self.lowyield_button.setChecked(lowyield)
-        right_layout.addWidget(self.lowyield_button)
+        yield_buttons_layout.addWidget(self.lowyield_button)
 
         # Explicitly group yield buttons
         self.yield_button_group = QButtonGroup(self)
@@ -558,12 +568,22 @@ class LerntagDeckCreatorDialog(QDialog):
         self.yield_button_group.addButton(self.standard_button)
         self.yield_button_group.addButton(self.lowyield_button)
 
+        yield_group_box.setLayout(yield_buttons_layout)
+        right_layout.addWidget(yield_group_box)
+
+        # BUTTON LAYOUT
+        buttons_layout = QHBoxLayout()
+
         # Confirm button
         confirm_btn = QPushButton("Stapel erstellen!")
-        confirm_btn.setFixedWidth(150)
-        right_layout.addWidget(confirm_btn, alignment=Qt.AlignmentFlag.AlignLeft) # fmt: skip
+        confirm_btn.setFixedWidth(200)
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
+        buttons_layout.addWidget(confirm_btn)
 
+        # Add stretch to push button to the left
+        buttons_layout.addStretch()
+
+        right_layout.addLayout(buttons_layout)
         main_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
