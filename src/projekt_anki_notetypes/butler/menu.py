@@ -2,7 +2,8 @@ from pathlib import Path
 import aqt
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo, askUser
+from aqt.qt import qconnect
+from aqt.utils import showInfo, askUser, openLink
 from aqt.gui_hooks import profile_did_open
 import anki
 import anki.hooks
@@ -30,10 +31,10 @@ def init_ankizin_helper(menu):
     ankizin_helper = AnkizinHelper()
 
     # Add menu item
-    first_setup = QAction("Ankizin erstmalig installiert?", mw)
+    first_setup = QAction("1️⃣ Ankizin erstmalig installiert?", mw)
     first_setup.triggered.connect(ankizin_helper.run_first_time_setup)
 
-    update_setup = QAction("Ankizin-Update installiert?", mw)
+    update_setup = QAction("🔄 Ankizin-Update installiert?", mw)
     update_setup.triggered.connect(ankizin_helper.run_ankizin_update_setup)
 
     menu.addAction(first_setup)
@@ -43,13 +44,13 @@ def init_ankizin_helper(menu):
 
 
 def add_lernplan_manager(menu):
-    action = QAction("Lernplan-Manager (automatisch)", mw)
+    action = QAction("🧑🏻‍💼 Lernplan-Manager (automatisch)", mw)
     action.triggered.connect(open_lernplan_manager)
     menu.addAction(action)
 
 
 def add_lerntag_deck_creator(menu):
-    action = QAction("Lerntag-Auswahlstapel erstellen (manuell)", mw)
+    action = QAction("✍🏻 Lerntag-Auswahlstapel erstellen (manuell)", mw)
     action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
@@ -126,6 +127,26 @@ def setup_rebuild_settings_toggle():
     aqt.forms.preferences.Ui_Preferences.setupUi = preferences_ui_with_ankizin
 
 
+def add_help_items_to_debug(debug_menu):
+    """Add help and community items directly to the debug menu."""
+    # Add documentation items
+    wiki_action = QAction("📑 Ankizin-Wiki", mw)
+    wiki_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
+    debug_menu.addAction(wiki_action)
+    
+    # Add community items
+    discord_action = QAction("👾 Discord", mw)
+    discord_action.triggered.connect(lambda: openLink("https://discord.com/invite/5DMsDg8Rvu"))
+    debug_menu.addAction(discord_action)
+    
+    insta_action = QAction("📷 Instagram", mw)
+    insta_action.triggered.connect(lambda: openLink("https://www.instagram.com/ankizin_bvmd/"))
+    debug_menu.addAction(insta_action)
+    
+    # Add separator before version info
+    debug_menu.addSeparator()
+
+
 def init_version_info(menu):
     """Add version info to a DEBUG submenu."""
     note_version = note_type_version(projekt_anki_notetype_models()[0])
@@ -134,7 +155,10 @@ def init_version_info(menu):
 
     # Create DEBUG submenu
     menu.addSeparator()
-    debug_menu = menu.addMenu("DEBUG")
+    debug_menu = menu.addMenu("🆘 Hilfe + Mehr")
+
+    # Add help items first
+    add_help_items_to_debug(debug_menu)
 
     note_version_info = QAction(f"Notiztyp-Version: {note_version}", mw)
     note_version_info.setEnabled(False)  # Make it non-clickable
@@ -155,7 +179,7 @@ def update_version_info():
     # Find DEBUG submenu
     debug_menu = None
     for action in menu.actions():
-        if action.text() == "DEBUG" and action.menu():
+        if action.text() == "🆘 Hilfe + Mehr" and action.menu():
             debug_menu = action.menu()
             break
 
