@@ -134,6 +134,10 @@ def add_help_items_to_debug(debug_menu):
     wiki_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
     debug_menu.addAction(wiki_action)
     
+    hub_action = QAction("⭐️ Ankizin auf AnkiHub", mw)
+    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/wie-installiere-ich-ankihub/"))
+    debug_menu.addAction(hub_action)
+    
     # Add community items
     discord_action = QAction("👾 Discord", mw)
     discord_action.triggered.connect(lambda: openLink("https://discord.com/invite/5DMsDg8Rvu"))
