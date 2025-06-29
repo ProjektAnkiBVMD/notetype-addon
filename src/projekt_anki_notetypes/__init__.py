@@ -128,7 +128,7 @@ def maybe_show_deck_update_notice():
 
     update_dialog = askUserDialog(
         title="Ankizin Deck-Update",
-        text="<h1>Ankizin V5 kommt am 28.06.!</h1>"
+        text="<h1>Ankizin V5 IST DA! (endlich)</h1>"
         "<h2>Neue Karten und verbesserte Tags für eine noch bessere StEx-Vorbereitung!</h2>"
         "<h2>Was ist neu?</h2>"
         "<ul>"
@@ -145,7 +145,7 @@ def maybe_show_deck_update_notice():
         "Du musst nix machen, Updates kommen automatisch.<br>",
         buttons=reversed(
             [
-                "Nein, ich bin up-to-date",
+                "Ich bin schon up-to-date",
                 "Erinnere mich später!",
             ]
         ),
@@ -166,7 +166,7 @@ def maybe_show_deck_update_notice():
         # answer == "Das ist ja super!"
         answer == "Nein, ich bin up-to-date"
     ):
-        conf["latest_notified_deck_version"] = latest_version
+        conf["latest_notified_deck_version"] = ADDON_VERSION
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     elif answer == "Erinnere mich später!":
         # Don't update the config, so the user will be asked again next time
