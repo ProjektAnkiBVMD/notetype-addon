@@ -31,7 +31,7 @@ def init_ankizin_helper(menu):
     ankizin_helper = AnkizinHelper()
 
     # Add menu item
-    first_setup = QAction("1️⃣ Ankizin erstmalig installiert?", mw)
+    first_setup = QAction("⏩️ Ankizin erstmalig installiert?", mw)
     first_setup.triggered.connect(ankizin_helper.run_first_time_setup)
 
     update_setup = QAction("🔄 Ankizin-Update installiert?", mw)
@@ -44,13 +44,13 @@ def init_ankizin_helper(menu):
 
 
 def add_lernplan_manager(menu):
-    action = QAction("🧑🏻‍💼 Lernplan-Manager (automatisch)", mw)
+    action = QAction("💼 Lernplan-Manager (automatisch)", mw)
     action.triggered.connect(open_lernplan_manager)
     menu.addAction(action)
 
 
 def add_lerntag_deck_creator(menu):
-    action = QAction("✍🏻 Lerntag-Auswahlstapel erstellen (manuell)", mw)
+    action = QAction("📝 Lerntag-Auswahlstapel erstellen (manuell)", mw)
     action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
