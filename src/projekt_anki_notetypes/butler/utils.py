@@ -165,13 +165,15 @@ def create_filtered_deck(
         print(f"Error: {e}")
         if top100 and not silent:
             showWarning(
-                "Error: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
-                "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag."
+                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag.<br>"
+                "Du kannst diese Warnung einfach wegklicken."
             )
         elif duedeck and not silent:
             showWarning(
-                "Error: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
-                "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage."
+                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage.<br>"
+                "Du kannst diese Warnung einfach wegklicken."
             )
         elif not silent:
             showWarning(f"Error: {e}")
