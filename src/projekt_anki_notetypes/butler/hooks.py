@@ -130,12 +130,16 @@ def lernplan_due_deck_auto_create():
     lernplan_conf = conf["lernplan"]
 
     # Check if due deck autocreation is enabled
-    if not lernplan_conf.get("autocreate_due", False):
+    if (not lernplan_conf.get("autocreate_due", False)) and (
+        not lernplan_conf.get("autocreate", False)
+    ):
         return
 
     # Check if we should run today (same logic as run_today_setup but separate tracking)
     # Backwards compatibility: fall back to last_updated if last_due_updated doesn't exist
-    last_due_updated = lernplan_conf.get("last_due_updated", lernplan_conf.get("last_updated", None))
+    last_due_updated = lernplan_conf.get(
+        "last_due_updated", lernplan_conf.get("last_updated", None)
+    )
 
     today = _get_effective_today()
 

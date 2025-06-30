@@ -164,7 +164,7 @@ def maybe_show_deck_update_notice():
     if (
         # answer == "Erklärvideo öffnen!"
         # answer == "Das ist ja super!"
-        answer == "Nein, ich bin up-to-date"
+        answer == "Ich bin schon up-to-date"
     ):
         conf["latest_notified_deck_version"] = ADDON_VERSION
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
