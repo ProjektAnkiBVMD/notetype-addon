@@ -63,113 +63,81 @@ def run_today_setup():
 
 
 def lernplan_auto_create():
-    # Set up the lernplan
-    # Check if the lernplan is already set up / config is available
+    """Auto-create lernplan decks based on schedule and configuration"""
+    # Get configuration
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    if not run_today_setup():
+        return
 
-    # Check if the setup should be run today
-    if run_today_setup():
-        lernplan_conf = conf["lernplan"]
+    lernplan_conf = conf["lernplan"]
 
-        # Check if the lernplan should be autocreated
-        if not lernplan_conf.get("autocreate", False):
-            return
+    # Validate prerequisites
+    if not lernplan_conf.get("autocreate", False):
+        return
 
-        # Check if this weekday is in the list of weekdays
-        weekdays = lernplan_conf["wochentage"]
-        today_weekday = datetime.datetime.now().date().weekday()
-        if not weekdays[today_weekday]:
-            return  # Today is not a lernplan day
+    # Check if today is a scheduled lernplan day
+    weekdays = lernplan_conf["wochentage"]
+    today_weekday = datetime.datetime.now().date().weekday()
+    if not weekdays[today_weekday]:
+        return  # Today is not a lernplan day
 
-        # Increase the Lerntag
-        lerntag = int(lernplan_conf.get("lerntag", "001"))
-        lerntag += 1
-        if lerntag > 85:
-            return  # Lernplan is finished
+    # Calculate and validate next lerntag
+    current_lerntag = int(lernplan_conf.get("lerntag", "001"))
+    next_lerntag = current_lerntag + 1
+    if next_lerntag > 85:
+        return  # Lernplan is finished
 
-        # Save the config
-        lerntag = str(lerntag).zfill(3)
-        lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["last_updated"] = datetime.datetime.now().isoformat()
-        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+    # Update configuration
+    lerntag_str = str(next_lerntag).zfill(3)
+    lernplan_conf["lerntag"] = lerntag_str
+    lernplan_conf["last_updated"] = datetime.datetime.now().isoformat()
+    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
-        # Get the yield settings
-        highyield_stark, highyield_leicht, lowyield, top100 = (
-            _extract_yield_settings(lernplan_conf)
-        )
+    # Create decks
+    yield_settings = _extract_yield_settings(lernplan_conf)
+    remove_previous_lerntag_decks()
+    create_lerntag_deck(lerntag_str, *yield_settings)
 
-        # Remove previous filtered decks
-        remove_previous_lerntag_decks()
-
-        # Create the filtered deck
-        create_lerntag_deck(
-            lerntag, highyield_stark, highyield_leicht, lowyield, top100
-        )
-
-        # Create the previous filtered decks if necessary
-        if lernplan_conf.get("autocreate_previous", False):
-            create_previous_lerntag_decks(
-                lerntag, highyield_stark, highyield_leicht, lowyield, top100
-            )
-
-        print("Lernplan updated")
-
-    else:
-        # Lernplan is not set up
-        return None
+    if lernplan_conf.get("autocreate_previous", False):
+        create_previous_lerntag_decks(lerntag_str, *yield_settings)
 
 
 def lernplan_due_deck_auto_create():
-    """Create due deck every day regardless of lernplan weekdays"""
+    """Create due deck daily, independent of lernplan schedule"""
+    # Get configuration
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-
-    # Only proceed if we have config and autocreate_due is enabled
     if conf is None or "lernplan" not in conf:
         return
 
     lernplan_conf = conf["lernplan"]
 
-    # Check if due deck autocreation is enabled
-    if (not lernplan_conf.get("autocreate_due", False)) and (
-        not lernplan_conf.get("autocreate", False)
-    ):
+    # Validate prerequisites
+    if not lernplan_conf.get("autocreate_due", False):
+        return
+    if not lernplan_conf.get("autocreate", False):
         return
 
-    # Check if we should run today (same logic as run_today_setup but separate tracking)
-    # Backwards compatibility: fall back to last_updated if last_due_updated doesn't exist
+    # Check if update is needed today
     last_due_updated = lernplan_conf.get(
         "last_due_updated", lernplan_conf.get("last_updated", None)
     )
-
     today = _get_effective_today()
 
-    # Skip if already updated today
     if last_due_updated is not None:
         last_due_date = datetime.datetime.fromisoformat(last_due_updated).date()
         if last_due_date >= today:
             return  # Already updated today
 
-    # Get current lerntag
-    lerntag = lernplan_conf.get("lerntag", "001")
+    # Get current lerntag (no advancement for due deck)
+    current_lerntag = lernplan_conf.get("lerntag", "001")
 
-    # Get the yield settings
-    highyield_stark, highyield_leicht, lowyield, top100 = (
-        _extract_yield_settings(lernplan_conf)
-    )
-
-    # Create the due deck
-    create_lerntag_due_deck(
-        lerntag,
-        highyield_stark,
-        highyield_leicht,
-        lowyield,
-        top100,
-        silent=True,
-    )
-
-    # Update the last_due_updated timestamp
+    # Update configuration
     lernplan_conf["last_due_updated"] = today.isoformat()
     mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+
+    # Create deck
+    yield_settings = _extract_yield_settings(lernplan_conf)
+    create_lerntag_due_deck(current_lerntag, *yield_settings, silent=True)
 
     print("Due deck updated")
 
