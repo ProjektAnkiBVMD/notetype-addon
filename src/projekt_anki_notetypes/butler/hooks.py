@@ -217,5 +217,6 @@ def profile_loaded_hk():
 
 def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
+    hooks.day_did_change.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
     gui_hooks.browser_will_search.append(browser_search_hk)
