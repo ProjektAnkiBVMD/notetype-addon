@@ -13,7 +13,7 @@ from .lernplan_manager import (
     create_lerntag_due_deck,
     remove_previous_lerntag_decks,
 )
-
+from anki.utils import int_time
 from .browser import filtered_deck_hk
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
@@ -208,14 +208,49 @@ def browser_search_hk(context: SearchContext):  # type: ignore
         )
         context.search = modified_search_term
 
-
-def profile_loaded_hk():
+def reload_data():
     lernplan_auto_create()
     lernplan_due_deck_auto_create()
     auto_rebuild_filtered_decks()
+
+def profile_loaded_hk():
+    reload_data()
+
+    # Hook alternative for Anki 25.02 and older support
+    # TODO Remove in a year or so when we can expect Anki 25.06+ users only
+    if not hasattr(gui_hooks, "day_did_change"):        
+        last_day_cutoff = mw.col.sched.day_cutoff
+
+        def refresh_reviewer_on_day_rollover_change():
+            from aqt.reviewer import RefreshNeeded
+
+            # need to refresh?
+            nonlocal last_day_cutoff
+            current_cutoff = mw.col.sched.day_cutoff
+            if mw.state == "review" and last_day_cutoff != current_cutoff:
+                last_day_cutoff = mw.col.sched.day_cutoff
+                mw.reviewer._refresh_needed = RefreshNeeded.QUEUES
+                mw.reviewer.refresh_if_needed()
+            if last_day_cutoff != current_cutoff:
+                reload_data()
+
+            # schedule another check
+            secs_until_cutoff = current_cutoff - int_time()
+            mw._reviewer_refresh_timer = mw.progress.timer( # type: ignore
+                secs_until_cutoff * 1000,
+                refresh_reviewer_on_day_rollover_change,
+                repeat=False,
+                parent=mw,
+            )
+
+        refresh_reviewer_on_day_rollover_change()
 
 
 def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
     gui_hooks.browser_will_search.append(browser_search_hk)
+    # for Anki 25.06 and later, we can use the new hook
+    if hasattr(gui_hooks, "day_did_change"):
+        gui_hooks.day_did_change.append(reload_data)
+
