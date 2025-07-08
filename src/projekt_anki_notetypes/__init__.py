@@ -35,6 +35,7 @@ from .notetype_setting_definitions import (
 )
 
 ADDON_DIR_NAME = str(Path(__file__).parent.name)
+ADDON_VERSION = "5.4"
 RESOURCES_PATH = Path(__file__).parent / "resources"
 
 from .butler.init import init_butler
@@ -121,30 +122,30 @@ def maybe_show_deck_update_notice():
     if not mw.col:
         return
 
-    # Return early if user was already notified about this version (and didn't choose "Remind me later")
-    latest_version = 5.2
-
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    if latest_version == conf.get("latest_notified_deck_version"):
+    if ADDON_VERSION == conf.get("latest_notified_deck_version"):
         return
 
     update_dialog = askUserDialog(
-        title="Ankizin Add-On-Update",
-        text="<h1>Ankizin Add-On-Update — Noch besserer Lernplan-Manager!</h1>"
-        "<h2>Wir haben am Tag der Arbeit gearbeitet und machen euch die StEx-Vorbereitung nun noch einfacher!</h2>"
-        "Der Lernplan-Manager kümmert sich vollautomatisch darum dir stets die richtigen Karten für deinen heutigen Lerntag zu zeigen.<br>"
-        "Einmal eingerichtet, musst du dich um (fast) nichts mehr kümmern."
+        title="Ankizin Deck-Update",
+        text="<h1>Ankizin V5 IST DA! (endlich)</h1>"
+        "<h2>Neue Karten und verbesserte Tags für eine noch bessere StEx-Vorbereitung!</h2>"
         "<h2>Was ist neu?</h2>"
         "<ul>"
-        "<li>Verbesserter Lernplan-Manager! (jetzt mit Fällige-Karten-Auswahlstapel-Option)</li>"
-        "<li><b>Automatisches Neu-Erstellen von Auswahlstapeln!<b><br>(&rarr;&nbsp;Einstellung &rarr;&nbsp;Wiederholung)</li>"
+        "<li>Neue und mehr Lernplan-Manager-Optionen</li>"
+        "<li>5441 neue Klinik- / M2-Karten</li>"
+        "<li>1055 neue Vorklinik- / M1-Karten</li>"
+        "<li>Neue Struktur für IMPP-Fokus / Yield-Tags</li>"
+        "<li>Etliche neue Uni-Tags</li>"
         "<li>Verbesserte Karten- und Notiztypen</li>"
         "</ul>"
-        "<h2>Was musst du tun?</h2>"
-        "Nichts!<br>",
+        "<h2>Was sollst du nun tun?</h2>"
+        "Die neue Ankizin-Version herunterladen!<br>"
+        "<h2>Ich nutze aber AnkiHub, was gilt für mich?</h2>"
+        "Du musst nix machen, Updates kommen automatisch.<br>",
         buttons=reversed(
             [
-                "Das ist ja super!",
+                "Ich bin schon up-to-date",
                 "Erinnere mich später!",
             ]
         ),
@@ -152,19 +153,20 @@ def maybe_show_deck_update_notice():
     update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
     update_dialog.setMaximumHeight(500)
     # update_dialog.setIconSize(QSize(62, 62))
-    # link_button = update_dialog.addButton(
-    #     "Erklärvideo öffnen!", QMessageBox.ButtonRole.RejectRole
-    # )
+    link_button = update_dialog.addButton(
+        "ZUM DOWNLOAD!", QMessageBox.ButtonRole.RejectRole
+    )
+    link_button_url = "https://www.ankizin.de/wiki/ankizin-deck-installieren/"
     # link_button_url = "https://www.youtube.com/watch?v=3CKUXRVaiLs"
-    # link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
+    link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
     if (
         # answer == "Erklärvideo öffnen!"
-        answer == "Das ist ja super!"
-        # or answer == "Nein, ich habe schon die neueste Version"
+        # answer == "Das ist ja super!"
+        answer == "Ich bin schon up-to-date"
     ):
-        conf["latest_notified_deck_version"] = latest_version
+        conf["latest_notified_deck_version"] = ADDON_VERSION
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     elif answer == "Erinnere mich später!":
         # Don't update the config, so the user will be asked again next time

@@ -92,17 +92,37 @@ def get_ankizin_versions() -> list:
         raise Exception("collection not available")
 
     # Determine the latest Ankizin_v version dynamically
-    pattern = re.compile(r"#Ankizin_v(\d+|Ankihub)::")
+    pattern = re.compile(r"#(Ankizin_v(\d+|Ankihub)|Zankiphil)::")
     versions = []
     for tag in col.tags.all():
         match = pattern.match(tag)
         if match:
-            versions.append("v" + match.group(1))
+            if match.group(2):  # Ankizin_v case
+                version = "v" + match.group(2)
+            else:  # Zankiphil case
+                version = "Zankiphil"
+            
+            if version not in versions:
+                versions.append(version)
 
+    # sorting: Ankihub first, then numbers in decreasing order, then Zankiphil
+    def sort_key(version):
+        if version == "vAnkihub":
+            return (0, 0)
+        elif version == "Zankiphil":
+            return (2, 0)
+        elif version.startswith("v") and version[1:].isdigit():
+            return (1, -int(version[1:]))  # negative for decreasing order
+        else:
+            return (3, version)
+    
+    versions.sort(key=sort_key)
     return versions
 
 
-def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):
+def create_filtered_deck(
+    deck_name, search, top100=False, duedeck=False, unsuspend=True, silent=False
+):
     col = mw.col
     if col is None:
         raise Exception("collection not available")
@@ -143,7 +163,19 @@ def create_filtered_deck(deck_name, search, unsuspend=True, silent=False):
         col.sched.add_or_update_filtered_deck(deck)
     except FilteredDeckError as e:
         print(f"Error: {e}")
-        if not silent:
+        if top100 and not silent:
+            showWarning(
+                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag.<br>"
+                "Du kannst diese Warnung einfach wegklicken."
+            )
+        elif duedeck and not silent:
+            showWarning(
+                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
+                "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage.<br>"
+                "Du kannst diese Warnung einfach wegklicken."
+            )
+        elif not silent:
             showWarning(f"Error: {e}")
 
 

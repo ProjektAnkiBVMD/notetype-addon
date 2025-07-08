@@ -23,15 +23,15 @@ def filtered_deck_hk(
         menu.addSeparator()
         menu.addAction(
             "Ankizin: Auswahlstapel aus Schlagwort erstellen (alle einsetzen)",
-            lambda: create_dyn_deck_from_tag(item, False),
+            lambda: create_dyn_deck_from_tag(item, high_yield=False),
         )
         menu.addAction(
             "Ankizin: Auswahlstapel aus high-yield Karten erstellen (alle einsetzen)",
-            lambda: create_dyn_deck_from_tag(item, True),
+            lambda: create_dyn_deck_from_tag(item, high_yield=True),
         )
         menu.addAction(
             "Ankizin: Auswahlstapel nur aus eingesetzten Karten erstellen",
-            lambda: create_dyn_deck_from_tag(item, False, unsuspend=False),
+            lambda: create_dyn_deck_from_tag(item, high_yield=False, unsuspend=False),
         )
 
 
@@ -49,13 +49,18 @@ def create_dyn_deck_from_tag(
     deck_name = format_deck_name(item.name)
 
     if high_yield:
-        high_yield_tag = (
-            f"#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)"
+        high_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
+        ]
+        high_yield_search = " OR ".join(
+            [f'"tag:{tag}"' for tag in high_yield_tags]
         )
-        search += f' tag:"{high_yield_tag}"'
+        search += f" ({high_yield_search})"
         deck_name += " - high-yield"
 
-    create_filtered_deck(deck_name, search, unsuspend)
+    create_filtered_deck(deck_name, search, unsuspend=unsuspend)
     mw.reset()
 
 

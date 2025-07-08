@@ -2,7 +2,9 @@ from pathlib import Path
 import aqt
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo, askUser
+from aqt.qt import qconnect
+from aqt.utils import showInfo, askUser, openLink
+from aqt.gui_hooks import profile_did_open
 import anki
 import anki.hooks
 import re
@@ -12,12 +14,16 @@ import aqt.forms.preferences
 
 from .ankizin_helper import AnkizinHelper
 from .lernplan_manager import open_lernplan_manager, open_lerntag_deck_creator
+from .utils import get_ankizin_versions
 
 from ..gui.projekt_anki_menu import get_ankizin_menu
+from ..gui.config_window import note_type_version
+from ..notetype_setting_definitions import projekt_anki_notetype_models
 
 ankizin_helper = None
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
+ADDON_VERSION = "5.4 (hotfix 4)"
 
 
 def init_ankizin_helper(menu):
@@ -25,10 +31,10 @@ def init_ankizin_helper(menu):
     ankizin_helper = AnkizinHelper()
 
     # Add menu item
-    first_setup = QAction("Ankizin erstmalig installiert?", mw)
+    first_setup = QAction("⏩️ Ankizin erstmalig installiert?", mw)
     first_setup.triggered.connect(ankizin_helper.run_first_time_setup)
 
-    update_setup = QAction("Ankizin-Update installiert?", mw)
+    update_setup = QAction("🔄 Ankizin-Update installiert?", mw)
     update_setup.triggered.connect(ankizin_helper.run_ankizin_update_setup)
 
     menu.addAction(first_setup)
@@ -38,13 +44,13 @@ def init_ankizin_helper(menu):
 
 
 def add_lernplan_manager(menu):
-    action = QAction("Lernplan-Manager (automatisch)", mw)
+    action = QAction("💼 Lernplan-Manager (automatisch)", mw)
     action.triggered.connect(open_lernplan_manager)
     menu.addAction(action)
 
 
 def add_lerntag_deck_creator(menu):
-    action = QAction("Lerntag-Auswahlstapel erstellen (manuell)", mw)
+    action = QAction("📝 Lerntag-Auswahlstapel erstellen (manuell)", mw)
     action.triggered.connect(open_lerntag_deck_creator)
     menu.addAction(action)
 
@@ -121,6 +127,80 @@ def setup_rebuild_settings_toggle():
     aqt.forms.preferences.Ui_Preferences.setupUi = preferences_ui_with_ankizin
 
 
+def add_help_items_to_debug(debug_menu):
+    """Add help and community items directly to the debug menu."""
+    # Add documentation items
+    wiki_action = QAction("📑 Ankizin-Wiki", mw)
+    wiki_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
+    debug_menu.addAction(wiki_action)
+    
+    hub_action = QAction("⭐️ Ankizin auf AnkiHub", mw)
+    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/wie-installiere-ich-ankihub/"))
+    debug_menu.addAction(hub_action)
+    
+    # Add community items
+    discord_action = QAction("👾 Discord", mw)
+    discord_action.triggered.connect(lambda: openLink("https://discord.com/invite/5DMsDg8Rvu"))
+    debug_menu.addAction(discord_action)
+    
+    insta_action = QAction("📷 Instagram", mw)
+    insta_action.triggered.connect(lambda: openLink("https://www.instagram.com/ankizin_bvmd/"))
+    debug_menu.addAction(insta_action)
+    
+    # Add separator before version info
+    debug_menu.addSeparator()
+
+
+def init_version_info(menu):
+    """Add version info to a DEBUG submenu."""
+    note_version = note_type_version(projekt_anki_notetype_models()[0])
+    if not note_version:
+        return
+
+    # Create DEBUG submenu
+    menu.addSeparator()
+    debug_menu = menu.addMenu("🆘 Hilfe + Mehr")
+
+    # Add help items first
+    add_help_items_to_debug(debug_menu)
+
+    note_version_info = QAction(f"Notiztyp-Version: {note_version}", mw)
+    note_version_info.setEnabled(False)  # Make it non-clickable
+    debug_menu.addAction(note_version_info)
+
+    addon_version_info = QAction(f"AddOn-Version: {ADDON_VERSION}", mw)
+    addon_version_info.setEnabled(False)  # Make it non-clickable
+    debug_menu.addAction(addon_version_info)
+
+
+def update_version_info():
+    menu = get_ankizin_menu()
+    ankizin_versions = get_ankizin_versions()
+    ankizin_versions_text = "kein Ankizin"
+    if ankizin_versions:
+        ankizin_versions_text = ", ".join(ankizin_versions)
+
+    # Find DEBUG submenu
+    debug_menu = None
+    for action in menu.actions():
+        if action.text() == "🆘 Hilfe + Mehr" and action.menu():
+            debug_menu = action.menu()
+            break
+
+    if not debug_menu:
+        return
+
+    # Check if action already exists and remove it
+    for action in debug_menu.actions():
+        if action.text().startswith("Ankizin-Versionen:"):
+            debug_menu.removeAction(action)
+            break
+
+    ankizin_versions_info = QAction(f"Ankizin-Versionen: {ankizin_versions_text}", mw)
+    ankizin_versions_info.setEnabled(False)
+    debug_menu.addAction(ankizin_versions_info)
+
+
 def menu_init():
     menu = get_ankizin_menu()
     menu.addSeparator()
@@ -128,6 +208,10 @@ def menu_init():
     add_lerntag_deck_creator(menu)
     menu.addSeparator()
     init_ankizin_helper(menu)
+    init_version_info(menu)
 
     # Setup preferences hook
     setup_rebuild_settings_toggle()
+
+    # Update version info after profile load
+    profile_did_open.append(update_version_info)
