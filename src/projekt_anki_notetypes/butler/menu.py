@@ -23,7 +23,7 @@ from ..notetype_setting_definitions import projekt_anki_notetype_models
 ankizin_helper = None
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
-ADDON_VERSION = "5.4 (day change support)"
+ADDON_VERSION = "5.5"
 
 
 def init_ankizin_helper(menu):
