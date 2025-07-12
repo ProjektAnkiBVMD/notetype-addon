@@ -118,9 +118,7 @@ def lernplan_due_deck_auto_create():
         return
 
     # Check if update is needed today
-    last_due_updated = lernplan_conf.get(
-        "last_due_updated", lernplan_conf.get("last_updated", None)
-    )
+    last_due_updated = lernplan_conf.get("last_due_updated", None)
     today = _get_effective_today()
 
     if last_due_updated is not None:
@@ -208,17 +206,19 @@ def browser_search_hk(context: SearchContext):  # type: ignore
         )
         context.search = modified_search_term
 
+
 def reload_data():
     lernplan_auto_create()
     lernplan_due_deck_auto_create()
     auto_rebuild_filtered_decks()
+
 
 def profile_loaded_hk():
     reload_data()
 
     # Hook alternative for Anki 25.02 and older support
     # TODO Remove in a year or so when we can expect Anki 25.06+ users only
-    if not hasattr(gui_hooks, "day_did_change"):        
+    if not hasattr(gui_hooks, "day_did_change"):
         last_day_cutoff = mw.col.sched.day_cutoff
 
         def refresh_reviewer_on_day_rollover_change():
@@ -236,7 +236,7 @@ def profile_loaded_hk():
 
             # schedule another check
             secs_until_cutoff = current_cutoff - int_time()
-            mw._reviewer_refresh_timer = mw.progress.timer( # type: ignore
+            mw._reviewer_refresh_timer = mw.progress.timer(  # type: ignore
                 secs_until_cutoff * 1000,
                 refresh_reviewer_on_day_rollover_change,
                 repeat=False,
@@ -253,4 +253,3 @@ def hooks_init():
     # for Anki 25.06 and later, we can use the new hook
     if hasattr(gui_hooks, "day_did_change"):
         gui_hooks.day_did_change.append(reload_data)
-

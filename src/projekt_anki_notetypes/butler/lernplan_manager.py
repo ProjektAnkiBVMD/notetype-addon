@@ -379,6 +379,7 @@ class LernplanManagerDialog(QDialog):
             button.isChecked() for button in self.weekday_buttons
         ]
         lernplan_conf["last_updated"] = _get_effective_today().isoformat()
+        lernplan_conf["last_due_updated"] = _get_effective_today().isoformat()
         lernplan_conf["lernplan_started_on"] = (
             datetime.datetime.today().weekday()
         )
