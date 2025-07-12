@@ -137,7 +137,7 @@ def lernplan_due_deck_auto_create():
 
     # Create deck
     yield_settings = _extract_yield_settings(lernplan_conf)
-    create_lerntag_due_deck(current_lerntag, *yield_settings, silent=True)
+    create_lerntag_due_deck(current_lerntag, *yield_settings)
 
     print("Due deck updated")
 
