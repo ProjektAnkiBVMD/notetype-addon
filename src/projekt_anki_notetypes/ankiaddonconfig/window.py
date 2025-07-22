@@ -422,6 +422,9 @@ class ConfigLayout(QBoxLayout):
         color_dialog.setOption(QColorDialog.ColorDialogOption.ShowAlphaChannel)
 
         def set_color(rgb: str) -> None:
+            # Ensure rgb is a valid string
+            if not isinstance(rgb, str) or not rgb:
+                rgb = "transparent"
             border_style = (
                 "none" if rgb != "transparent" else "1px solid #000000"
             )
@@ -436,11 +439,11 @@ class ConfigLayout(QBoxLayout):
 
         def update() -> None:
             value = self.conf.get(key)
-
-            if value != "inherit":
-                set_color(value)
-            else:
+            # Defensive: treat None or invalid as transparent
+            if not isinstance(value, str) or not value or value == "inherit":
                 set_color("transparent")
+            else:
+                set_color(value)
 
         def save(color: QColor) -> None:
             rgb = color.name()
