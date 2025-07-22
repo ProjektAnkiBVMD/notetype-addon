@@ -163,9 +163,25 @@ def auto_rebuild_filtered_decks():
     col = mw.col
     if col is None:
         raise Exception("collection not available")
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+
+    # no configuration available, skipping auto rebuild of filtered decks
+    if conf is None:
+        return
 
     # Check if the setup should be run today
-    if not run_today_setup():
+    last_rebuild = conf.get("last_rebuild", None)
+
+    if last_rebuild is None:
+        # No last_rebuild date available, so we assume the setup should be run
+        should_run = True
+    else:
+        # Check if the rebuild hooks should be run right now
+        last_rebuild = datetime.datetime.fromisoformat(last_rebuild).date()
+        today = _get_effective_today()
+        should_run = last_rebuild < today
+
+    if not should_run:
         return
 
     mw.progress.start()
@@ -183,6 +199,10 @@ def auto_rebuild_filtered_decks():
                 _deck = col.sched.get_or_create_filtered_deck(deck_id=deck.id)
                 _deck.allow_empty = True  # for some reason this is not set when get_or_create_filtered_deck is called
                 try_rebuild_filtered_deck(_deck)
+
+    # Update last_rebuild date
+    conf["last_rebuild"] = datetime.datetime.now().isoformat()
+    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
     mw.progress.finish()
     mw.reset()
