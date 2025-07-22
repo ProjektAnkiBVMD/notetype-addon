@@ -1,4 +1,4 @@
-<!-- version a983ab3 -->
+<!-- version f0935e4 -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -201,14 +201,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 <!-- ####################################### -->
 <!-- ##############  SCRIPTS  ############## -->
 <!-- ####################################### -->
-
-<script>
-  try {
-    anki.imageOcclusion.setup();
-  } catch (exc) {
-    document.getElementById("err").innerHTML = `Error loading image occlusion. Is your Anki version up to date?<br><br>${exc}`;
-  }
-</script>
 
 <!-- ############ DO NOT DELETE ############# -->
 <!-- ~~~~~~~~~CUSTOM SCRIPT INSERTION~~~~~~~~ -->
@@ -765,6 +757,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       }
     });
     observer.observe(document.body, { attributes: true });
+  }
+</script>
+
+<script>
+  try {
+    anki.imageOcclusion.setup();
+  } catch (exc) {
+    document.getElementById("err").innerHTML = `Error loading image occlusion. Is your Anki version up to date?<br><br>${exc}`;
   }
 </script>
 
