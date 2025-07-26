@@ -273,11 +273,32 @@ def _show_io_field_in_editor(js: str, n: notes.Note, e: editor.Editor) -> str:
     return (
         js
         + """
-        document.querySelectorAll('.field-container').forEach(el => {
-            el.classList.remove('hide');
-        });
+        (function () {
+            if (window.myOcclusionHandler) return;
+            window.myOcclusionHandler = true;
+
+            function showIOfield() {
+                document.querySelectorAll('.field-container').forEach(el => {
+                el.classList.remove('hide');
+                });
+            }
+
+            // Run initially
+            showIOfield();
+
+            // Listen for state changes (custom event or DOM observer)
+            document.addEventListener("editorStateDidChange", showIOfield);
+        })();
         """
     )
+
+
+def _rerun_show_io_field_in_editor(
+    _1: editor.Editor, _2: editor.EditorState, _3: editor.EditorState
+) -> None:
+    """Rerun the show_io_field_in_editor function to ensure the IO field is shown."""
+    mw.web.eval("document.dispatchEvent(new Event('editorStateDidChange'));")
+    return
 
 
 def hooks_init():
@@ -289,3 +310,4 @@ def hooks_init():
         gui_hooks.day_did_change.append(reload_data)
 
     gui_hooks.editor_will_load_note.append(_show_io_field_in_editor)
+    gui_hooks.editor_state_did_change.append(_rerun_show_io_field_in_editor)
