@@ -1,20 +1,23 @@
-from aqt import gui_hooks, mw
-from aqt.qt import *
-from aqt.browser import SearchContext
-from anki import hooks
 import datetime
 from pathlib import Path
-from aqt.operations.scheduling import add_or_update_filtered_deck
+
+from anki import hooks, notes
 from anki.scheduler import FilteredDeckForUpdate
-from .menu import get_rebuild_config
+from anki.utils import int_time
+from aqt import gui_hooks, mw, editor
+from aqt.browser import SearchContext
+from aqt.operations.scheduling import add_or_update_filtered_deck
+from aqt.qt import *
+from aqt.reviewer import RefreshNeeded
+
+from .browser import filtered_deck_hk
 from .lernplan_manager import (
     create_lerntag_deck,
-    create_previous_lerntag_decks,
     create_lerntag_due_deck,
+    create_previous_lerntag_decks,
     remove_previous_lerntag_decks,
 )
-from anki.utils import int_time
-from .browser import filtered_deck_hk
+from .menu import get_rebuild_config
 
 ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
@@ -242,8 +245,6 @@ def profile_loaded_hk():
         last_day_cutoff = mw.col.sched.day_cutoff
 
         def refresh_reviewer_on_day_rollover_change():
-            from aqt.reviewer import RefreshNeeded
-
             # need to refresh?
             nonlocal last_day_cutoff
             current_cutoff = mw.col.sched.day_cutoff
