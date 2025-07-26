@@ -230,14 +230,14 @@ def browser_search_hk(context: SearchContext):  # type: ignore
         context.search = modified_search_term
 
 
-def reload_data():
+def reload_data_hk():
     lernplan_auto_create()
     lernplan_due_deck_auto_create()
     auto_rebuild_filtered_decks()
 
 
 def profile_loaded_hk():
-    reload_data()
+    reload_data_hk()
 
     # Hook alternative for Anki 25.02 and older support
     # TODO Remove in a year or so when we can expect Anki 25.06+ users only
@@ -253,7 +253,7 @@ def profile_loaded_hk():
                 mw.reviewer._refresh_needed = RefreshNeeded.QUEUES
                 mw.reviewer.refresh_if_needed()
             if last_day_cutoff != current_cutoff:
-                reload_data()
+                reload_data_hk()
 
             # schedule another check
             secs_until_cutoff = current_cutoff - int_time()
@@ -267,7 +267,7 @@ def profile_loaded_hk():
         refresh_reviewer_on_day_rollover_change()
 
 
-def _show_io_field_in_editor(js: str, n: notes.Note, e: editor.Editor) -> str:
+def show_io_field_in_editor_hk(js: str, n: notes.Note, e: editor.Editor) -> str:
     """Add JS to the JS code of the editor to show the IO field in the editor."""
 
     return (
@@ -317,6 +317,6 @@ def hooks_init():
     gui_hooks.browser_will_search.append(browser_search_hk)
     # for Anki 25.06 and later, we can use the new hook
     if hasattr(gui_hooks, "day_did_change"):
-        gui_hooks.day_did_change.append(reload_data)
+        gui_hooks.day_did_change.append(reload_data_hk)
 
-    gui_hooks.editor_will_load_note.append(_show_io_field_in_editor)
+    gui_hooks.editor_will_load_note.append(show_io_field_in_editor_hk)
