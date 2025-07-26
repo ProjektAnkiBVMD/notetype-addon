@@ -274,31 +274,41 @@ def _show_io_field_in_editor(js: str, n: notes.Note, e: editor.Editor) -> str:
         js
         + """
         (function () {
-            if (window.myOcclusionHandler) return;
-            window.myOcclusionHandler = true;
+          // Only set up the observer once per page load
+          if (window.myOcclusionObserver) return;
 
-            function showIOfield() {
-                document.querySelectorAll('.field-container').forEach(el => {
-                el.classList.remove('hide');
-                });
+          function showIOfield() {
+            document.querySelectorAll('.field-container').forEach(el => {
+              el.classList.remove('hide');
+            });
+          }
+
+          // Run once on initial load
+          showIOfield();
+
+          // Set up MutationObserver
+          const observer = new MutationObserver((mutations) => {
+            // Check if relevant nodes have been added or changed
+            for (const mutation of mutations) {
+              if (mutation.type === "childList") {
+                showIOfield();
+              }
             }
+          });
 
-            // Run initially
-            showIOfield();
-
-            // Listen for state changes (custom event or DOM observer)
-            document.addEventListener("editorStateDidChange", showIOfield);
+          // Start observing the editor root node
+          const editorRoot = document.querySelector('.note-editor');
+          if (editorRoot) {
+            observer.observe(editorRoot, {
+              childList: true,
+              subtree: false,  // Only observe direct children
+              attributes: false,  // Only observe direct children,
+            });
+            window.myOcclusionObserver = observer;
+          }
         })();
         """
     )
-
-
-def _rerun_show_io_field_in_editor(
-    _1: editor.Editor, _2: editor.EditorState, _3: editor.EditorState
-) -> None:
-    """Rerun the show_io_field_in_editor function to ensure the IO field is shown."""
-    mw.web.eval("document.dispatchEvent(new Event('editorStateDidChange'));")
-    return
 
 
 def hooks_init():
@@ -310,4 +320,3 @@ def hooks_init():
         gui_hooks.day_did_change.append(reload_data)
 
     gui_hooks.editor_will_load_note.append(_show_io_field_in_editor)
-    gui_hooks.editor_state_did_change.append(_rerun_show_io_field_in_editor)
