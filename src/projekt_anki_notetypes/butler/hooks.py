@@ -267,6 +267,19 @@ def profile_loaded_hk():
         refresh_reviewer_on_day_rollover_change()
 
 
+def _show_io_field_in_editor(js: str, n: notes.Note, e: editor.Editor) -> str:
+    """Add JS to the JS code of the editor to show the IO field in the editor."""
+
+    return (
+        js
+        + """
+        document.querySelectorAll('.field-container').forEach(el => {
+            el.classList.remove('hide');
+        });
+        """
+    )
+
+
 def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
@@ -274,3 +287,5 @@ def hooks_init():
     # for Anki 25.06 and later, we can use the new hook
     if hasattr(gui_hooks, "day_did_change"):
         gui_hooks.day_did_change.append(reload_data)
+
+    gui_hooks.editor_will_load_note.append(_show_io_field_in_editor)
