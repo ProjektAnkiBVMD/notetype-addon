@@ -235,9 +235,22 @@ def reload_data_hk():
     lernplan_due_deck_auto_create()
     auto_rebuild_filtered_decks()
 
-
 def profile_loaded_hk():
-    reload_data_hk()
+    if mw.pm.auto_syncing_enabled() and mw.pm.sync_auth() and not mw.safeMode:
+        
+        def on_sync_finished_hk():
+            # run reload_data AFTER sync is finished
+            reload_data_hk()
+            
+            try:
+                gui_hooks.sync_did_finish.remove(on_sync_finished_hk)
+            except ValueError:
+                pass  # Hook wasn't registered, ignore
+
+        gui_hooks.sync_did_finish.append(on_sync_finished_hk)
+    else:
+        # No auto-sync or not configured for sync, run immediately
+        reload_data_hk()
 
     # Hook alternative for Anki 25.02 and older support
     # TODO Remove in a year or so when we can expect Anki 25.06+ users only
