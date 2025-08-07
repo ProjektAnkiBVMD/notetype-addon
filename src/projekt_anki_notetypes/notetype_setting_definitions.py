@@ -546,7 +546,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"--text-bold: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "#339961",
         },
         "underlined_text_color": {
             "text": "A - Light-Mode: Unterstrichene Textfarbe",
@@ -556,7 +556,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"--text-underline: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "#f89925",
         },
         "italic_text_color": {
             "text": "A - Light-Mode: Schräggestellte Textfarbe",
@@ -566,7 +566,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"--text-italics: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "#30b4c5",
         },
         "cloze_color": {
             "text": "A - Light-Mode: Cloze-Textfarbe",
@@ -648,7 +648,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"--nm-text-bold: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "MediumSeaGreen",
         },
         "nm_underlined_text_color": {
             "text": "B - Dark-Mode: Unterstrichene Textfarbe",
@@ -658,7 +658,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"--nm-text-underline: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "#fab763",
         },
         "nm_italic_text_color": {
             "text": "B - Dark-Mode: Schräggestellte Textfarbe",
@@ -668,7 +668,7 @@ setting_configs: Dict[str, Any] = OrderedDict(
             "regex": r"-nm-text-italics: (.+?)( +!important)?;",
             "with_inherit_option": True,
             "section": "Farben",
-            "default": "inherit",
+            "default": "#44c1d2",
         },
         "nm_cloze_color": {
             "text": "B - Dark-Mode: Lückentextfarbe",
