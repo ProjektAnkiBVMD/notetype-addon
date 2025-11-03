@@ -6,7 +6,10 @@ from anki.scheduler import FilteredDeckForUpdate
 from anki.utils import int_time
 from aqt import gui_hooks, mw, editor
 from aqt.browser import SearchContext
-from aqt.operations.scheduling import add_or_update_filtered_deck
+from aqt.operations.scheduling import (
+    add_or_update_filtered_deck,
+    rebuild_filtered_deck
+)
 from aqt.qt import *
 from aqt.reviewer import RefreshNeeded
 
@@ -150,7 +153,7 @@ def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
         or "is:due" in searchterm_entry.search
     ):  # already finetuned
         print("Deck already has is:new or is:due filter")
-        mw.col.sched.rebuild_filtered_deck(filtered_deck.id)
+        rebuild_filtered_deck(parent=mw, deck_id=filtered_deck.id).run_in_background()
     else:
         # rebuild with is:new or is:due filter
         print("Rebuilding deck with is:new or is:due filter")
@@ -196,7 +199,7 @@ def auto_rebuild_filtered_decks():
         if col.decks.is_filtered(deck.id):
             # match only decks that have "REBUILD" in their name
             if "REBUILD" in deck.name:
-                col.sched.rebuild_filtered_deck(deck.id)
+                rebuild_filtered_deck(parent=mw, deck_id=deck.id).run_in_background()
             elif rebuild_all:
                 # rebuild with is:new or is:due filter
                 _deck = col.sched.get_or_create_filtered_deck(deck_id=deck.id)
