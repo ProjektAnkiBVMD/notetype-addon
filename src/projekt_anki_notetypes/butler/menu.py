@@ -9,6 +9,7 @@ import anki
 import anki.hooks
 import re
 import webbrowser
+import json
 from aqt.utils import showInfo
 import aqt.forms.preferences
 
@@ -65,6 +66,13 @@ def get_rebuild_config():
     conf.setdefault("autoRebuildDecksOnStartup", True)
 
     return conf
+
+
+def copy_config_to_clipboard():
+    conf = get_rebuild_config()
+    conf_json = json.dumps(conf, indent=4)
+    QApplication.clipboard().setText(conf_json)
+    showInfo("Ankizin-Konfiguration wurde in die Zwischenablage kopiert.")
 
 
 def on_auto_rebuild_checkbox_changed(checked: bool):
@@ -172,17 +180,17 @@ def init_version_info(menu):
     addon_version_info.setEnabled(False)  # Make it non-clickable
     debug_menu.addAction(addon_version_info)
 
+    # Add copy button at the end
+    debug_menu.addSeparator()
+    copy_action = QAction("📋 Konfiguration kopieren", mw)
+    qconnect(copy_action.triggered, copy_config_to_clipboard)
+    debug_menu.addAction(copy_action)
+
 
 def update_version_info():
-    menu = get_ankizin_menu()
-    ankizin_versions = get_ankizin_versions()
-    ankizin_versions_text = "kein Ankizin"
-    if ankizin_versions:
-        ankizin_versions_text = ", ".join(ankizin_versions)
-
     # Find DEBUG submenu
     debug_menu = None
-    for action in menu.actions():
+    for action in get_ankizin_menu().actions():
         if action.text() == "🆘 Hilfe + Mehr" and action.menu():
             debug_menu = action.menu()
             break
@@ -190,15 +198,27 @@ def update_version_info():
     if not debug_menu:
         return
 
-    # Check if action already exists and remove it
+    versions = get_ankizin_versions()
+    ver_text = f"{', '.join(versions) if versions else 'kein Ankizin'}"
+    ver_text = f"Ankizin-Versionen: {ver_text}"
+
+    # Update existing entry if found
     for action in debug_menu.actions():
         if action.text().startswith("Ankizin-Versionen:"):
-            debug_menu.removeAction(action)
-            break
+            action.setText(ver_text)
+            return
 
-    ankizin_versions_info = QAction(f"Ankizin-Versionen: {ankizin_versions_text}", mw)
-    ankizin_versions_info.setEnabled(False)
-    debug_menu.addAction(ankizin_versions_info)
+    # Create and insert new entry before the last separator
+    ver_action = QAction(ver_text, mw)
+    ver_action.setEnabled(False)
+
+    actions = debug_menu.actions()
+    for i in range(len(actions) - 1, -1, -1):
+        if actions[i].isSeparator():
+            debug_menu.insertAction(actions[i], ver_action)
+            return
+
+    debug_menu.addAction(ver_action)
 
 
 def menu_init():
