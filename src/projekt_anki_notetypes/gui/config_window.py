@@ -10,7 +10,6 @@ from aqt.utils import askUser, showInfo, tooltip
 
 from ..ankiaddonconfig import ConfigManager, ConfigWindow
 from ..ankiaddonconfig.window import ConfigLayout
-from ..constants import ANKIHUB_NOTETYPE_RE, NOTETYPE_COPY_RE
 from ..notetype_setting import NotetypeSetting, NotetypeSettingException
 from ..notetype_setting_definitions import (
     projekt_anki_notetype_model,
@@ -54,8 +53,7 @@ class NotetypesConfigWindow:
     window: Optional[ConfigWindow] = None
 
     def __init__(self, clayout_: CardLayout = None):
-        # code in this class assumes that if bool(clayout) is true, clayout.model contains
-        # an anking notetype model
+        # code in this class assumes that if bool(clayout) is true, clayout.model contains an projektanki notetype model
         self.clayout = None
         if clayout_:
             if clayout_.model["name"] in _names_of_all_supported_note_types():
@@ -162,7 +160,7 @@ class NotetypesConfigWindow:
                 _notetype_base_name(self.clayout.model["name"])
             )
 
-        # add anking links layouts
+        # add projektanki links layouts
         self.projekt_anki_icons_widget = QWidget()
         ProjektAnkiIconsLayout(self.projekt_anki_icons_widget)
         window.main_layout.insertWidget(0, self.projekt_anki_icons_widget)
@@ -329,10 +327,8 @@ class NotetypesConfigWindow:
     def _adjust_configurable_field_nts_order(
         self, ntss: List[NotetypeSetting], notetype_base_name: str
     ) -> List[NotetypeSetting]:
-        # adjusts the order of the hint button settings to be the same as
-        # on the original anking card
-        # it would probably be better to check the order of the buttons on the current
-        # version of the card, not the original one
+        # adjusts the order of the hint button settings to be the same as on the original projektanki card
+        # it would probably be better to check the order of the buttons on the current version of the card, not the original one
 
         field_ntss = [
             nts
@@ -674,7 +670,10 @@ def _new_version_available_for_model(model: "NotetypeDict") -> bool:
 def _note_type_versions(notetype_base_name: str) -> List["NotetypeDict"]:
     """Returns a list of all notetype versions of the notetype in the collection.
     Version of a note type are created by the AnkiHub add-on and by copying
-    the base AnKing note types or importing them from different sources."""
+    the base ProjektAnki note types or importing them from different sources."""
+    NOTETYPE_COPY_RE    = r"{notetype_base_name}-[a-zA-Z0-9]{{5}}"
+    ANKIHUB_NOTETYPE_RE = r"{notetype_base_name} \(.+ / .+?\)"
+    
     models = [
         mw.col.models.get(x.id)  # type: ignore
         for x in mw.col.models.all_names_and_ids()
@@ -706,7 +705,7 @@ def _most_basic_notetype_version(
 
 
 def _notetype_base_name(model_name: str) -> str:
-    """Returns the base name of a note type, that is if it's a version of a an anking note type
+    """Returns the base name of a note type, that is if it's a version of a projektanki note type
     it will return the base name, otherwise it will return the name itself."""
     return next(
         (

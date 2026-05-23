@@ -1,6 +1,5 @@
 import datetime
 import re
-from pathlib import Path
 
 import anki
 import aqt
@@ -9,13 +8,12 @@ from aqt.qt import *
 from aqt.operations import CollectionOp
 from anki.collection import OpChanges
 
+from ..constants import ADDON_DIR_NAME
 from .utils import (
     check_ankizin_installation,
     create_filtered_deck,
     remove_filtered_deck,
 )
-
-ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
 def _get_effective_today():
@@ -94,7 +92,7 @@ class LernplanManagerDialog(QDialog):
                 "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch<br>normale und low-yield Karten enthalten sein sollen.<br>"
                 "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
                 "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen.<br><br>"
-                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: V4+ / AnkiHub)."
+                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: AnkiCollab / V4+)."
             )
         )
         right_layout.addSpacing(20)
@@ -324,7 +322,7 @@ class LernplanManagerDialog(QDialog):
         col = mw.col
         # match only main Lerntag tags
         lerntag_pattern = re.compile(
-            r"#Ankizin_v(?:\d+|Ankihub)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
+            r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
         )
         lerntag_tags = [
             tag for tag in col.tags.all() if lerntag_pattern.match(tag)
@@ -597,7 +595,7 @@ class LerntagDeckCreatorDialog(QDialog):
         col = mw.col
         # match only main Lerntag tags
         lerntag_pattern = re.compile(
-            r"#Ankizin_v(?:\d+|Ankihub)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
+            r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
         )
         lerntag_tags = [
             tag for tag in col.tags.all() if lerntag_pattern.match(tag)
@@ -726,7 +724,7 @@ def create_lerntag_due_deck(
     lerntage = "|".join([str(i).zfill(3) for i in range(1, int(lerntag))])
     tag_pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({lerntage})"
     search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
-    deck_name = f"!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
+    deck_name = "!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
 
     # Filter for TOP-100 themes first (if enabled)
     if top100:
@@ -755,7 +753,7 @@ def create_lerntag_due_deck(
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tags = [
-            "#Ankizin_vAnkihub::!MARKIERE_DIESE_KARTEN::M2_low_yield",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
             "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
         ]
         low_yield_search = " OR ".join(

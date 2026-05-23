@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl, QAction, QMessageBox, QSize, QIcon, QPixmap
+from aqt.qt import QUrl, QAction, QMessageBox, QPixmap
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -16,12 +16,14 @@ from aqt.gui_hooks import (
     profile_did_open,
     editor_will_show_context_menu,
 )
-from aqt.qt import QMenu, QPushButton, qtmajor, QAction, qconnect
+from aqt.qt import QMenu, QPushButton, qtmajor, qconnect
 from aqt.utils import askUserDialog, tooltip, openLink
 
 from bs4 import BeautifulSoup
 
+from .butler.init import init_butler
 from .compat import add_compat_aliases
+from .constants import ADDON_DIR_NAME, ADDON_VERSION
 from .gui.config_window import (
     NotetypesConfigWindow,
     models_with_available_updates,
@@ -34,11 +36,7 @@ from .notetype_setting_definitions import (
     projekt_anki_notetype_models,
 )
 
-ADDON_DIR_NAME = str(Path(__file__).parent.name)
-ADDON_VERSION = "5.4"
 RESOURCES_PATH = Path(__file__).parent / "resources"
-
-from .butler.init import init_butler
 
 
 # init Butler sub-component

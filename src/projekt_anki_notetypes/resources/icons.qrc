@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="AnKing">
+    <qresource prefix="ProjektAnki">
         <file>ankizin.png</file>
         <file>ankizin_logotype.png</file>
         <file>sternisanta.png</file>

@@ -65,7 +65,7 @@ class NotetypeSetting(ABC):
             if self.key("general") != key:
                 return
 
-            # sets the config value for all anking notetypes
+            # sets the config value for all projekt_anki notetypes
             # even if they dont have this setting available
             # (in this case it will be ignored)
             for notetype_base_name in projekt_anki_notetype_names():
@@ -120,7 +120,6 @@ class NotetypeSetting(ABC):
             return result
 
         templates = result["tmpls"]
-        # all the AnKing notetypes have one template each
         # ProjektAnki notetypes may have multiple templates
         assert len(templates) >= 1
         assert len(templates) == len(sections)
@@ -197,7 +196,6 @@ class NotetypeSetting(ABC):
     ) -> List[str]:
         templates = model["tmpls"]
 
-        # all the AnKing notetypes have one template each
         # ProjektAnki notetypes may have multiple templates
         assert len(templates) >= 1
         template = templates[t_idx]

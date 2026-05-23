@@ -92,7 +92,7 @@ def get_ankizin_versions() -> list:
         raise Exception("collection not available")
 
     # Determine the latest Ankizin_v version dynamically
-    pattern = re.compile(r"#(Ankizin_v(\d+|Ankihub)|Zankiphil)::")
+    pattern = re.compile(r"#(Ankizin_v(\d+|Ankihub|AnkiCollab)|Zankiphil)::")
     versions = []
     for tag in col.tags.all():
         match = pattern.match(tag)
@@ -105,16 +105,18 @@ def get_ankizin_versions() -> list:
             if version not in versions:
                 versions.append(version)
 
-    # sorting: Ankihub first, then numbers in decreasing order, then Zankiphil
+    # sorting: AnkiCollab first, then Ankihub, then numbers in decreasing order, then Zankiphil
     def sort_key(version):
-        if version == "vAnkihub":
-            return (0, 0)
+        if version == "vAnkiCollab":
+            return (0, 0)  # highest priority
+        elif version == "vAnkihub":
+            return (1, 0)
         elif version == "Zankiphil":
-            return (2, 0)
+            return (3, 0)
         elif version.startswith("v") and version[1:].isdigit():
             return (1, -int(version[1:]))  # negative for decreasing order
         else:
-            return (3, version)
+            return (4, version)
     
     versions.sort(key=sort_key)
     return versions

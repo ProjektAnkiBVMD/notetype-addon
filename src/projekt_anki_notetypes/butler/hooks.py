@@ -1,5 +1,4 @@
 import datetime
-from pathlib import Path
 
 from anki import hooks, notes
 from anki.scheduler import FilteredDeckForUpdate
@@ -13,6 +12,7 @@ from aqt.operations.scheduling import (
 from aqt.qt import *
 from aqt.reviewer import RefreshNeeded
 
+from ..constants import ADDON_DIR_NAME
 from .browser import filtered_deck_hk
 from .lernplan_manager import (
     create_lerntag_deck,
@@ -21,8 +21,6 @@ from .lernplan_manager import (
     remove_previous_lerntag_decks,
 )
 from .menu import get_rebuild_config
-
-ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
 
 
 def _get_effective_today():

@@ -1,4 +1,3 @@
-from pathlib import Path
 import aqt
 from aqt import mw
 from aqt.qt import *
@@ -17,14 +16,12 @@ from .ankizin_helper import AnkizinHelper
 from .lernplan_manager import open_lernplan_manager, open_lerntag_deck_creator
 from .utils import get_ankizin_versions
 
+from ..constants import ADDON_DIR_NAME, ADDON_VERSION
 from ..gui.projekt_anki_menu import get_ankizin_menu
 from ..gui.config_window import note_type_version
 from ..notetype_setting_definitions import projekt_anki_notetype_models
 
 ankizin_helper = None
-
-ADDON_DIR_NAME = str(Path(__file__).parent.parent.name)
-ADDON_VERSION = "5.6"
 
 
 def init_ankizin_helper(menu):
@@ -142,8 +139,8 @@ def add_help_items_to_debug(debug_menu):
     wiki_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
     debug_menu.addAction(wiki_action)
     
-    hub_action = QAction("⭐️ Ankizin auf AnkiHub", mw)
-    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/wie-installiere-ich-ankihub/"))
+    hub_action = QAction("⭐️ Ankizin auf AnkiCollab", mw)
+    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
     debug_menu.addAction(hub_action)
     
     # Add community items

@@ -6,18 +6,18 @@ from typing import Dict, List
 from aqt import mw
 from aqt.utils import askUser, tooltip
 
-from ..constants import NOTETYPE_COPY_RE
 from ..notetype_setting_definitions import projekt_anki_notetype_names
 from ..utils import adjust_fields, create_backup
 
 
 def handle_extra_notetype_versions() -> None:
-    # mids of copies of the AnKing notetype identified by its name
+    # mids of copies of the ProjektAnki notetype identified by its name
     copy_mids_by_notetype_base_name: Dict[str, List[int]] = dict()
     for notetype_base_name in projekt_anki_notetype_names():
         if mw.col.models.by_name(notetype_base_name) is None:
             continue
 
+        NOTETYPE_COPY_RE   = r"{notetype_base_name}-[a-zA-Z0-9]{{5}}"
         notetype_copy_mids = [
             x.id
             for x in mw.col.models.all_names_and_ids()
@@ -58,7 +58,7 @@ def convert_extra_notetypes(
     future: Future, copy_mids_by_notetype_base_name: Dict[str, List[int]]
 ) -> None:
     """
-    Change note type of notes that have copies of an AnKing note type as a type to the original note type.
+    Change note type of notes that have copies of an ProjektAnki note type as a type to the original note type.
     Remove the extra note type copies.
     """
 
