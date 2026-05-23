@@ -99,6 +99,7 @@ class NotetypesConfigWindow:
             "ProjektAnkiCloze",
             "ProjektAnkiBlickdiagnose",
             "ProjektAnkiIO",
+            "ProjektAnkiEffigos",
             "ProjektAnkiAnatomieTrainer",
             "ProjektAnkiHistoTrainer",
             "ProjektAnkiVocab",
