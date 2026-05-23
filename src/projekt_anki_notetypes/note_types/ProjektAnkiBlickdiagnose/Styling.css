@@ -110,7 +110,11 @@
 /*~~~~~~~~~FONT STYLE~~~~~~~~~*/
 .card,
 kbd {
-  font-family: Arial Greek, Arial, Arial Unicode MS, sans-serif;
+  font-family:
+    Arial Greek,
+    Arial,
+    Arial Unicode MS,
+    sans-serif;
   /* Step exam's font is Arial Greek */
 }
 

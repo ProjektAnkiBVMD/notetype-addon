@@ -1,4 +1,4 @@
-<!-- version f0935e4 -->
+<!-- version 6d896bf -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -124,19 +124,8 @@
       {{/Note ID}}
     </div>
 
-    <!-- ERRATA BUTTON -->
-    <div class="head-flex-right" onclick="event.stopPropagation()">
-      <a id="link-ankihub" href="https://app.ankihub.net/">
-        <button id="button-ankihub" class="button-general" title="Karte in AnkiHub">
-          <strong>AnkiHub</strong>
-        </button>
-      </a>
-      <script>
-        try {
-          document.getElementById("link-ankihub").href =
-            document.getElementsByClassName("ankihub-view-note")[0].href
-        } catch (e) { }
-      </script>
+    <!-- FORMER ERRATA BUTTON -->
+    <div class="head-flex-right">
     </div>
   </div>
 
@@ -422,7 +411,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
     // improve legibility of tags
     // remove unnecessary prefixes
-    tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "")
+    tag = tag.replaceAll("#Ankizin_v1::", "").replaceAll("#Ankizin_v2::", "").replaceAll("#Ankizin_v3::", "").replaceAll("#Ankizin_vAnkihub::", "").replaceAll("#Ankizin_vAnkiCollab::", "")
     tag = tag.replaceAll("#Ankiphil_Vorklinik_v4.3::", "").replaceAll("#Ankiphil_Klinik_v1.4::", "");
     // clean duplicated prefixes
     tag = tag.replaceAll("#AMBOSS::", "").replaceAll("Bibliothek-Vorklinik::", "").replaceAll("Bibliothek-Klinik::", "").replaceAll("#M2_M3_Klinik::", "Klinik::").replaceAll("#M1_Vorklinik_(work_in_progress)::", "Vorklinik::");
