@@ -140,7 +140,7 @@ def add_help_items_to_debug(debug_menu):
     debug_menu.addAction(wiki_action)
     
     hub_action = QAction("⭐️ Ankizin auf AnkiCollab", mw)
-    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/"))
+    hub_action.triggered.connect(lambda: openLink("https://www.ankizin.de/wiki/ankicollab-grundlagen-und-installation-von-ankizin/"))
     debug_menu.addAction(hub_action)
     
     # Add community items

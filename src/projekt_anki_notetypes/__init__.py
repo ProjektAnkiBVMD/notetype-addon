@@ -126,21 +126,21 @@ def maybe_show_deck_update_notice():
 
     update_dialog = askUserDialog(
         title="Ankizin Deck-Update",
-        text="<h1>Ankizin V5 IST DA! (endlich)</h1>"
-        "<h2>Neue Karten und verbesserte Tags für eine noch bessere StEx-Vorbereitung!</h2>"
-        "<h2>Was ist neu?</h2>"
-        "<ul>"
-        "<li>Neue und mehr Lernplan-Manager-Optionen</li>"
-        "<li>5441 neue Klinik- / M2-Karten</li>"
-        "<li>1055 neue Vorklinik- / M1-Karten</li>"
-        "<li>Neue Struktur für IMPP-Fokus / Yield-Tags</li>"
-        "<li>Etliche neue Uni-Tags</li>"
-        "<li>Verbesserte Karten- und Notiztypen</li>"
-        "</ul>"
+        text="<h1>Ankizin ist <a href='https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/'>UMGEZOGEN zu AnkiCollab</a>!</h1>"
+        "AnkiCollab ist ein von dem Ankizin Projekt selbst entwickeltes Add-on, "
+        "welches euch ermöglicht, immer auf dem neusten Stand von Ankizin zu sein "
+        "sowie Änderungsvorschläge einzureichen.<br>"
+        "AnkiCollab ist keine Pflicht, ersetzt aber das warten auf neue Ankizin-Versionen.<br>"
+        "Wer das nicht möchte, kann wie gewohnt mit Ankizin V5 weiterlernen 😄"
         "<h2>Was sollst du nun tun?</h2>"
-        "Die neue Ankizin-Version herunterladen!<br>"
-        "<h2>Ich nutze aber AnkiHub, was gilt für mich?</h2>"
-        "Du musst nix machen, Updates kommen automatisch.<br>",
+        "<h3>Einmal auf AnkiCollab umziehen!</h3>"
+        "<ul>"
+        "<li>Für AnkiHub-User: siehe Link unten</li>"
+        "<li>Für Nicht-AnkiHub-User: gleicher Link unten</li>"
+        "</ul>"
+        "<h2>Warum das Ganze?</h2>"
+        "AnkiCollab ist völlig unabhängig, selbst programmiert und komplett kostenlos (rein durch Spenden und Preisgelder getragen).<br><br>"
+        "<small><i>Da das eine enorm wichtige Änderung ist (und jetzt auch alle stets up-to-date bleiben können), kommt dieses Pop-Up so lange, bist du sagst 'Ich bin schon up-to-date'.</i></small>",
         buttons=reversed(
             [
                 "Ich bin schon up-to-date",
@@ -152,21 +152,16 @@ def maybe_show_deck_update_notice():
     update_dialog.setMaximumHeight(500)
     # update_dialog.setIconSize(QSize(62, 62))
     link_button = update_dialog.addButton(
-        "ZUM DOWNLOAD!", QMessageBox.ButtonRole.RejectRole
+        "Umzug → AnkiCollab!", QMessageBox.ButtonRole.RejectRole
     )
-    link_button_url = "https://www.ankizin.de/wiki/ankizin-deck-installieren/"
-    # link_button_url = "https://www.youtube.com/watch?v=3CKUXRVaiLs"
+    link_button_url = "https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/"
     link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
-    if (
-        # answer == "Erklärvideo öffnen!"
-        # answer == "Das ist ja super!"
-        answer == "Ich bin schon up-to-date"
-    ):
+    if answer == "Ich bin schon up-to-date":
         conf["latest_notified_deck_version"] = ADDON_VERSION
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-    elif answer == "Erinnere mich später!":
+    else:
         # Don't update the config, so the user will be asked again next time
         pass
 
