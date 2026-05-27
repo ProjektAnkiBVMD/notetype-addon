@@ -102,6 +102,7 @@ class NotetypesConfigWindow:
             "ProjektAnkiEffigos",
             "ProjektAnkiAnatomieTrainer",
             "ProjektAnkiHistoTrainer",
+            "HeroldInnereAnkiNickCloze",
             "ProjektAnkiVocab",
             "ProjektAnkiBasic",
         ]
