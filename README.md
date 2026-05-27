@@ -1,8 +1,6 @@
-# Ankizin Notetypes Add-On
+# Notiztypen für das [Ankizin Klinik-Deck](https://www.ankizin.de/)
 
-## Notiztypen für das [Ankizin Klinik-Deck](https://www.ankizin.de/)
-
-### Aktuellste Version stets auf [AnkiCollab](https://app.ankihub.net/decks/b2fa8710-93fc-48f3-ab4a-fd14f4435624)!
+## Aktuellste Version stets auf [AnkiCollab](https://app.ankihub.net/decks/b2fa8710-93fc-48f3-ab4a-fd14f4435624)!
 
 ## PFLICHT für das Ankizin-Deck! (YouTube-Video)
 
