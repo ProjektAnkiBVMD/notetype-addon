@@ -37,6 +37,41 @@ def _extract_yield_settings(lernplan_conf):
     ) # fmt: skip
 
 
+def _update_past_days(prev_lerntag, new_lerntag, conf):
+    """Mark the PREVIOUS day as True when switching to a new lerntag.
+
+    Only the day being left (prev_lerntag) is added to past_days.
+    This is called automatically when the user changes to a different learning day.
+    """
+    if not prev_lerntag or prev_lerntag == new_lerntag:
+        # No previous lerntag or no change, nothing to do
+        return conf
+
+    lernplan_conf = conf.get("lernplan", {})
+    past_days = lernplan_conf.get("past_days", [])
+
+    # Ensure array is properly sized
+    col = mw.col
+    pattern = re.compile(r"#Ankizin_[^:]+::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_(\d{3})_")
+    target_size = 1
+    for tag in col.tags.all():
+        match = pattern.match(tag)
+        if match:
+            target_size = max(target_size, int(match.group(1)) + 1)
+
+    while len(past_days) < target_size:
+        past_days.append(False)
+
+    past_days = past_days[:target_size]
+
+    # Mark only the previous day as True (the day being left)
+    past_days[int(prev_lerntag)] = True
+
+    lernplan_conf["past_days"] = past_days
+    conf["lernplan"] = lernplan_conf
+    return conf
+
+
 class LernplanManagerDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -110,6 +145,10 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!LERNTAG&nbsp;XX</code>.")  # fmt: skip
         self.autocreate_button.toggled.connect(self.toggle_settings)
         right_layout.addWidget(self.autocreate_button)
+
+        # PAST DAYS INFO
+        right_layout.addWidget(QLabel("<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>"))
+        right_layout.addSpacing(10)
 
         # CREATE FRAME TO HOLD SETTINGS
         self.settings_frame = QFrame()
@@ -262,6 +301,14 @@ class LernplanManagerDialog(QDialog):
         # Buttons layout - confirm and deactivate side by side
         buttons_layout = QHBoxLayout()
 
+        # Manage Past Days button
+        manage_past_days_btn = QPushButton("Verlauf verwalten...")
+        manage_past_days_btn.setFixedWidth(160)
+        manage_past_days_btn.clicked.connect(self.open_past_days_dialog)
+        buttons_layout.addWidget(manage_past_days_btn)
+
+        buttons_layout.addSpacing(10)
+
         # Confirm button for when autocreate is enabled
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
@@ -360,6 +407,10 @@ class LernplanManagerDialog(QDialog):
         autocreate_previous = self.autocreate_previous_button.isChecked()
         autocreate_no_previous = self.autocreate_no_previous_button.isChecked()
 
+        # Update past_days if lerntag changed
+        prev_lerntag = lernplan_conf.get("lerntag", "001")
+        _update_past_days(prev_lerntag, lerntag, conf)
+
         # Save the config
         lernplan_conf["lerntag"] = lerntag
         lernplan_conf["highyield_stark"] = highyield_stark
@@ -457,6 +508,123 @@ class LernplanManagerDialog(QDialog):
         result.setToolTip(tooltip)
         result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         return result
+
+    def open_past_days_dialog(self):
+        """Open the Past Days management dialog"""
+        dialog = PastDaysDialog(self)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            # Dialog has already saved changes to config
+            pass
+
+
+class PastDaysDialog(QDialog):
+    """Dialog to manage which past learning days are included in the past_days array"""
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setWindowTitle("Verlauf verwalten")
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(400)
+
+        layout = QVBoxLayout(self)
+
+        # Explanation
+        layout.addWidget(
+            QLabel(
+                "Hier kannst Du die Lerntage verwalten, die in Deinem Verlauf gespeichert sind.<br>"
+                "Aktiviere oder deaktiviere einzelne Lerntage nach Bedarf."
+            )
+        )
+        layout.addSpacing(10)
+
+        # Scrollable list of past days
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_widget = QWidget()
+        scroll_layout = QVBoxLayout(scroll_widget)
+        scroll_layout.setContentsMargins(0, 0, 0, 0)
+
+        # Get the config to find past_days
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            conf = {}
+        lernplan_conf = conf.get("lernplan", {})
+        past_days = lernplan_conf.get("past_days", [])
+
+        # Create checkboxes for each past day
+        self.day_checkboxes = {}
+        lerntag_list = self.get_lerntag_list()
+        lerntag_dict = {int(num): topic for num, topic in lerntag_list}
+
+        # Show all days that have past_days[i] = True
+        for day_idx in range(1, len(past_days)):
+            if past_days[day_idx]:
+                topic = lerntag_dict.get(day_idx, "Unknown")
+                checkbox = QCheckBox(f"Lerntag {str(day_idx).zfill(3)} - {topic.replace('_', ' ')}")
+                checkbox.setChecked(True)
+                self.day_checkboxes[day_idx] = checkbox
+                scroll_layout.addWidget(checkbox)
+
+        # If no past days yet
+        if not self.day_checkboxes:
+            scroll_layout.addWidget(QLabel("<i>Noch keine Lerntage im Verlauf</i>"))
+
+        scroll_layout.addStretch()
+        scroll_area.setWidget(scroll_widget)
+        layout.addWidget(scroll_area)
+
+        # Buttons
+        button_layout = QHBoxLayout()
+
+        ok_btn = QPushButton("OK")
+        ok_btn.clicked.connect(self.save_and_close)
+        button_layout.addWidget(ok_btn)
+
+        cancel_btn = QPushButton("Abbrechen")
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+
+        layout.addLayout(button_layout)
+
+    def get_lerntag_list(self):
+        """Get list of all lerntag numbers and topics"""
+        col = mw.col
+        lerntag_pattern = re.compile(r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$")
+        lerntag_tags = [tag for tag in col.tags.all() if lerntag_pattern.match(tag)]
+
+        unique_lerntag = {}
+        for tag in lerntag_tags:
+            match = lerntag_pattern.match(tag)
+            if match:
+                number, topic = match.group(1), match.group(2)
+                if number not in unique_lerntag:
+                    unique_lerntag[number] = topic
+
+        lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
+        return lerntag_list
+
+    def save_and_close(self):
+        """Save the checkbox states to config and close"""
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+        if conf is None:
+            conf = {}
+        if "lernplan" not in conf:
+            conf["lernplan"] = {}
+        lernplan_conf = conf["lernplan"]
+
+        past_days = lernplan_conf.get("past_days", [])
+
+        # Update past_days based on checkbox states
+        for day_idx, checkbox in self.day_checkboxes.items():
+            # Ensure array is large enough
+            while len(past_days) <= day_idx:
+                past_days.append(False)
+            past_days[day_idx] = checkbox.isChecked()
+
+        lernplan_conf["past_days"] = past_days
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+
+        self.accept()
 
 
 class LerntagDeckCreatorDialog(QDialog):
@@ -721,7 +889,23 @@ def create_lerntag_due_deck(
     if col is None:
         raise Exception("collection not available")
 
-    lerntage = "|".join([str(i).zfill(3) for i in range(1, int(lerntag))])
+    # Build lerntage list from past_days array
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    if conf is None:
+        conf = {}
+    lernplan_conf = conf.get("lernplan", {})
+    past_days = lernplan_conf.get("past_days", [])
+
+    lerntage_list = []
+    for i in range(1, int(lerntag)):
+        if i < len(past_days) and past_days[i]:
+            lerntage_list.append(str(i).zfill(3))
+
+    if not lerntage_list:
+        # No past days to create deck for
+        return
+
+    lerntage = "|".join(lerntage_list)
     tag_pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({lerntage})"
     search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
     deck_name = "!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
