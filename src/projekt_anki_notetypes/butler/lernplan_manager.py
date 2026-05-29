@@ -91,6 +91,7 @@ class LernplanManagerDialog(QDialog):
                 False,
             )
             top100 = False
+            create_subchapter_decks = False
         else:
             lernplan_conf = conf.get("lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
@@ -103,6 +104,7 @@ class LernplanManagerDialog(QDialog):
             autocreate_previous = lernplan_conf.get("autocreate_previous", False) # fmt: skip
             autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False) # fmt: skip
             wochentage = lernplan_conf.get("wochentage", [True] * 5 + [False] * 2) # fmt: skip
+            create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False) # fmt: skip
 
         # Logo
         logo_label = QLabel()
@@ -191,19 +193,30 @@ class LernplanManagerDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         settings_layout.addWidget(self.lerntag_combo)
 
+        # EXTRA CHOICES
         # TOP-100 FILTER
-        top100_group_box = QGroupBox()
-        top100_buttons_layout = QVBoxLayout()
-        top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
+        extra_choices_group_box = QGroupBox()
+        extra_choices_buttons_layout = QVBoxLayout()
+        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
         self.top100_button.setToolTip(
             "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
         )
-        top100_buttons_layout.addWidget(self.top100_button)
-        top100_group_box.setLayout(top100_buttons_layout)
-        settings_layout.addWidget(top100_group_box)
+        extra_choices_buttons_layout.addWidget(self.top100_button)
+
+        # SUBCHAPTER DECK CREATION
+        self.create_subchapter_decks_button = QCheckBox(
+            "Separate Auswahlstapel für jedes Kapitel erstellen"
+        )
+        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
+        self.create_subchapter_decks_button.setToolTip(
+            "Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages."
+        )
+        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
+        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
+        settings_layout.addWidget(extra_choices_group_box)
 
         # YIELD SELECTION
         yield_group_box = QGroupBox()
@@ -424,6 +437,7 @@ class LernplanManagerDialog(QDialog):
         lernplan_conf["autocreate_due"] = autocreate_due
         lernplan_conf["autocreate_previous"] = autocreate_previous
         lernplan_conf["autocreate_no_previous"] = autocreate_no_previous
+        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
         lernplan_conf["wochentage"] = [
             button.isChecked() for button in self.weekday_buttons
         ]
@@ -462,13 +476,14 @@ class LernplanManagerDialog(QDialog):
         # Remove previous filtered decks
         remove_previous_lerntag_decks()
 
-        # Create the filtered deck
+        # Create the filtered deck(s)
         create_lerntag_deck(
             lerntag,
             highyield_stark,
             highyield_leicht,
             lowyield,
             top100,
+            create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
         )
 
         # Create the previous due deck if necessary
@@ -491,6 +506,7 @@ class LernplanManagerDialog(QDialog):
                     highyield_leicht,
                     lowyield,
                     top100,
+                    create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
                 ),
             ).success(LernplanManagerDialog.on_success).run_in_background()
 
@@ -678,13 +694,15 @@ class LerntagDeckCreatorDialog(QDialog):
                 False,
             )
             top100 = False
+            create_subchapter_decks = False
         else:
             lernplan_conf = conf.get("man_lernplan", {})
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             # Handle both old "highyield" and new separate options
-            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf)
+            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf) # fmt: skip
             normyield = lernplan_conf.get("normyield", True)
+            create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False)
 
         # Logo
         logo_label = QLabel()
@@ -723,19 +741,30 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(lerntag)
         right_layout.addWidget(self.lerntag_combo)
 
+        # EXTRA CHOICES
         # TOP-100 FILTER
-        top100_group_box = QGroupBox()
-        top100_buttons_layout = QVBoxLayout()
-        top100_buttons_layout.setContentsMargins(5, 5, 5, 5)
+        extra_choices_group_box = QGroupBox()
+        extra_choices_buttons_layout = QVBoxLayout()
+        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
         self.top100_button = QCheckBox("nur TOP-100 Themen")
         self.top100_button.setChecked(top100)
         self.top100_button.setToolTip(
             "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
         )
-        top100_buttons_layout.addWidget(self.top100_button)
-        top100_group_box.setLayout(top100_buttons_layout)
-        right_layout.addWidget(top100_group_box)
+        extra_choices_buttons_layout.addWidget(self.top100_button)
+
+        # SUBCHAPTER DECK CREATION
+        self.create_subchapter_decks_button = QCheckBox(
+            "Separate Auswahlstapel für jedes Kapitel erstellen"
+        )
+        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
+        self.create_subchapter_decks_button.setToolTip(
+            "Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages."
+        )
+        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
+        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
+        right_layout.addWidget(extra_choices_group_box)
 
         # YIELD SELECTION
         yield_group_box = QGroupBox()
@@ -843,6 +872,7 @@ class LerntagDeckCreatorDialog(QDialog):
         lernplan_conf["normyield"] = self.standard_button.isChecked()
         lernplan_conf["lowyield"] = lowyield
         lernplan_conf["top100"] = top100
+        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         return (
             lerntag,
@@ -862,13 +892,14 @@ class LerntagDeckCreatorDialog(QDialog):
             top100,
         ) = self.save_config()
 
-        # Create the filtered deck
+        # Create the filtered deck(s) - check if subchapter mode is enabled
         create_lerntag_deck(
             lerntag,
             highyield_stark,
             highyield_leicht,
             lowyield,
             top100,
+            create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
             deck_name_prefix="Lerntag ",
         )
         self.accept()
@@ -895,6 +926,7 @@ def create_previous_lerntag_decks(
     highyield_leicht,
     lowyield,
     top100=False,
+    create_subchapter_decks=False,
 ):
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     if conf is None:
@@ -918,6 +950,7 @@ def create_previous_lerntag_decks(
             highyield_leicht,
             lowyield,
             top100,
+            create_subchapter_decks=create_subchapter_decks,
             sup_deck_name="!VORHERIGE LERNTAGE",
             silent=True,
         )
@@ -1005,6 +1038,7 @@ def create_lerntag_deck(
     highyield_leicht,
     lowyield,
     top100=False,
+    create_subchapter_decks=False,
     deck_name_prefix: str = None,
     sup_deck_name: str = None,
     silent=False,
@@ -1013,16 +1047,79 @@ def create_lerntag_deck(
     if col is None:
         raise Exception("collection not available")
 
-    tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_*"
+    subchapter_pairs = set()
+    if create_subchapter_decks:
+        lerntag_zfill = str(lerntag).zfill(3)
+        pattern = re.compile(f"#Ankizin_[^:]+::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag_zfill}_(.+?)::([^:]+)$") # fmt: skip
+        for tag in col.tags.all():
+            match = pattern.match(tag)
+            if match:
+                subchapter_pairs.add((match.group(1), match.group(2)))
+    
+    if not create_subchapter_decks:
+        _create_lerntag_filtered_deck(
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100=top100,
+            deck_name_prefix=deck_name_prefix,
+            sup_deck_name=sup_deck_name,
+            silent=silent,
+        )
+        return
+
+    for parent_topic, subchapter in sorted(subchapter_pairs):
+        _create_lerntag_filtered_deck(
+            lerntag,
+            highyield_stark,
+            highyield_leicht,
+            lowyield,
+            top100=top100,
+            deck_name_prefix=deck_name_prefix,
+            sup_deck_name=sup_deck_name,
+            parent_topic=parent_topic,
+            subchapter=subchapter,
+            silent=silent,
+        )
+
+
+def _create_lerntag_filtered_deck(
+    lerntag,
+    highyield_stark,
+    highyield_leicht,
+    lowyield,
+    top100=False,
+    deck_name_prefix: str = None,
+    sup_deck_name: str = None,
+    parent_topic: str = None,
+    subchapter: str = None,
+    silent=False,
+):
+    col = mw.col
+    if col is None:
+        raise Exception("collection not available")
+
+    tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_"
+    if parent_topic:
+        tag_pattern += parent_topic
+        if subchapter:
+            tag_pattern += f"::{subchapter}"
+    tag_pattern += "*"
+
     search = col.build_search_string(f'"tag:{tag_pattern}"')
     deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
     deck_name += f"{lerntag}"
 
-    # Filter for TOP-100 themes first (if enabled)
+    if parent_topic:
+        deck_name += f" - {parent_topic.replace('_', ' ')}"
+    if sup_deck_name:
+        deck_name = f"{sup_deck_name}::{deck_name}"
+
+    # Apply the same content filters to parent decks and subchapter decks.
     if top100:
         top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
         search += f' "tag:{top100_tag}"'
-        deck_name += " - TOP-100"
 
     # Select only high-yield cards
     if highyield_stark:
@@ -1038,16 +1135,11 @@ def create_lerntag_deck(
                     "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
                 ]
             )
-
         high_yield_search = " OR ".join(
             [f'"tag:{tag}"' for tag in high_yield_tags]
         )
         search += f" ({high_yield_search})"
 
-        if highyield_leicht:
-            deck_name += " - high-yield (alle)"
-        elif highyield_stark:
-            deck_name += " - high-yield (stark gelb)"
     # Exclude low-yield cards
     elif not lowyield:
         low_yield_tags = [
@@ -1058,12 +1150,23 @@ def create_lerntag_deck(
             [f'"tag:{tag}"' for tag in low_yield_tags]
         )
         search += f" -({low_yield_search})"
-    # Don't exclude low-yield cards
+
+    if top100:
+        deck_name += " - TOP-100"
+
+    if highyield_stark:
+        deck_name += (
+            " - high-yield (alle)"
+            if highyield_leicht
+            else " - high-yield (stark gelb)"
+        )
+    elif not lowyield:
+        pass
     else:
         deck_name += " - inkl. low-yield"
-
-    if sup_deck_name:
-        deck_name = f"{sup_deck_name}::{deck_name}"
+        
+    if subchapter:
+        deck_name += f"::{subchapter.replace('_', ' ')}"
 
     create_filtered_deck(deck_name, search, top100=top100, silent=silent)
 
