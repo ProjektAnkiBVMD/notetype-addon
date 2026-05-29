@@ -5,8 +5,7 @@ import anki
 import aqt
 from aqt import mw
 from aqt.qt import *
-from aqt.operations import CollectionOp
-from anki.collection import OpChanges
+from aqt.utils import showWarning
 
 from ..constants import ADDON_DIR_NAME
 from .utils import (
@@ -14,6 +13,8 @@ from .utils import (
     create_filtered_deck,
     remove_filtered_deck,
 )
+
+DEFAULT_WOCHENTAGE = [True] * 5 + [False] * 2
 
 
 def _get_effective_today():
@@ -27,6 +28,12 @@ def _get_effective_today():
     return today
 
 
+def _get_config() -> dict:
+    """Get addon config or return empty dict if not configured."""
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    return conf if conf is not None else {}
+
+
 def _extract_yield_settings(lernplan_conf):
     """Extract yield settings from config"""
     return (
@@ -35,6 +42,30 @@ def _extract_yield_settings(lernplan_conf):
         lernplan_conf.get("lowyield", False),
         lernplan_conf.get("top100", False),
     ) # fmt: skip
+
+
+def _build_yield_search(col, highyield_stark: bool, highyield_leicht: bool, lowyield: bool) -> str:
+    """Build search string for yield-based card filtering."""
+    if highyield_stark:
+        high_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
+        ] # fmt: skip
+        if highyield_leicht:
+            high_yield_tags.extend([
+                "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
+                "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
+            ]) # fmt: skip
+        high_yield_search = " OR ".join([f'"tag:{tag}"' for tag in high_yield_tags]) # fmt: skip
+        return f" ({high_yield_search})"
+    elif not lowyield:
+        low_yield_tags = [
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
+            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
+        ] # fmt: skip
+        low_yield_search = " OR ".join([f'"tag:{tag}"' for tag in low_yield_tags]) # fmt: skip
+        return f" -({low_yield_search})"
+    return ""
 
 
 def _update_past_days(prev_lerntag, new_lerntag, conf):
@@ -59,10 +90,8 @@ def _update_past_days(prev_lerntag, new_lerntag, conf):
         if match:
             target_size = max(target_size, int(match.group(1)) + 1)
 
-    while len(past_days) < target_size + 1:
+    while len(past_days) <= int(prev_lerntag):
         past_days.append(False)
-
-    past_days = past_days[:target_size]
 
     # Mark only the previous day as True (the day being left)
     past_days[int(prev_lerntag)] = True
@@ -72,57 +101,290 @@ def _update_past_days(prev_lerntag, new_lerntag, conf):
     return conf
 
 
-class LernplanManagerDialog(QDialog):
-    def __init__(self, parent):
+def get_lerntag_list() -> list[tuple[str, str]]:
+    """Return sorted list of (number_str, topic_str) for all Lerntag tags."""
+    col = mw.col
+    lerntag_pattern = re.compile(
+        r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
+    )
+    lerntag_tags = [tag for tag in col.tags.all() if lerntag_pattern.match(tag)]
+
+    unique_lerntag = {}
+    for tag in lerntag_tags:
+        match = lerntag_pattern.match(tag)
+        if match:
+            number, topic = match.group(1), match.group(2)
+            if number not in unique_lerntag:
+                unique_lerntag[number] = topic
+
+    return sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
+
+
+class LerntagDeckCreatorDialog(QDialog):
+    def __init__(self, parent, conf_key: str = "man_lernplan"):
         super().__init__(parent)
-        self.setWindowTitle("Lernplan-Manager (automatisch)")
+        self._conf_key = conf_key
+        self.setWindowTitle("Lerntag-Auswahlstapel erstellen")
 
         main_layout = QHBoxLayout(self)
         main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
 
-        # Get the config
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            lerntag = 0  # 0-indexed
-            highyield_stark, highyield_leicht, normyield, lowyield = (
-                False,
-                False,
-                True,
-                False,
-            )
-            top100 = False
-            create_subchapter_decks = False
-        else:
-            lernplan_conf = conf.get("lernplan", {})
-            # config contains e.g. "035" but we want 0-indexed
-            lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
-            # Handle both old "highyield" and new separate options
-            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf) # fmt: skip
-            normyield = lernplan_conf.get("normyield", True)
-            autocreate = lernplan_conf.get("autocreate", False)
-            autocreate_due = lernplan_conf.get("autocreate_due", True)
-            autocreate_previous = lernplan_conf.get("autocreate_previous", False) # fmt: skip
-            autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False) # fmt: skip
-            wochentage = lernplan_conf.get("wochentage", [True] * 5 + [False] * 2) # fmt: skip
-            create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False) # fmt: skip
+        self._load_config()
+        self._setup_logo(main_layout)
 
-        # Logo
+        right_layout = QVBoxLayout()
+        self._setup_explanation(right_layout)
+        self._setup_main_content(right_layout)
+        self._setup_action_buttons(right_layout)
+
+        main_layout.addLayout(right_layout)
+        self.setWindowIcon(QIcon("icons:ankizin.png"))
+
+    def _load_config(self) -> None:
+        conf = _get_config()
+        lernplan_conf = conf.get(self._conf_key, {})
+        self._lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
+        self._highyield_stark, self._highyield_leicht, self._lowyield, self._top100 = (
+            _extract_yield_settings(lernplan_conf)
+        )
+        self._normyield = lernplan_conf.get("normyield", True)
+        self._create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False)
+
+    def _setup_logo(self, main_layout: QHBoxLayout) -> None:
         logo_label = QLabel()
         logo_pixmap = QPixmap("icons:ankizin.png")
         logo_label.setPixmap(
             logo_pixmap.scaled(
-                100,
-                100,
+                100, 100,
                 Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
         )
         main_layout.addWidget(logo_label)
 
-        # Right side layout
-        right_layout = QVBoxLayout()
+    def _setup_lerntag_combo(
+        self,
+        layout: QLayout,
+        lerntag: int,
+        label_text: str = "<b>Lerntag:</b>",
+    ) -> None:
+        self.lerntag_combo_label = QLabel(label_text)
+        layout.addWidget(self.lerntag_combo_label)
+        self.lerntag_combo = QComboBox()
+        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        fixed_font.setPointSize(fixed_font.pointSize() + 2)
+        self.lerntag_combo.setFont(fixed_font)
+        for number, topic in get_lerntag_list():
+            display_text = f"{number} - {topic.replace('_', ' ')}"
+            self.lerntag_combo.addItem(display_text, number)
+        self.lerntag_combo.setCurrentIndex(lerntag)
+        layout.addWidget(self.lerntag_combo)
 
-        # EXPLANATION
+    def _setup_extra_choices(
+        self,
+        layout: QLayout,
+        top100: bool,
+        create_subchapter_decks: bool,
+    ) -> None:
+        extra_choices_group_box = QGroupBox()
+        extra_choices_buttons_layout = QVBoxLayout()
+        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
+
+        self.top100_button = QCheckBox("nur TOP-100 Themen")
+        self.top100_button.setChecked(top100)
+        self.top100_button.setToolTip("Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS.")
+        extra_choices_buttons_layout.addWidget(self.top100_button)
+
+        self.create_subchapter_decks_button = QCheckBox("Separate Auswahlstapel für jedes Kapitel erstellen")
+        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
+        self.create_subchapter_decks_button.setToolTip("Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages.")
+        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
+
+        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
+        layout.addWidget(extra_choices_group_box)
+
+    def _setup_yield_group(
+        self,
+        layout: QLayout,
+        highyield_stark: bool,
+        highyield_leicht: bool,
+        normyield: bool,
+        lowyield: bool,
+    ) -> None:
+        yield_group_box = QGroupBox()
+        yield_buttons_layout = QVBoxLayout()
+        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
+
+        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
+        self.highyield_stark_button.setChecked(highyield_stark and not highyield_leicht)
+        yield_buttons_layout.addWidget(self.highyield_stark_button)
+
+        self.highyield_all_button = QRadioButton("alle HIGH-YIELD Karten (stark + leicht gelb)")
+        self.highyield_all_button.setChecked(highyield_stark and highyield_leicht)
+        yield_buttons_layout.addWidget(self.highyield_all_button)
+
+        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)")
+        self.standard_button.setChecked(normyield)
+        yield_buttons_layout.addWidget(self.standard_button)
+
+        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)")
+        self.lowyield_button.setChecked(lowyield)
+        yield_buttons_layout.addWidget(self.lowyield_button)
+
+        self.yield_button_group = QButtonGroup(self)
+        self.yield_button_group.addButton(self.highyield_stark_button)
+        self.yield_button_group.addButton(self.highyield_all_button)
+        self.yield_button_group.addButton(self.standard_button)
+        self.yield_button_group.addButton(self.lowyield_button)
+
+        yield_group_box.setLayout(yield_buttons_layout)
+        layout.addWidget(yield_group_box)
+
+    def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
+        explanation_label = QLabel("Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom automatischen Lernplan-Manager.")
+        explanation_label.setWordWrap(True)
+        right_layout.addWidget(explanation_label)
+        right_layout.addSpacing(20)
+
+    def _setup_main_content(self, right_layout: QVBoxLayout) -> None:
+        self._setup_lerntag_combo(right_layout, self._lerntag)
+        self._setup_extra_choices(right_layout, self._top100, self._create_subchapter_decks)
+        self._setup_yield_group(
+            right_layout,
+            self._highyield_stark,
+            self._highyield_leicht,
+            self._normyield,
+            self._lowyield,
+        )
+
+    def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
+        buttons_layout = QHBoxLayout()
+        confirm_btn = QPushButton("Stapel erstellen!")
+        confirm_btn.setFixedWidth(200)
+        confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
+        buttons_layout.addWidget(confirm_btn)
+        buttons_layout.addStretch()
+        right_layout.addLayout(buttons_layout)
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.reject()
+
+    def _read_widget_values(self) -> tuple[str, bool, bool, bool, bool]:
+        lerntag = self.lerntag_combo.currentData().zfill(3)
+        highyield_stark = self.highyield_stark_button.isChecked()
+        highyield_leicht = self.highyield_all_button.isChecked()
+        if highyield_leicht:
+            highyield_stark = True
+        lowyield = self.lowyield_button.isChecked()
+        top100 = self.top100_button.isChecked()
+        return lerntag, highyield_stark, highyield_leicht, lowyield, top100
+
+    def _write_common_config(
+        self,
+        lernplan_conf: dict,
+        lerntag: str,
+        highyield_stark: bool,
+        highyield_leicht: bool,
+        lowyield: bool,
+        top100: bool,
+    ) -> None:
+        lernplan_conf["lerntag"] = lerntag
+        lernplan_conf["highyield_stark"] = highyield_stark
+        lernplan_conf["highyield_leicht"] = highyield_leicht
+        lernplan_conf["highyield"] = None
+        lernplan_conf["normyield"] = self.standard_button.isChecked()
+        lernplan_conf["lowyield"] = lowyield
+        lernplan_conf["top100"] = top100
+        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
+
+    def save_config(self):
+        conf = _get_config()
+        if self._conf_key not in conf:
+            conf[self._conf_key] = {}
+        lernplan_conf = conf[self._conf_key]
+
+        lerntag, highyield_stark, highyield_leicht, lowyield, top100 = self._read_widget_values()
+        self._write_common_config(lernplan_conf, lerntag, highyield_stark, highyield_leicht, lowyield, top100)
+
+        create_subchapter = self.create_subchapter_decks_button.isChecked()
+
+        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        return lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter
+
+    # ==== DECK CREATION FLOW (LerntagDeckCreatorDialog & LernplanManagerDialog) ====
+    #
+    # LerntagDeckCreatorDialog orchestrates the flow with hooks:
+    #   1. create_lerntag_deck_wrapper()
+    #      ├─ _pre_create_cleanup()            [overridden in LernplanManagerDialog]
+    #      ├─ save_config()                    [overridden in LernplanManagerDialog]
+    #      └─ mw.taskman.with_progress()
+    #         ├─ create_lerntag_deck()
+    #         └─ _create_additional_decks()    [overridden in LernplanManagerDialog]
+    #
+    # LernplanManagerDialog overrides:
+    #   • _pre_create_cleanup()        -> remove_previous_lerntag_decks()
+    #   • save_config()                -> lernplan-specific config (due, previous, autocreate)
+    #   • _create_additional_decks()   -> create due/previous decks
+    #
+    # WHY THIS DESIGN:
+    #   - LerntagDeckCreatorDialog handles task coordination (progress popup, reset)
+    #   - LernplanManagerDialog handles lernplan-specific logic (what to create, what to clean)
+    #   - Minimal duplication: LernplanManagerDialog only implements the differences
+
+    def create_lerntag_deck_wrapper(self):
+        self._pre_create_cleanup()
+        config_tuple = self.save_config()
+        lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter = config_tuple[:6]
+
+        def create_lerntag():
+            create_lerntag_deck(
+                lerntag,
+                highyield_stark, highyield_leicht, lowyield,
+                top100,
+                create_subchapter_decks=create_subchapter,
+                deck_name_prefix=self._get_deck_name_prefix(),
+            )
+
+        def on_done(_):
+            self._create_additional_decks(config_tuple)
+            mw.reset()
+
+        mw.taskman.with_progress(
+            create_lerntag,
+            on_done=on_done,
+            label="Lerntag-Karten werden gesammelt...",
+            immediate=True,
+        )
+        self.accept()
+
+    def _get_deck_name_prefix(self):
+        # Hook for subclass to customize deck name prefix.
+        return "Lerntag "
+
+    def _pre_create_cleanup(self):
+        # Hook for subclass to clean up old decks before creation.
+        pass
+
+    def _create_additional_decks(self, config_tuple):
+        mw.reset()
+
+class LernplanManagerDialog(LerntagDeckCreatorDialog):
+    def __init__(self, parent):
+        super().__init__(parent, conf_key="lernplan")
+
+    def _load_config(self) -> None:
+        super()._load_config()
+        conf = _get_config()
+        lernplan_conf = conf.get("lernplan", {})
+        self._autocreate = lernplan_conf.get("autocreate", False)
+        self._autocreate_due = lernplan_conf.get("autocreate_due", True)
+        self._autocreate_previous = lernplan_conf.get("autocreate_previous", False)
+        self._autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False)
+        self._wochentage = lernplan_conf.get("wochentage", DEFAULT_WOCHENTAGE)
+
+    def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
+        self.setWindowTitle("Lernplan-Manager (automatisch)")
         explanation_label = QLabel(
             "Lass den <b>automatischen Lernplan-Manager</b> Deine Lerntag-Auswahlstapel erstellen.<br>"
             "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch normale und low-yield Karten enthalten sein sollen.<br>"
@@ -132,43 +394,51 @@ class LernplanManagerDialog(QDialog):
         )
         explanation_label.setWordWrap(True)
         right_layout.addWidget(explanation_label)
+
         right_layout.addSpacing(20)
 
-        # AUTOCREATE LERNTAG DECK
-        right_layout.addWidget(
-            QLabel(
-                "<b>Lernplan-Manager aktivieren:</b> [Haken raus zum Abschalten]"
-            )
-        )
-        self.autocreate_button = QCheckBox(
-            "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
-        )
-        self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!&#8288;LERNTAG&nbsp;XX</code>.")  # fmt: skip
+        right_layout.addWidget(QLabel("<b>Lernplan-Manager aktivieren:</b> [Haken raus zum Abschalten]"))
+        self.autocreate_button = QCheckBox("Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)")
+        self.autocreate_button.setChecked(self._autocreate)
+        self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!&#8288;LERNTAG&nbsp;XX</code>.")
         self.autocreate_button.toggled.connect(self.toggle_settings)
         right_layout.addWidget(self.autocreate_button)
 
-        # PAST DAYS INFO
-        past_days_info_label = QLabel(
-            "<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>"
-        )
+        past_days_info_label = QLabel("<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>")
         past_days_info_label.setWordWrap(True)
         right_layout.addWidget(past_days_info_label)
+
         right_layout.addSpacing(10)
 
-        # CREATE FRAME TO HOLD SETTINGS
+    def _setup_autocreate_option(
+        self,
+        layout: QVBoxLayout,
+        button: QRadioButton,
+        checked: bool,
+        tooltip: str,
+        label_text: str,
+    ) -> None:
+        button_layout = QHBoxLayout()
+        button.setChecked(checked)
+        button_layout.addWidget(button, 0)
+        button_layout.insertWidget(1, self._info_icon_label(tooltip))
+        label = QLabel(label_text)
+        label.setWordWrap(True)
+        button_layout.addWidget(label, 1)
+        layout.addLayout(button_layout)
+
+    def _setup_main_content(self, right_layout: QVBoxLayout) -> None:
         self.settings_frame = QFrame()
-        self.settings_frame.setVisible(autocreate)
+        self.settings_frame.setVisible(self._autocreate)
         settings_layout = QVBoxLayout()
         settings_layout.setContentsMargins(0, 0, 0, 0)
 
-        # WOCHENTAGE AUSWÄHLEN
         settings_layout.addSpacing(10)
         self.weekdays = QGroupBox("Wochentage für den Lernplan:")
         weekdays_layout = QHBoxLayout()
         self.weekday_buttons = []
         for weekday, check in zip(
-            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], wochentage
+            ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"], self._wochentage
         ):
             button = QCheckBox(weekday)
             button.setChecked(check)
@@ -177,183 +447,82 @@ class LernplanManagerDialog(QDialog):
         self.weekdays.setLayout(weekdays_layout)
         settings_layout.addWidget(self.weekdays)
 
-        # LERNTAG SELECTION MENU
         settings_layout.addSpacing(10)
-        self.lerntag_combo_label = QLabel("<b>Aktueller Lerntag:</b>")
-        settings_layout.addWidget(self.lerntag_combo_label)
+        self._setup_lerntag_combo(settings_layout, self._lerntag, label_text="<b>Aktueller Lerntag:</b>")
+        self._setup_extra_choices(settings_layout, self._top100, self._create_subchapter_decks)
+        self._setup_yield_group(settings_layout, self._highyield_stark, self._highyield_leicht, self._normyield, self._lowyield)
 
-        self.lerntag_combo = QComboBox()
-        # Use a fixed-width font so the lerntag number appears monospace
-        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixed_font.setPointSize(fixed_font.pointSize() + 2)
-        self.lerntag_combo.setFont(fixed_font)
-        for number, topic in self.get_lerntag_list():
-            display_text = f"{number} - {topic.replace('_', ' ')}"
-            self.lerntag_combo.addItem(display_text, number)
-        self.lerntag_combo.setCurrentIndex(lerntag)
-        settings_layout.addWidget(self.lerntag_combo)
-
-        # EXTRA CHOICES
-        # TOP-100 FILTER
-        extra_choices_group_box = QGroupBox()
-        extra_choices_buttons_layout = QVBoxLayout()
-        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
-
-        self.top100_button = QCheckBox("nur TOP-100 Themen")
-        self.top100_button.setChecked(top100)
-        self.top100_button.setToolTip(
-            "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
-        )
-        extra_choices_buttons_layout.addWidget(self.top100_button)
-
-        # SUBCHAPTER DECK CREATION
-        self.create_subchapter_decks_button = QCheckBox(
-            "Separate Auswahlstapel für jedes Kapitel erstellen"
-        )
-        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
-        self.create_subchapter_decks_button.setToolTip(
-            "Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages."
-        )
-        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
-        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
-        settings_layout.addWidget(extra_choices_group_box)
-
-        # YIELD SELECTION
-        yield_group_box = QGroupBox()
-        yield_buttons_layout = QVBoxLayout()
-        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
-
-        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
-        self.highyield_stark_button.setChecked(
-            highyield_stark and not highyield_leicht
-        )
-        yield_buttons_layout.addWidget(self.highyield_stark_button)
-
-        self.highyield_all_button = QRadioButton(
-            "alle HIGH-YIELD Karten (stark + leicht gelb)"
-        )
-        self.highyield_all_button.setChecked(
-            highyield_stark and highyield_leicht
-        )
-        yield_buttons_layout.addWidget(self.highyield_all_button)
-
-        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
-        self.standard_button.setChecked(normyield)
-        yield_buttons_layout.addWidget(self.standard_button)
-
-        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
-        self.lowyield_button.setChecked(lowyield)
-        yield_buttons_layout.addWidget(self.lowyield_button)
-
-        # Explicitly group yield buttons
-        self.yield_button_group = QButtonGroup(self)
-        self.yield_button_group.addButton(self.highyield_stark_button)
-        self.yield_button_group.addButton(self.highyield_all_button)
-        self.yield_button_group.addButton(self.standard_button)
-        self.yield_button_group.addButton(self.lowyield_button)
-
-        yield_group_box.setLayout(yield_buttons_layout)
-        settings_layout.addWidget(yield_group_box)
-
-        # AUTOCREATE OPTIONS LAYOUT
         autocreate_group_box = QGroupBox()
         autocreate_options_layout = QVBoxLayout()
         autocreate_options_layout.setContentsMargins(5, 5, 5, 5)
 
-        # AUTOCREATE DUE LERNTAG DECK
-        due_layout = QHBoxLayout()
         self.autocreate_due_button = QRadioButton()
-        self.autocreate_due_button.setChecked(autocreate_due)
-        due_tooltip = ("Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.") # fmt: skip
-        due_label = QLabel("Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)") # fmt: skip
-        due_label.setWordWrap(True)
-        due_layout.addWidget(self.autocreate_due_button, 0)
-        due_layout.insertWidget(1, self._info_icon_label(due_tooltip))
-        due_layout.addWidget(due_label, 1)
-        autocreate_options_layout.addLayout(due_layout)
+        self._setup_autocreate_option(
+            autocreate_options_layout,
+            self.autocreate_due_button,
+            self._autocreate_due,
+            "Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.",
+            "Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)",
+        )
 
-        # AUTOCREATE PREVIOUS LERNTAG DECK
-        previous_layout = QHBoxLayout()
         self.autocreate_previous_button = QRadioButton()
-        self.autocreate_previous_button.setChecked(autocreate_previous)
-        previous_tooltip = (
-            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
-            "Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
+        self._setup_autocreate_option(
+            autocreate_options_layout,
+            self.autocreate_previous_button,
+            self._autocreate_previous,
+            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden.",
+            "Ich will einzelne Lerntage später nochmal spezifisch wiederholen.",
         )
-        previous_label = QLabel("Ich will einzelne Lerntage später nochmal spezifisch wiederholen.") # fmt: skip
-        previous_label.setWordWrap(True)
-        previous_layout.addWidget(self.autocreate_previous_button, 0)
-        previous_layout.insertWidget(1, self._info_icon_label(previous_tooltip))
-        previous_layout.addWidget(previous_label, 1)
-        autocreate_options_layout.addLayout(previous_layout)
 
-        # AUTOCREATE NO PREVIOUS LERNTAG DECKS
-        no_previous_layout = QHBoxLayout()
         self.autocreate_no_previous_button = QRadioButton()
-        self.autocreate_no_previous_button.setChecked(autocreate_no_previous)
-        noprev_tooltip = (
-            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>"
-            "Macht eigentlich nur Sinn, wenn Du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst."
+        self._setup_autocreate_option(
+            autocreate_options_layout,
+            self.autocreate_no_previous_button,
+            self._autocreate_no_previous,
+            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>Macht eigentlich nur Sinn, wenn Du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst.",
+            "Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.",
         )
-        no_previous_label = QLabel("Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.") # fmt: skip
-        no_previous_label.setWordWrap(True)
-        no_previous_layout.addWidget(self.autocreate_no_previous_button, 0)
-        no_previous_layout.insertWidget(1, self._info_icon_label(noprev_tooltip)) # fmt: skip
-        no_previous_layout.addWidget(no_previous_label, 1)
-        autocreate_options_layout.addLayout(no_previous_layout)
 
-        # Explicitly group autocreate buttons
         self.autocreate_button_group = QButtonGroup(self)
         self.autocreate_button_group.addButton(self.autocreate_due_button)
         self.autocreate_button_group.addButton(self.autocreate_previous_button)
-        self.autocreate_button_group.addButton(self.autocreate_no_previous_button) # fmt: skip
+        self.autocreate_button_group.addButton(self.autocreate_no_previous_button)
 
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
 
-        # Buttons layout - confirm and deactivate side by side
         buttons_layout = QHBoxLayout()
 
-        # Confirm button for when autocreate is enabled
         confirm_btn = QPushButton("Speichern und loslernen!")
         confirm_btn.setFixedWidth(200)
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
         buttons_layout.addWidget(confirm_btn)
-        
+
         buttons_layout.addSpacing(10)
-        
-        # Manage Past Days button
+
         manage_past_days_btn = QPushButton("Verlauf verwalten...")
         manage_past_days_btn.setFixedWidth(160)
         manage_past_days_btn.clicked.connect(self.open_past_days_dialog)
         buttons_layout.addWidget(manage_past_days_btn)
 
-        # Deactivate button for when autocreate is enabled
         self.deactivate_button = QPushButton("Lernplan-Manager deaktivieren")
         self.deactivate_button.setFixedWidth(240)
-        self.deactivate_button.setVisible(autocreate)
+        self.deactivate_button.setVisible(self._autocreate)
         self.deactivate_button.clicked.connect(self.deactivate_lernplan_manager)
         buttons_layout.addWidget(self.deactivate_button)
 
-        # Add stretch to push buttons to the left
         buttons_layout.addStretch()
 
         settings_layout.addLayout(buttons_layout)
         self.settings_frame.setLayout(settings_layout)
         right_layout.addWidget(self.settings_frame)
 
-        # Save button for when autocreate is disabled
+    def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
         self.save_button = QPushButton("Speichern")
         self.save_button.setFixedWidth(120)
-        self.save_button.setVisible(not autocreate)
+        self.save_button.setVisible(not self._autocreate)
         self.save_button.clicked.connect(self.save_and_close)
-        right_layout.addWidget(
-            self.save_button, alignment=Qt.AlignmentFlag.AlignLeft
-        )
-
-        main_layout.addLayout(right_layout)
-
-        self.setWindowIcon(QIcon("icons:ankizin.png"))
+        right_layout.addWidget(self.save_button, alignment=Qt.AlignmentFlag.AlignLeft)
 
     def toggle_settings(self, checked):
         self.settings_frame.setVisible(checked)
@@ -368,156 +537,76 @@ class LernplanManagerDialog(QDialog):
         self.accept()
 
     def deactivate_lernplan_manager(self):
-        self.autocreate_button.setChecked(False)  # Uncheck autocreate button
-        self.toggle_settings(False)  # Trigger the toggle to update UI
-        self.save_config()  # Save the configuration
-        self.accept()  # Save the configuration
+        self.autocreate_button.setChecked(False)
+        self.toggle_settings(False)
+        self.save_config()
+        self.accept()
 
     def closeEvent(self, event):
         self.save_config()
         event.ignore()
         self.reject()
 
-    def get_lerntag_list(self):
-        col = mw.col
-        # match only main Lerntag tags
-        lerntag_pattern = re.compile(
-            r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
-        )
-        lerntag_tags = [
-            tag for tag in col.tags.all() if lerntag_pattern.match(tag)
-        ]
-
-        unique_lerntag = {}
-        for tag in lerntag_tags:
-            match = lerntag_pattern.match(tag)
-            if match:
-                number, topic = match.group(1), match.group(2)
-                if number not in unique_lerntag:
-                    unique_lerntag[number] = topic
-
-        lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
-        return lerntag_list
-
     def save_config(self):
-        # Get the config
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            conf = {}
-        if "lernplan" not in conf:
-            conf["lernplan"] = {}
-        lernplan_conf = conf["lernplan"]
+        # Get config and read widget values once
+        conf = mw.addonManager.getConfig(ADDON_DIR_NAME) or {}
+        lernplan_conf = conf.setdefault("lernplan", {})
 
-        lerntag = self.lerntag_combo.currentData().zfill(3)
-        highyield_stark = self.highyield_stark_button.isChecked()
-        highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
-        # If highyield_leicht is true, highyield_stark must also be true
-        if highyield_leicht:
-            highyield_stark = True
-        lowyield = self.lowyield_button.isChecked()
-        top100 = self.top100_button.isChecked()
-        autocreate_due = self.autocreate_due_button.isChecked()
-        autocreate_previous = self.autocreate_previous_button.isChecked()
-        autocreate_no_previous = self.autocreate_no_previous_button.isChecked()
+        lerntag, highyield_stark, highyield_leicht, lowyield, top100 = self._read_widget_values()
 
-        # Update past_days if lerntag changed
+        # Update past days
         prev_lerntag = lernplan_conf.get("lerntag", "001")
         _update_past_days(prev_lerntag, lerntag, conf)
 
-        # Save the config
-        lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["highyield_stark"] = highyield_stark
-        lernplan_conf["highyield_leicht"] = highyield_leicht
-        # Keep old highyield for backwards compatibility, but unset it
-        lernplan_conf["highyield"] = None
-        lernplan_conf["normyield"] = self.standard_button.isChecked()
-        lernplan_conf["lowyield"] = lowyield
-        lernplan_conf["top100"] = top100
+        # Write common config (same for LerntagDeckCreatorDialog and LernplanManagerDialog)
+        self._write_common_config(lernplan_conf, lerntag, highyield_stark, highyield_leicht, lowyield, top100)
+
+        # Read return flags
+        create_subchapter = self.create_subchapter_decks_button.isChecked()
+        create_due = self.autocreate_due_button.isChecked()
+        create_previous = self.autocreate_previous_button.isChecked()
+
+        # Write lernplan-specific fields
         lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
-        lernplan_conf["autocreate_due"] = autocreate_due
-        lernplan_conf["autocreate_previous"] = autocreate_previous
-        lernplan_conf["autocreate_no_previous"] = autocreate_no_previous
-        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
-        lernplan_conf["wochentage"] = [
-            button.isChecked() for button in self.weekday_buttons
-        ]
-        lernplan_conf["last_updated"] = _get_effective_today().isoformat()
-        lernplan_conf["last_due_updated"] = _get_effective_today().isoformat()
-        lernplan_conf["lernplan_started_on"] = (
-            datetime.datetime.today().weekday()
-        )
+        lernplan_conf["autocreate_due"] = create_due
+        lernplan_conf["autocreate_previous"] = create_previous
+        lernplan_conf["autocreate_no_previous"] = self.autocreate_no_previous_button.isChecked()
+        lernplan_conf["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
+        today = _get_effective_today()
+        lernplan_conf["last_updated"] = today.isoformat()
+        lernplan_conf["last_due_updated"] = today.isoformat()
+        lernplan_conf["lernplan_started_on"] = today.weekday()
+
+        # Write once
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return (
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-            autocreate_previous,
-            autocreate_due,
-        )
 
-    @staticmethod
-    def on_success(changes: OpChanges):
-        pass
+        return lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter, create_due, create_previous
 
-    def create_lerntag_deck_wrapper(self):
-        # save config + get values
-        (
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-            _previous,
-            _due,
-        ) = self.save_config()
-
-        # Remove previous filtered decks
+    def _pre_create_cleanup(self):
         remove_previous_lerntag_decks()
 
-        # Create the filtered deck(s)
-        create_lerntag_deck(
+    def _get_deck_name_prefix(self):
+        return "!LERNTAG "
+
+    def _create_additional_decks(self, config_tuple):
+        (
             lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
+            highyield_stark, highyield_leicht, lowyield,
             top100,
-            create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
-        )
-
-        # Create the previous due deck if necessary
-        if _due:
-            create_lerntag_due_deck(
-                lerntag,
-                highyield_stark,
-                highyield_leicht,
-                lowyield,
-                top100,
-            )
-
-        # Create the previous filtered decks if necessary
-        if _previous:
-            CollectionOp(
-                parent=aqt.mw,
-                op=lambda _: create_previous_lerntag_decks(
-                    lerntag,
-                    highyield_stark,
-                    highyield_leicht,
-                    lowyield,
-                    top100,
-                    create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
-                ),
-            ).success(LernplanManagerDialog.on_success).run_in_background()
-
-        self.accept()
-        mw.reset()
+            _, create_due_deck, create_previous,
+        ) = config_tuple
+        
+        if not create_due_deck and not create_previous:
+            return
+        
+        if create_due_deck:
+            create_lerntag_due_deck(lerntag, highyield_stark, highyield_leicht, lowyield, top100)
+        if create_previous:
+            create_previous_lerntag_decks(lerntag, highyield_stark, highyield_leicht, lowyield, top100)
 
     def _info_icon_label(self, tooltip: str) -> QLabel:
         dummy = QCheckBox()
-        icon = dummy.style().standardIcon(
-            QStyle.StandardPixmap.SP_MessageBoxInformation
-        )
+        icon = dummy.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxInformation)
         result = QLabel("")
         pixmap = icon.pixmap(dummy.iconSize())
         result.setPixmap(pixmap)
@@ -529,7 +618,6 @@ class LernplanManagerDialog(QDialog):
         """Open the Past Days management dialog"""
         dialog = PastDaysDialog(self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            # Dialog has already saved changes to config
             pass
 
 
@@ -562,15 +650,13 @@ class PastDaysDialog(QDialog):
         scroll_layout.setSpacing(0)
 
         # Get the config to find past_days
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            conf = {}
+        conf = _get_config()
         lernplan_conf = conf.get("lernplan", {})
         past_days = lernplan_conf.get("past_days", [])
 
         # Create checkboxes for each past day
         self.day_checkboxes = {}
-        lerntag_list = self.get_lerntag_list()
+        lerntag_list = get_lerntag_list()
         lerntag_dict = {int(num): topic for num, topic in lerntag_list}
         row_texts = []
 
@@ -597,9 +683,7 @@ class PastDaysDialog(QDialog):
 
         # If no lerntage exist yet
         if not self.day_checkboxes:
-            scroll_layout.addWidget(
-                QLabel("<i>Keine Lerntage im Lernplan gefunden</i>")
-            )
+            scroll_layout.addWidget(QLabel("<i>Keine Lerntage im Lernplan gefunden</i>"))
 
         # scroll_layout.addStretch()
         scroll_area.setWidget(scroll_widget)
@@ -629,28 +713,9 @@ class PastDaysDialog(QDialog):
 
         layout.addLayout(button_layout)
 
-    def get_lerntag_list(self):
-        """Get list of all lerntag numbers and topics"""
-        col = mw.col
-        lerntag_pattern = re.compile(r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$") # fmt: skip
-        lerntag_tags = [tag for tag in col.tags.all() if lerntag_pattern.match(tag)] # fmt: skip
-
-        unique_lerntag = {}
-        for tag in lerntag_tags:
-            match = lerntag_pattern.match(tag)
-            if match:
-                number, topic = match.group(1), match.group(2)
-                if number not in unique_lerntag:
-                    unique_lerntag[number] = topic
-
-        lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
-        return lerntag_list
-
     def save_and_close(self):
         """Save the checkbox states to config and close"""
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            conf = {}
+        conf = _get_config()
         if "lernplan" not in conf:
             conf["lernplan"] = {}
         lernplan_conf = conf["lernplan"]
@@ -675,237 +740,6 @@ class PastDaysDialog(QDialog):
         self.accept()
 
 
-class LerntagDeckCreatorDialog(QDialog):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setWindowTitle("Lerntag-Auswahlstapel erstellen")
-
-        main_layout = QHBoxLayout(self)
-        main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
-
-        # Get the config
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            lerntag = 0  # 0-indexed
-            highyield_stark, highyield_leicht, normyield, lowyield = (
-                False,
-                False,
-                True,
-                False,
-            )
-            top100 = False
-            create_subchapter_decks = False
-        else:
-            lernplan_conf = conf.get("man_lernplan", {})
-            # config contains e.g. "035" but we want 0-indexed
-            lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
-            # Handle both old "highyield" and new separate options
-            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf) # fmt: skip
-            normyield = lernplan_conf.get("normyield", True)
-            create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False)
-
-        # Logo
-        logo_label = QLabel()
-        logo_pixmap = QPixmap("icons:ankizin.png")
-        logo_label.setPixmap(
-            logo_pixmap.scaled(
-                100,
-                100,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
-        main_layout.addWidget(logo_label)
-
-        # Right side layout
-        right_layout = QVBoxLayout()
-
-        # EXPLANATION
-        explanation_label = QLabel(
-            "Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom automatischen Lernplan-Manager."
-        )
-        explanation_label.setWordWrap(True)
-        right_layout.addWidget(explanation_label)
-        right_layout.addSpacing(20)
-
-        # LERNTAG SELECTION MENU
-        right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
-        self.lerntag_combo = QComboBox()
-        # Use a fixed-width font so the lerntag number appears monospace
-        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixed_font.setPointSize(fixed_font.pointSize() + 2)
-        self.lerntag_combo.setFont(fixed_font)
-        for number, topic in self.get_lerntag_list():
-            display_text = f"{number} - {topic.replace('_', ' ')}"
-            self.lerntag_combo.addItem(display_text, number)
-        self.lerntag_combo.setCurrentIndex(lerntag)
-        right_layout.addWidget(self.lerntag_combo)
-
-        # EXTRA CHOICES
-        # TOP-100 FILTER
-        extra_choices_group_box = QGroupBox()
-        extra_choices_buttons_layout = QVBoxLayout()
-        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
-
-        self.top100_button = QCheckBox("nur TOP-100 Themen")
-        self.top100_button.setChecked(top100)
-        self.top100_button.setToolTip(
-            "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS."
-        )
-        extra_choices_buttons_layout.addWidget(self.top100_button)
-
-        # SUBCHAPTER DECK CREATION
-        self.create_subchapter_decks_button = QCheckBox(
-            "Separate Auswahlstapel für jedes Kapitel erstellen"
-        )
-        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
-        self.create_subchapter_decks_button.setToolTip(
-            "Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages."
-        )
-        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
-        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
-        right_layout.addWidget(extra_choices_group_box)
-
-        # YIELD SELECTION
-        yield_group_box = QGroupBox()
-        yield_buttons_layout = QVBoxLayout()
-        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
-
-        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
-        self.highyield_stark_button.setChecked(
-            highyield_stark and not highyield_leicht
-        )
-        yield_buttons_layout.addWidget(self.highyield_stark_button)
-
-        self.highyield_all_button = QRadioButton(
-            "alle HIGH-YIELD Karten (stark + leicht gelb)"
-        )
-        self.highyield_all_button.setChecked(
-            highyield_stark and highyield_leicht
-        )
-        yield_buttons_layout.addWidget(self.highyield_all_button)
-
-        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)") # fmt: skip
-        self.standard_button.setChecked(normyield)
-        yield_buttons_layout.addWidget(self.standard_button)
-
-        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)") # fmt: skip
-        self.lowyield_button.setChecked(lowyield)
-        yield_buttons_layout.addWidget(self.lowyield_button)
-
-        # Explicitly group yield buttons
-        self.yield_button_group = QButtonGroup(self)
-        self.yield_button_group.addButton(self.highyield_stark_button)
-        self.yield_button_group.addButton(self.highyield_all_button)
-        self.yield_button_group.addButton(self.standard_button)
-        self.yield_button_group.addButton(self.lowyield_button)
-
-        yield_group_box.setLayout(yield_buttons_layout)
-        right_layout.addWidget(yield_group_box)
-
-        # BUTTON LAYOUT
-        buttons_layout = QHBoxLayout()
-
-        # Confirm button
-        confirm_btn = QPushButton("Stapel erstellen!")
-        confirm_btn.setFixedWidth(200)
-        confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
-        buttons_layout.addWidget(confirm_btn)
-
-        # Add stretch to push button to the left
-        buttons_layout.addStretch()
-
-        right_layout.addLayout(buttons_layout)
-        main_layout.addLayout(right_layout)
-
-        self.setWindowIcon(QIcon("icons:ankizin.png"))
-
-    def closeEvent(self, event):
-        event.ignore()
-        self.reject()
-
-    def get_lerntag_list(self):
-        col = mw.col
-        # match only main Lerntag tags
-        lerntag_pattern = re.compile(
-            r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
-        )
-        lerntag_tags = [
-            tag for tag in col.tags.all() if lerntag_pattern.match(tag)
-        ]
-
-        unique_lerntag = {}
-        for tag in lerntag_tags:
-            match = lerntag_pattern.match(tag)
-            if match:
-                number, topic = match.group(1), match.group(2)
-                if number not in unique_lerntag:
-                    unique_lerntag[number] = topic
-
-        lerntag_list = sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
-        return lerntag_list
-
-    def save_config(self):
-        # Get the config
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-        if conf is None:
-            conf = {}
-        if "man_lernplan" not in conf:
-            conf["man_lernplan"] = {}
-        lernplan_conf = conf["man_lernplan"]
-
-        lerntag = self.lerntag_combo.currentData().zfill(3)
-        highyield_stark = self.highyield_stark_button.isChecked()
-        highyield_leicht = self.highyield_all_button.isChecked()  # If "all" is selected, include leicht
-        # If highyield_leicht is true, highyield_stark must also be true
-        if highyield_leicht:
-            highyield_stark = True
-        lowyield = self.lowyield_button.isChecked()
-        top100 = self.top100_button.isChecked()
-
-        # Save the config
-        lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["highyield_stark"] = highyield_stark
-        lernplan_conf["highyield_leicht"] = highyield_leicht
-        # Keep old highyield for backwards compatibility, but unset it
-        lernplan_conf["highyield"] = None
-        lernplan_conf["normyield"] = self.standard_button.isChecked()
-        lernplan_conf["lowyield"] = lowyield
-        lernplan_conf["top100"] = top100
-        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
-        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return (
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-        )
-
-    def create_lerntag_deck_wrapper(self):
-        # save config + get values
-        (
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-        ) = self.save_config()
-
-        # Create the filtered deck(s) - check if subchapter mode is enabled
-        create_lerntag_deck(
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-            create_subchapter_decks=self.create_subchapter_decks_button.isChecked(),
-            deck_name_prefix="Lerntag ",
-        )
-        self.accept()
-        mw.reset()
-
-
 def remove_previous_lerntag_decks():
     col = mw.col
     if col is None:
@@ -928,9 +762,7 @@ def create_previous_lerntag_decks(
     top100=False,
     create_subchapter_decks=False,
 ):
-    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    if conf is None:
-        conf = {}
+    conf = _get_config()
     lernplan_conf = conf.get("lernplan", {})
     past_days = lernplan_conf.get("past_days", [])
 
@@ -941,7 +773,7 @@ def create_previous_lerntag_decks(
     ]
 
     if not previous_days:
-        return OpChanges()
+        return
 
     for i in reversed(previous_days):
         create_lerntag_deck(
@@ -954,7 +786,6 @@ def create_previous_lerntag_decks(
             sup_deck_name="!VORHERIGE LERNTAGE",
             silent=True,
         )
-    return OpChanges()
 
 
 def create_lerntag_due_deck(
@@ -974,9 +805,7 @@ def create_lerntag_due_deck(
         raise Exception("collection not available")
 
     # Build lerntage list from past_days array
-    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    if conf is None:
-        conf = {}
+    conf = _get_config()
     lernplan_conf = conf.get("lernplan", {})
     past_days = lernplan_conf.get("past_days", [])
 
@@ -994,41 +823,11 @@ def create_lerntag_due_deck(
     search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
     deck_name = "!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
 
-    # Filter for TOP-100 themes first (if enabled)
     if top100:
         top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
         search += f' "tag:{top100_tag}"'
 
-    # Select only high-yield cards
-    if highyield_stark:
-        high_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
-        ]
-
-        if highyield_leicht:  # "all" button selected
-            high_yield_tags.extend(
-                [
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
-                ]
-            )
-
-        high_yield_search = " OR ".join(
-            [f'"tag:{tag}"' for tag in high_yield_tags]
-        )
-        search += f" ({high_yield_search})"
-    # Exclude low-yield cards
-    elif not lowyield:
-        low_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
-        ]
-        low_yield_search = " OR ".join(
-            [f'"tag:{tag}"' for tag in low_yield_tags]
-        )
-        search += f" -({low_yield_search})"
-
+    search += _build_yield_search(col, highyield_stark, highyield_leicht, lowyield)
     create_filtered_deck(deck_name, search, duedeck=True, silent=silent)
 
 
@@ -1048,6 +847,7 @@ def create_lerntag_deck(
         raise Exception("collection not available")
 
     subchapter_pairs = set()
+    errors = []
     if create_subchapter_decks:
         lerntag_zfill = str(lerntag).zfill(3)
         pattern = re.compile(f"#Ankizin_[^:]+::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag_zfill}_(.+?)::([^:]+)$") # fmt: skip
@@ -1055,9 +855,9 @@ def create_lerntag_deck(
             match = pattern.match(tag)
             if match:
                 subchapter_pairs.add((match.group(1), match.group(2)))
-    
+
     if not create_subchapter_decks:
-        _create_lerntag_filtered_deck(
+        error = _create_lerntag_filtered_deck(
             lerntag,
             highyield_stark,
             highyield_leicht,
@@ -1067,10 +867,12 @@ def create_lerntag_deck(
             sup_deck_name=sup_deck_name,
             silent=silent,
         )
+        if error:
+            errors.append(error)
         return
 
-    for parent_topic, subchapter in sorted(subchapter_pairs):
-        _create_lerntag_filtered_deck(
+    for chapter, subchapter in sorted(subchapter_pairs):
+        error = _create_lerntag_filtered_deck(
             lerntag,
             highyield_stark,
             highyield_leicht,
@@ -1078,10 +880,18 @@ def create_lerntag_deck(
             top100=top100,
             deck_name_prefix=deck_name_prefix,
             sup_deck_name=sup_deck_name,
-            parent_topic=parent_topic,
+            chapter=chapter,
             subchapter=subchapter,
-            silent=silent,
+            silent=True,
         )
+        if error:
+            errors.append(error)
+
+    if errors and not silent:
+        unique_errors = list(dict.fromkeys(errors))
+        showWarning("<br><br>".join(unique_errors))
+
+    return
 
 
 def _create_lerntag_filtered_deck(
@@ -1092,7 +902,7 @@ def _create_lerntag_filtered_deck(
     top100=False,
     deck_name_prefix: str = None,
     sup_deck_name: str = None,
-    parent_topic: str = None,
+    chapter: str = None,
     subchapter: str = None,
     silent=False,
 ):
@@ -1101,8 +911,8 @@ def _create_lerntag_filtered_deck(
         raise Exception("collection not available")
 
     tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_"
-    if parent_topic:
-        tag_pattern += parent_topic
+    if chapter:
+        tag_pattern += chapter
         if subchapter:
             tag_pattern += f"::{subchapter}"
     tag_pattern += "*"
@@ -1111,45 +921,16 @@ def _create_lerntag_filtered_deck(
     deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
     deck_name += f"{lerntag}"
 
-    if parent_topic:
-        deck_name += f" - {parent_topic.replace('_', ' ')}"
+    if chapter:
+        deck_name += f" - {chapter.replace('_', ' ')}"
     if sup_deck_name:
         deck_name = f"{sup_deck_name}::{deck_name}"
 
-    # Apply the same content filters to parent decks and subchapter decks.
     if top100:
         top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
         search += f' "tag:{top100_tag}"'
 
-    # Select only high-yield cards
-    if highyield_stark:
-        high_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
-        ]
-
-        if highyield_leicht:  # "all" button selected
-            high_yield_tags.extend(
-                [
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
-                    "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
-                ]
-            )
-        high_yield_search = " OR ".join(
-            [f'"tag:{tag}"' for tag in high_yield_tags]
-        )
-        search += f" ({high_yield_search})"
-
-    # Exclude low-yield cards
-    elif not lowyield:
-        low_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
-        ]
-        low_yield_search = " OR ".join(
-            [f'"tag:{tag}"' for tag in low_yield_tags]
-        )
-        search += f" -({low_yield_search})"
+    search += _build_yield_search(col, highyield_stark, highyield_leicht, lowyield)
 
     if top100:
         deck_name += " - TOP-100"
@@ -1160,9 +941,7 @@ def _create_lerntag_filtered_deck(
             if highyield_leicht
             else " - high-yield (stark gelb)"
         )
-    elif not lowyield:
-        pass
-    else:
+    elif lowyield:
         deck_name += " - inkl. low-yield"
         
     if subchapter:

@@ -132,7 +132,7 @@ def create_filtered_deck(
     deck_id = col.decks.id_for_name(deck_name)
     if deck_id != None:
         col.sched.rebuild_filtered_deck(deck_id)
-        return
+        return None
 
     if unsuspend:
         # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
@@ -165,20 +165,26 @@ def create_filtered_deck(
         col.sched.add_or_update_filtered_deck(deck)
     except FilteredDeckError as e:
         print(f"Error: {e}")
-        if top100 and not silent:
-            showWarning(
+        if top100:
+            error_message = (
                 "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
                 "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag.<br>"
                 "Du kannst diese Warnung einfach wegklicken."
             )
-        elif duedeck and not silent:
-            showWarning(
+        elif duedeck:
+            error_message = (
                 "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
                 "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage.<br>"
                 "Du kannst diese Warnung einfach wegklicken."
             )
-        elif not silent:
-            showWarning(f"Error: {e}")
+        else:
+            error_message = f"Error: {e}"
+
+        if not silent:
+            showWarning(error_message)
+        return error_message
+
+    return None
 
 
 def remove_filtered_deck(deck_id):
