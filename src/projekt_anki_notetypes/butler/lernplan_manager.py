@@ -96,7 +96,7 @@ class LernplanManagerDialog(QDialog):
             # config contains e.g. "035" but we want 0-indexed
             lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
             # Handle both old "highyield" and new separate options
-            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf)
+            highyield_stark, highyield_leicht, lowyield, top100 = _extract_yield_settings(lernplan_conf) # fmt: skip
             normyield = lernplan_conf.get("normyield", True)
             autocreate = lernplan_conf.get("autocreate", False)
             autocreate_due = lernplan_conf.get("autocreate_due", True)
@@ -121,15 +121,15 @@ class LernplanManagerDialog(QDialog):
         right_layout = QVBoxLayout()
 
         # EXPLANATION
-        right_layout.addWidget(
-            QLabel(
-                "Lass den <b>automatischen Lernplan-Manager</b> deine Lerntag-Auswahlstapel erstellen.<br>"
-                "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch<br>normale und low-yield Karten enthalten sein sollen.<br>"
-                "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
-                "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach<br>!VORHERIGE LERNTAGE verschoben werden sollen.<br><br>"
-                "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin<br>(aktuell: AnkiCollab / V4+)."
-            )
+        explanation_label = QLabel(
+            "Lass den <b>automatischen Lernplan-Manager</b> Deine Lerntag-Auswahlstapel erstellen.<br>"
+            "Du kannst wählen, ob nur TOP-100 Themen und/oder nur HIGH-YIELD Karten oder auch normale und low-yield Karten enthalten sein sollen.<br>"
+            "Der Lernplan-Manager erstellt jeden Tag automatisch einen neuen Lerntag-Auswahlstapel.<br>"
+            "Alte Stapel werden automatisch aus der Übersicht entfernt, wenn sie nicht nach <code>!VORHERIGE&nbsp;LERNTAGE</code> verschoben werden sollen.<br><br>"
+            "Der Lernplan-Manager funktioniert am besten mit der aktuellsten Version von Ankizin (aktuell: AnkiCollab / V4+)."
         )
+        explanation_label.setWordWrap(True)
+        right_layout.addWidget(explanation_label)
         right_layout.addSpacing(20)
 
         # AUTOCREATE LERNTAG DECK
@@ -142,12 +142,16 @@ class LernplanManagerDialog(QDialog):
             "Lerntag-Auswahlstapel jeden Tag automatisch erstellen (empfohlen)"
         )
         self.autocreate_button.setChecked(autocreate)
-        self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!LERNTAG&nbsp;XX</code>.")  # fmt: skip
+        self.autocreate_button.setToolTip("Aktiviert den automatischen Lernplan-Manager.<br>Erstellt jeden Tag einen neuen Lerntag-Auswahlstapel <code>!&#8288;LERNTAG&nbsp;XX</code>.")  # fmt: skip
         self.autocreate_button.toggled.connect(self.toggle_settings)
         right_layout.addWidget(self.autocreate_button)
 
         # PAST DAYS INFO
-        right_layout.addWidget(QLabel("<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>"))
+        past_days_info_label = QLabel(
+            "<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>"
+        )
+        past_days_info_label.setWordWrap(True)
+        right_layout.addWidget(past_days_info_label)
         right_layout.addSpacing(10)
 
         # CREATE FRAME TO HOLD SETTINGS
@@ -177,6 +181,10 @@ class LernplanManagerDialog(QDialog):
         settings_layout.addWidget(self.lerntag_combo_label)
 
         self.lerntag_combo = QComboBox()
+        # Use a fixed-width font so the lerntag number appears monospace
+        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        fixed_font.setPointSize(fixed_font.pointSize() + 2)
+        self.lerntag_combo.setFont(fixed_font)
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
@@ -243,11 +251,7 @@ class LernplanManagerDialog(QDialog):
         due_layout = QHBoxLayout()
         self.autocreate_due_button = QRadioButton()
         self.autocreate_due_button.setChecked(autocreate_due)
-        due_tooltip = (
-            "Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER "
-            "LERNTAGE</code>) mit allen fälligen Karten aus vergangenen "
-            "Lerntagen."
-        )
+        due_tooltip = ("Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.") # fmt: skip
         due_label = QLabel("Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)") # fmt: skip
         due_label.setWordWrap(True)
         due_layout.addWidget(self.autocreate_due_button, 0)
@@ -260,10 +264,8 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_previous_button = QRadioButton()
         self.autocreate_previous_button.setChecked(autocreate_previous)
         previous_tooltip = (
-            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden "
-            "Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
-            "Die lange Liste an Lerntag-Stapeln ist dann unter "
-            "<code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
+            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>"
+            "Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden."
         )
         previous_label = QLabel("Ich will einzelne Lerntage später nochmal spezifisch wiederholen.") # fmt: skip
         previous_label.setWordWrap(True)
@@ -277,10 +279,8 @@ class LernplanManagerDialog(QDialog):
         self.autocreate_no_previous_button = QRadioButton()
         self.autocreate_no_previous_button.setChecked(autocreate_no_previous)
         noprev_tooltip = (
-            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten "
-            "Karten fallen in die ganz normale Rotation zurück.<br>Macht "
-            "eigentlich nur Sinn, wenn du schon seit dem 5. Semester mit "
-            "Ankizin lernst und im Lernplan nur auffrischst."
+            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>"
+            "Macht eigentlich nur Sinn, wenn Du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst."
         )
         no_previous_label = QLabel("Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.") # fmt: skip
         no_previous_label.setWordWrap(True)
@@ -355,10 +355,10 @@ class LernplanManagerDialog(QDialog):
         self.accept()
 
     def deactivate_lernplan_manager(self):
-        self.autocreate_button.setChecked(False) # Uncheck the autocreate button
-        self.toggle_settings(False) # Trigger the toggle to update UI
-        self.save_config() # Save the configuration
-        self.accept() # Save the configuration
+        self.autocreate_button.setChecked(False)  # Uncheck autocreate button
+        self.toggle_settings(False)  # Trigger the toggle to update UI
+        self.save_config()  # Save the configuration
+        self.accept()  # Save the configuration
 
     def closeEvent(self, event):
         self.save_config()
@@ -703,16 +703,20 @@ class LerntagDeckCreatorDialog(QDialog):
         right_layout = QVBoxLayout()
 
         # EXPLANATION
-        right_layout.addWidget(
-            QLabel(
-                "Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom<br>automatischen Lernplan-Manager."
-            )
+        explanation_label = QLabel(
+            "Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom automatischen Lernplan-Manager."
         )
+        explanation_label.setWordWrap(True)
+        right_layout.addWidget(explanation_label)
         right_layout.addSpacing(20)
 
         # LERNTAG SELECTION MENU
         right_layout.addWidget(QLabel("<b>Lerntag:</b>"))
         self.lerntag_combo = QComboBox()
+        # Use a fixed-width font so the lerntag number appears monospace
+        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        fixed_font.setPointSize(fixed_font.pointSize() + 2)
+        self.lerntag_combo.setFont(fixed_font)
         for number, topic in self.get_lerntag_list():
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
