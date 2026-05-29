@@ -710,8 +710,19 @@ class PastDaysDialog(QDialog):
         cancel_btn = QPushButton("Abbrechen")
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
+        
+        button_layout.addStretch()
+        
+        reset_btn = QPushButton("Zurücksetzen")
+        reset_btn.clicked.connect(self.reset_all)
+        button_layout.addWidget(reset_btn)
 
         layout.addLayout(button_layout)
+
+    def reset_all(self):
+        """Reset all past days to False"""
+        for checkbox in self.day_checkboxes.values():
+            checkbox.setChecked(False)
 
     def save_and_close(self):
         """Save the checkbox states to config and close"""
