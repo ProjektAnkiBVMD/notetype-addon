@@ -892,7 +892,22 @@ def create_previous_lerntag_decks(
     lowyield,
     top100=False,
 ):
-    for i in range(int(lerntag) - 1, 0, -1):
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    if conf is None:
+        conf = {}
+    lernplan_conf = conf.get("lernplan", {})
+    past_days = lernplan_conf.get("past_days", [])
+
+    previous_days = [
+        i
+        for i in range(1, int(lerntag))
+        if i < len(past_days) and past_days[i]
+    ]
+
+    if not previous_days:
+        return OpChanges()
+
+    for i in reversed(previous_days):
         create_lerntag_deck(
             str(i).zfill(3),
             highyield_stark,
