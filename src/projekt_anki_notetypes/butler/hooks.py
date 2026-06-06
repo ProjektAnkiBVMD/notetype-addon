@@ -15,9 +15,11 @@ from aqt.reviewer import RefreshNeeded
 from ..constants import ADDON_DIR_NAME
 from .browser import filtered_deck_hk
 from .lernplan_manager import (
+    _update_past_days,
     create_lerntag_deck,
     create_lerntag_due_deck,
     create_previous_lerntag_decks,
+    get_lerntag_list,
     remove_previous_lerntag_decks,
 )
 from .menu import get_rebuild_config
@@ -81,20 +83,25 @@ def lernplan_auto_create():
 
     # Check if today is a scheduled lernplan day
     weekdays = lernplan_conf["wochentage"]
-    today_weekday = datetime.datetime.now().date().weekday()
+    today_weekday = _get_effective_today().weekday()
     if not weekdays[today_weekday]:
         return  # Today is not a lernplan day
 
     # Calculate and validate next lerntag
     current_lerntag = int(lernplan_conf.get("lerntag", "001"))
     next_lerntag = current_lerntag + 1
-    if next_lerntag > 85:
+    # Derive the last day dynamically instead of hardcoding 85 (AMBOSS-M2-100-Tage)
+    max_day = max((int(num) for num, _ in get_lerntag_list()), default=85)
+    if next_lerntag > max_day:
         return  # Lernplan is finished
+
+    # Record the day we are leaving in the history (past_days)
+    _update_past_days(current_lerntag, next_lerntag, conf)
 
     # Update configuration
     lerntag_str = str(next_lerntag).zfill(3)
     lernplan_conf["lerntag"] = lerntag_str
-    lernplan_conf["last_updated"] = datetime.datetime.now().isoformat()
+    lernplan_conf["last_updated"] = _get_effective_today().isoformat()
     mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
     # Create decks
@@ -238,11 +245,11 @@ def reload_data_hk():
 
 def profile_loaded_hk():
     if mw.pm.auto_syncing_enabled() and mw.pm.sync_auth() and not mw.safeMode:
-        
+
         def on_sync_finished_hk():
             # run reload_data AFTER sync is finished
             reload_data_hk()
-            
+
             try:
                 gui_hooks.sync_did_finish.remove(on_sync_finished_hk)
             except ValueError:

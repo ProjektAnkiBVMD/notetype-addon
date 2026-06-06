@@ -839,7 +839,8 @@ def create_lerntag_due_deck(
         search += f' "tag:{top100_tag}"'
 
     search += _build_yield_search(col, highyield_stark, highyield_leicht, lowyield)
-    create_filtered_deck(deck_name, search, duedeck=True, silent=silent)
+    search += " -is:suspended"
+    create_filtered_deck(deck_name, search, duedeck=True, unsuspend=False, silent=silent)
 
 
 def create_lerntag_deck(
