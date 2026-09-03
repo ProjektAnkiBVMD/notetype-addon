@@ -224,6 +224,11 @@ def browser_search_hk(context: SearchContext):  # type: ignore
     search_term = context.search
 
     target_string = "note:Ankiphil*"
+    high_yield_target = "tag:*!High-Yield"
+    high_yield_tags = [
+        "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
+        "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
+    ]
 
     has_ankiphil = target_string in search_term
     has_amboss_field = "AMBOSS*:" in search_term
@@ -235,7 +240,17 @@ def browser_search_hk(context: SearchContext):  # type: ignore
         modified_search_term = search_term.replace(
             target_string, replacement_string, 1
         )
-        context.search = modified_search_term
+        search_term = modified_search_term
+
+        if high_yield_target in search_term:
+            high_yield_search = " OR ".join(
+                [f'"tag:{tag}"' for tag in high_yield_tags]
+            )
+            search_term = search_term.replace(
+                high_yield_target, f"({high_yield_search})", 1
+            )
+
+        context.search = search_term
 
 
 def reload_data_hk():
