@@ -10,6 +10,7 @@ from .lernplan_decks import (
     effective_today,
     get_lerntag_list,
     rebuild_lernplan_decks,
+    set_past_day,
     update_past_days,
 )
 from .utils import check_ankizin_installation, report_result
@@ -440,9 +441,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
     def open_past_days_dialog(self):
         """Open the Past Days management dialog"""
-        dialog = PastDaysDialog(self)
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            pass
+        PastDaysDialog(self).exec()
 
 
 class PastDaysDialog(QDialog):
@@ -551,25 +550,12 @@ class PastDaysDialog(QDialog):
     def save_and_close(self):
         """Save the checkbox states to config and close"""
         conf = _get_config()
-        if "lernplan" not in conf:
-            conf["lernplan"] = {}
-        lernplan_conf = conf["lernplan"]
-
-        past_days = lernplan_conf.get("past_days", [])
+        past_days = conf.setdefault("lernplan", {}).setdefault("past_days", [])
 
         # Update past_days based on checkbox states for every lerntag in the plan.
         for day_idx, checkbox in self.day_checkboxes.items():
-            # Ensure array is large enough
-            while len(past_days) <= day_idx:
-                past_days.append(False)
-            past_days[day_idx] = checkbox.isChecked()
+            set_past_day(past_days, day_idx, checkbox.isChecked())
 
-        if self.day_checkboxes:
-            max_day_idx = max(self.day_checkboxes)
-            while len(past_days) <= max_day_idx:
-                past_days.append(False)
-
-        lernplan_conf["past_days"] = past_days
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         self.accept()

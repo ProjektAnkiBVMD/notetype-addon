@@ -42,14 +42,17 @@ def get_lerntag_list(col: Collection) -> list[tuple[str, str]]:
     return sorted(unique.items(), key=lambda x: int(x[0]))
 
 
+def set_past_day(past_days: list, idx: int, value: bool) -> None:
+    """Set past_days[idx], growing the list if needed."""
+    past_days.extend([False] * (idx + 1 - len(past_days)))
+    past_days[idx] = value
+
+
 def update_past_days(prev_lerntag, new_lerntag, conf: dict) -> None:
     """Mark the day being left (prev_lerntag) as past in conf['lernplan']['past_days']."""
     if not prev_lerntag or int(prev_lerntag) == int(new_lerntag):
         return
-    past_days = conf.setdefault("lernplan", {}).setdefault("past_days", [])
-    idx = int(prev_lerntag)
-    past_days.extend([False] * (idx + 1 - len(past_days)))
-    past_days[idx] = True
+    set_past_day(conf.setdefault("lernplan", {}).setdefault("past_days", []), int(prev_lerntag), True)
 
 
 @dataclass
