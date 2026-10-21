@@ -32,19 +32,43 @@ class LerntagDeckCreatorDialog(QDialog):
         self._conf_key = conf_key
         self.setWindowTitle("Lerntag-Auswahlstapel erstellen")
 
-        main_layout = QHBoxLayout(self)
-        main_layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
-
         self._load_config()
-        self._setup_logo(main_layout)
+
+        # the dialog can be taller than the screen, so the whole content scrolls
+        self._content = QWidget()
+        content_layout = QHBoxLayout(self._content)
+        self._setup_logo(content_layout)
 
         right_layout = QVBoxLayout()
         self._setup_explanation(right_layout)
         self._setup_main_content(right_layout)
         self._setup_action_buttons(right_layout)
+        content_layout.addLayout(right_layout)
 
-        main_layout.addLayout(right_layout)
+        self._scroll_area = QScrollArea()
+        self._scroll_area.setWidgetResizable(True)
+        self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self._scroll_area.setWidget(self._content)
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self._scroll_area)
+
         self.setWindowIcon(QIcon("icons:ankizin.png"))
+        self._fitted = False
+
+    def showEvent(self, event) -> None:
+        super().showEvent(event)
+        if not self._fitted:  # child widgets only report their real size once shown
+            self._fitted = True
+            QTimer.singleShot(0, self._fit_to_content)
+
+    def _fit_to_content(self) -> None:
+        """Size the window to its content, but never taller than the screen."""
+        self._content.layout().activate()
+        hint = self._content.sizeHint()
+        scrollbar_width = self._scroll_area.verticalScrollBar().sizeHint().width()
+        max_height = int(QGuiApplication.primaryScreen().availableGeometry().height() * 0.9)
+        self.resize(hint.width() + scrollbar_width, min(hint.height(), max_height))
 
     def _load_config(self) -> None:
         conf = _get_config()
@@ -285,8 +309,13 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.lerntag_list = QListWidget()
         self.lerntag_list.setFont(self._fixed_font())
         self.lerntag_list.setMinimumHeight(220)
+        self.lerntag_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.lerntag_list.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.lerntag_list.setDefaultDropAction(Qt.DropAction.MoveAction)
+        # Qt drops item widgets when a row is moved, so recreate the missing ones afterwards
+        self.lerntag_list.model().rowsInserted.connect(
+            lambda *_: QTimer.singleShot(0, self._refresh_lerntag_rows)
+        )
         self._current = self._lerntag
         done = {n for n in self._order if is_past_day(self._past_days, int(n))}
         self._fill_lerntag_list(self._order, done)
@@ -304,33 +333,53 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
     def _lerntag_rows(self) -> list[tuple[str, bool]]:
         """(number, done) in the order currently shown."""
-        items = [self.lerntag_list.item(row) for row in range(self.lerntag_list.count())]
-        return [(i.data(Qt.ItemDataRole.UserRole), i.checkState() == Qt.CheckState.Checked) for i in items]
+        numbers = [self.lerntag_list.item(row).data(Qt.ItemDataRole.UserRole) for row in range(self.lerntag_list.count())]
+        return [(number, number in self._done) for number in numbers]
 
     def _fill_lerntag_list(self, order: list[str], done: set[str]) -> None:
+        self._done = set(done)
         self.lerntag_list.clear()
         for number in order:
             item = QListWidgetItem()
             item.setData(Qt.ItemDataRole.UserRole, number)
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if number in done else Qt.CheckState.Unchecked)
             self.lerntag_list.addItem(item)
-        self._refresh_current_marker()
+        self._refresh_lerntag_rows()
 
-    def _refresh_current_marker(self) -> None:
+    def _refresh_lerntag_rows(self) -> None:
+        """Make sure every row has its checkbox and shows the current-day marker."""
         for row in range(self.lerntag_list.count()):
             item = self.lerntag_list.item(row)
             number = item.data(Qt.ItemDataRole.UserRole)
+            row_widget = self.lerntag_list.itemWidget(item)
+            if row_widget is None:
+                row_widget = self._create_lerntag_row(number)
+                self.lerntag_list.setItemWidget(item, row_widget)
             is_current = number == self._current
-            item.setText(f"{'▶' if is_current else ' '} {number} - {self._topics[number]}")
-            font = item.font()
+            font = self._fixed_font()
             font.setBold(is_current)
-            item.setFont(font)
+            row_widget.label.setFont(font)
+            row_widget.label.setText(f"{'▶' if is_current else ' '} {number} - {self._topics[number]}")
+            item.setSizeHint(row_widget.sizeHint())
+
+    def _create_lerntag_row(self, number: str) -> QWidget:
+        # The label ignores mouse presses, so they reach the list and start a drag.
+        row_widget = QWidget()
+        layout = QHBoxLayout(row_widget)
+        layout.setContentsMargins(4, 0, 0, 0)
+        row_widget.checkbox = QCheckBox()
+        row_widget.checkbox.setChecked(number in self._done)
+        row_widget.checkbox.toggled.connect(
+            lambda checked: self._done.add(number) if checked else self._done.discard(number)
+        )
+        row_widget.label = QLabel()
+        layout.addWidget(row_widget.checkbox)
+        layout.addWidget(row_widget.label, 1)
+        return row_widget
 
     def _set_current_lerntag(self) -> None:
         if item := self.lerntag_list.currentItem():
             self._current = item.data(Qt.ItemDataRole.UserRole)
-            self._refresh_current_marker()
+            self._refresh_lerntag_rows()
 
     def _reset_lerntag_order(self) -> None:
         rows = self._lerntag_rows()
@@ -452,9 +501,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.settings_frame.setVisible(checked)
         self.save_button.setVisible(not checked)
         self.deactivate_button.setVisible(checked)
-        self.updateGeometry()
-        self.resize(0, 0)
-        self.adjustSize()
+        self._fit_to_content()
 
     def save_and_close(self):
         self.save_config()
