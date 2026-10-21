@@ -18,6 +18,9 @@ LERNTAG_PREFIX = "!LERNTAG "
 DUE_DECK_NAME = "!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
 PREVIOUS_PARENT = "!VORHERIGE LERNTAGE"
 
+# written by older versions: derived from other settings or never read
+OBSOLETE_CONFIG_KEYS = ("highyield", "normyield", "autocreate_no_previous", "lernplan_started_on")
+
 _ROOT = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS"
 _TOP100_TAG = f"{_ROOT}::M2-TOP100-Themen"
 _LERNTAG_LIST_RE = re.compile(
@@ -102,8 +105,6 @@ class LerntagSettings:
             "lerntag": self.lerntag,
             "highyield_stark": self.highyield_stark,
             "highyield_leicht": self.highyield_leicht,
-            "highyield": None,
-            "normyield": not (self.highyield_stark or self.lowyield),
             "lowyield": self.lowyield,
             "top100": self.top100,
             "create_subchapter_decks": self.subchapters,

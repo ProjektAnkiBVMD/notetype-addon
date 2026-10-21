@@ -6,6 +6,7 @@ from aqt.utils import showWarning
 from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
     LERNTAG_PREFIX,
+    OBSOLETE_CONFIG_KEYS,
     LerntagSettings,
     effective_today,
     get_lerntag_list,
@@ -79,7 +80,7 @@ class LerntagDeckCreatorDialog(QDialog):
         self._highyield_leicht = settings.highyield_leicht
         self._lowyield = settings.lowyield
         self._top100 = settings.top100
-        self._normyield = lernplan_conf.get("normyield", True)
+        self._normyield = not (settings.highyield_stark or settings.lowyield)
         self._create_subchapter_decks = settings.subchapters
 
     def _setup_logo(self, main_layout: QHBoxLayout) -> None:
@@ -222,6 +223,8 @@ class LerntagDeckCreatorDialog(QDialog):
     def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
         """Hook: write the settings into `section` (= conf[self._conf_key])."""
         section.update(settings.to_conf())
+        for key in OBSOLETE_CONFIG_KEYS:
+            section.pop(key, None)
 
     def save_config(self, mark_today: bool = False) -> LerntagSettings:
         conf = _get_config()
@@ -266,7 +269,6 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._autocreate = lernplan_conf.get("autocreate", False)
         self._autocreate_due = lernplan_conf.get("autocreate_due", True)
         self._autocreate_previous = lernplan_conf.get("autocreate_previous", False)
-        self._autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False)
         self._wochentage = lernplan_conf.get("wochentage", DEFAULT_WOCHENTAGE)
         self._order = get_lerntag_order(mw.col, lernplan_conf)
         self._topics = {n: t.replace("_", " ") for n, t in get_lerntag_list(mw.col)}
@@ -432,37 +434,33 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         autocreate_options_layout = QVBoxLayout()
         autocreate_options_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.autocreate_due_button = QRadioButton()
-        self._setup_autocreate_option(
-            autocreate_options_layout,
-            self.autocreate_due_button,
-            self._autocreate_due,
-            "Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.",
-            "Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)",
-        )
-
-        self.autocreate_previous_button = QRadioButton()
-        self._setup_autocreate_option(
-            autocreate_options_layout,
-            self.autocreate_previous_button,
-            self._autocreate_previous,
-            "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden.",
-            "Ich will einzelne Lerntage später nochmal spezifisch wiederholen.",
-        )
-
-        self.autocreate_no_previous_button = QRadioButton()
-        self._setup_autocreate_option(
-            autocreate_options_layout,
-            self.autocreate_no_previous_button,
-            self._autocreate_no_previous,
-            "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>Macht eigentlich nur Sinn, wenn Du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst.",
-            "Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.",
-        )
-
+        # (attribute, checked, tooltip, label)
+        options = [
+            (
+                "autocreate_due_button",
+                self._autocreate_due,
+                "Erstellt einen Auswahlstapel (<code>!FÄLLIGE KARTEN VERGANGENER LERNTAGE</code>) mit allen fälligen Karten aus vergangenen Lerntagen.",
+                "Ich will die relevanten Lernplan‑Karten im Anki‑Algorithmus während des Lernplanes regelmäßig wiederholen. (Standard)",
+            ),
+            (
+                "autocreate_previous_button",
+                self._autocreate_previous,
+                "Erstellt die Auswahlstapel <code>!LERNTAG&nbsp;XX</code> jeden Tag neu, sammelt dabei alle (nicht nur fällige) Karten ein.<br>Die lange Liste an Lerntag-Stapeln ist dann unter <code>!VORHERIGE&nbsp;LERNTAGE</code> zu finden.",
+                "Ich will einzelne Lerntage später nochmal spezifisch wiederholen.",
+            ),
+            (
+                "autocreate_no_previous_button",
+                not (self._autocreate_due or self._autocreate_previous),
+                "Nur <code>!LERNTAG&nbsp;XX</code> wird kreiert, alle gelernten Karten fallen in die ganz normale Rotation zurück.<br>Macht eigentlich nur Sinn, wenn Du schon seit dem 5. Semester mit Ankizin lernst und im Lernplan nur auffrischst.",
+                "Ich will nur die relevanten Lernplan‑Karten ausgewählt haben.",
+            ),
+        ]
         self.autocreate_button_group = QButtonGroup(self)
-        self.autocreate_button_group.addButton(self.autocreate_due_button)
-        self.autocreate_button_group.addButton(self.autocreate_previous_button)
-        self.autocreate_button_group.addButton(self.autocreate_no_previous_button)
+        for attr, checked, tooltip, label_text in options:
+            button = QRadioButton()
+            setattr(self, attr, button)
+            self._setup_autocreate_option(autocreate_options_layout, button, checked, tooltip, label_text)
+            self.autocreate_button_group.addButton(button)
 
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
@@ -529,7 +527,6 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         section["autocreate"] = self.autocreate_button.isChecked()
         section["autocreate_due"] = self.autocreate_due_button.isChecked()
         section["autocreate_previous"] = self.autocreate_previous_button.isChecked()
-        section["autocreate_no_previous"] = self.autocreate_no_previous_button.isChecked()
         section["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
         # Only mark "today is handled" when decks were created (or on first activation),
         # otherwise merely closing the dialog would skip today's automatic day change.
@@ -537,7 +534,6 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             today = effective_today(mw.col)
             section["last_updated"] = today.isoformat()
             section["last_due_updated"] = today.isoformat()
-            section["lernplan_started_on"] = today.weekday()
 
     def _rebuild_kwargs(self) -> dict:
         return {
