@@ -65,7 +65,7 @@ def has_ankizin_installed():
     # Check tags
     if not has_ankizin:
         for tag in collection.tags.all():
-            if "#Ankizin_v" in tag.lower():
+            if "#ankizin_v" in tag.lower():
                 has_ankizin = True
                 break
 
