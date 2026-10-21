@@ -246,11 +246,11 @@ def _is_managed(name: str) -> bool:
     )
 
 
-def remove_managed_decks(col: Collection) -> None:
-    """Remove our filtered decks, then the empty normal parents they leave behind."""
+def remove_managed_decks(col: Collection, keep: set[str] = frozenset()) -> None:
+    """Remove our filtered decks (except those named in `keep`), then the empty normal parents."""
     decks = [d for d in col.decks.all_names_and_ids() if _is_managed(d.name)]
     filtered = [d.id for d in decks if col.decks.is_filtered(d.id)]
-    col.decks.remove(filtered)
+    col.decks.remove([d.id for d in decks if d.id in filtered and d.name not in keep])
 
     # Removing a normal deck DELETES its cards, so only remove provably empty parents.
     # Deepest first, so a parent is checked after its children are gone.
@@ -266,7 +266,6 @@ def _apply_spec(col: Collection, name: str, search: str) -> bool:
     if did:
         if not col.decks.is_filtered(did):
             raise AnkiError("Es existiert bereits ein normaler Stapel mit diesem Namen.")
-        col.sched.empty_filtered_deck(did)  # its own cards would hide from the check below
     # same implicit exclusions as Anki's filtered deck builder
     if not col.find_cards(f"({search}) -is:suspended -is:buried -deck:filtered"):
         return False
@@ -289,7 +288,14 @@ def create_filtered_decks(col: Collection, specs: list[tuple], cleanup: bool = F
     target = col.add_custom_undo_entry("Auswahlstapel erstellen")
     result = DeckResult()
     if cleanup:
-        remove_managed_decks(col)
+        remove_managed_decks(col, keep={name for name, _, _ in specs})
+
+    # Decks that are updated in place keep their ids (and deck options). Empty them all first,
+    # as the cards they hold would otherwise be unavailable to the decks built before them.
+    for name, _, _ in specs:
+        did = col.decks.id_for_name(name)
+        if did and col.decks.is_filtered(did):
+            col.sched.empty_filtered_deck(did)
 
     cids = {c for _, search, unsuspend in specs if unsuspend for c in col.find_cards(search)}
     if cids:
