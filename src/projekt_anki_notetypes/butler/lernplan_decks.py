@@ -183,12 +183,15 @@ def _lerntag_specs(
     ]
 
 
+def _past_days(past_days, current: str) -> list[int]:
+    """All finished Lerntage except the current one, whatever order they were learned in."""
+    return [i for i in range(1, len(past_days)) if past_days[i] and i != int(current)]
+
+
 def _due_spec(col: Collection, s: LerntagSettings, past_days) -> tuple | None:
-    if int(s.lerntag) < 2:
-        return None  # due cards only make sense if there is a past Lerntag
-    days = "|".join(str(i).zfill(3) for i in range(1, len(past_days)) if past_days[i])
+    days = "|".join(str(i).zfill(3) for i in _past_days(past_days, s.lerntag))
     if not days:
-        return None
+        return None  # due cards only make sense if there is a past Lerntag
     pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({days})"
     search = col.build_search_string(f'is:due "tag:re:{pattern}"') + _filters(s) + " -is:suspended"
     return (DUE_DECK_NAME, search, False)
@@ -209,8 +212,7 @@ def build_specs(
     if current:
         specs += _lerntag_specs(col, s, s.lerntag, prefix, unsuspend=True)
     if previous:
-        days = [i for i in range(1, int(s.lerntag)) if i < len(past_days) and past_days[i]]
-        for i in reversed(days):
+        for i in reversed(_past_days(past_days, s.lerntag)):
             specs += _lerntag_specs(col, s, str(i).zfill(3), LERNTAG_PREFIX, parent=PREVIOUS_PARENT)
     if due and (spec := _due_spec(col, s, past_days)):
         specs.append(spec)
