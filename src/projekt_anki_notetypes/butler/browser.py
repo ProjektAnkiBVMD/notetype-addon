@@ -1,4 +1,5 @@
 from aqt import mw
+from aqt.operations import CollectionOp
 from aqt.qt import *
 from anki.collection import SearchNode
 from aqt.browser import SidebarItem, SidebarTreeView, SidebarItemType
@@ -8,7 +9,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from aqt.browser import SidebarTreeView  # type: ignore
 
-from .utils import create_filtered_deck
+from .lernplan_decks import create_filtered_decks
+from .utils import report_result
 
 
 def filtered_deck_hk(
@@ -60,8 +62,9 @@ def create_dyn_deck_from_tag(
         search += f" ({high_yield_search})"
         deck_name += " - high-yield"
 
-    create_filtered_deck(deck_name, search, unsuspend=unsuspend)
-    mw.reset()
+    CollectionOp(
+        mw, lambda col: create_filtered_decks(col, [(deck_name, search, unsuspend)])
+    ).success(report_result).run_in_background()
 
 
 def format_deck_name(tagName: str):

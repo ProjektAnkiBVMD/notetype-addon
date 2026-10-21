@@ -1,19 +1,18 @@
 from aqt import mw
 from aqt.operations import CollectionOp
 from aqt.qt import *
-from aqt.utils import showWarning, tooltip
+from aqt.utils import showWarning
 
 from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
     LERNTAG_PREFIX,
-    DeckResult,
     LerntagSettings,
     effective_today,
     get_lerntag_list,
     rebuild_lernplan_decks,
     update_past_days,
 )
-from .utils import check_ankizin_installation
+from .utils import check_ankizin_installation, report_result
 
 DEFAULT_WOCHENTAGE = [True] * 5 + [False] * 2
 
@@ -22,14 +21,6 @@ def _get_config() -> dict:
     """Get addon config or return empty dict if not configured."""
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
     return conf if conf is not None else {}
-
-
-def report_result(result: DeckResult, silent: bool = False) -> None:
-    """Show failures (always) and decks without cards (unless silent). Main thread only."""
-    if result.failed:
-        showWarning("<br><br>".join(f"<b>{name}</b>: {msg}" for name, msg in result.failed))
-    elif result.skipped and not silent:
-        tooltip(f"{len(result.skipped)} Stapel ohne Karten wurden nicht erstellt (z.B. keine TOP-100/High-Yield Karten an diesem Tag).", period=5000)
 
 
 class LerntagDeckCreatorDialog(QDialog):

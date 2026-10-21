@@ -21,7 +21,7 @@ from .lernplan_decks import (
     rebuild_lernplan_decks,
     update_past_days,
 )
-from .lernplan_manager import report_result
+from .utils import report_result
 from .menu import get_rebuild_config
 
 

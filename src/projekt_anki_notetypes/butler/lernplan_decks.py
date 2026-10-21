@@ -258,26 +258,13 @@ def _apply_spec(col: Collection, name: str, search: str) -> bool:
     return True
 
 
-def rebuild_lernplan_decks(
-    col: Collection,
-    settings: LerntagSettings,
-    *,
-    prefix: str = LERNTAG_PREFIX,
-    cleanup: bool = False,
-    current: bool = True,
-    previous: bool = False,
-    due: bool = False,
-    past_days=(),
-) -> DeckResult:
-    """Create (or update) the Lerntag decks as ONE undoable step."""
-    target = col.add_custom_undo_entry("Lerntag-Stapel erstellen")
+def create_filtered_decks(col: Collection, specs: list[tuple], cleanup: bool = False) -> DeckResult:
+    """Create (or update) filtered decks from (name, search, unsuspend) as ONE undoable step."""
+    target = col.add_custom_undo_entry("Auswahlstapel erstellen")
     result = DeckResult()
     if cleanup:
         remove_managed_decks(col)
 
-    specs = build_specs(
-        col, settings, prefix=prefix, current=current, previous=previous, due=due, past_days=past_days
-    )
     cids = {c for _, search, unsuspend in specs if unsuspend for c in col.find_cards(search)}
     if cids:
         col.sched.unsuspend_cards(list(cids))  # suspended cards can't enter a filtered deck
@@ -291,3 +278,20 @@ def rebuild_lernplan_decks(
 
     result.changes = col.merge_undo_entries(target)
     return result
+
+
+def rebuild_lernplan_decks(
+    col: Collection,
+    settings: LerntagSettings,
+    *,
+    prefix: str = LERNTAG_PREFIX,
+    cleanup: bool = False,
+    current: bool = True,
+    previous: bool = False,
+    due: bool = False,
+    past_days=(),
+) -> DeckResult:
+    specs = build_specs(
+        col, settings, prefix=prefix, current=current, previous=previous, due=due, past_days=past_days
+    )
+    return create_filtered_decks(col, specs, cleanup)

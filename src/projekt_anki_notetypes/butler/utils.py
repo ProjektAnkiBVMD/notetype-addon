@@ -8,10 +8,8 @@ from aqt.qt import *
 from aqt.operations import QueryOp, CollectionOp
 from anki.collection import EmptyCardsReport, OpChanges
 from aqt.emptycards import EmptyCardsDialog
-from aqt.utils import showInfo, askUser, showWarning
-from anki.decks import FilteredDeckConfig
-from anki.scheduler import FilteredDeckForUpdate
-from anki.errors import FilteredDeckError
+from aqt.utils import showInfo, askUser, showWarning, tooltip
+from .lernplan_decks import DeckResult
 
 
 def on_success(out: OpChanges) -> None:
@@ -122,66 +120,9 @@ def get_ankizin_versions() -> list:
     return versions
 
 
-def create_filtered_deck(
-    deck_name, search, top100=False, duedeck=False, unsuspend=True, silent=False
-):
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    deck_id = col.decks.id_for_name(deck_name)
-    if deck_id != None:
-        col.sched.rebuild_filtered_deck(deck_id)
-        return None
-
-    if unsuspend:
-        # Unsuspend all cards that are not yet unsuspended, sonst nicht im dynamic deck
-        cidsToUnsuspend = col.find_cards(search)
-        col.sched.unsuspend_cards(cidsToUnsuspend)
-
-    if not silent:
-        mw.progress.start()
-    # deck_id = 0
-    deck: FilteredDeckForUpdate = col.sched.get_or_create_filtered_deck(0)
-
-    deck.name = deck_name
-    config = deck.config
-    config.reschedule = 1
-    terms = [
-        FilteredDeckConfig.SearchTerm(
-            search=search,
-            limit=999,
-            order=5,  # order by added date, so its chronological (usually)
-        )
-    ]
-
-    del config.delays[:]  # v1 scheduler relict
-    del config.search_terms[:]
-    config.search_terms.extend(terms)
-
-    if not silent:
-        mw.progress.finish()
-    try:
-        col.sched.add_or_update_filtered_deck(deck)
-    except FilteredDeckError as e:
-        print(f"Error: {e}")
-        if top100:
-            error_message = (
-                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
-                "Höchstwahrscheinlich gibt es keine TOP-100 Karten am heutigen Lerntag.<br>"
-                "Du kannst diese Warnung einfach wegklicken."
-            )
-        elif duedeck:
-            error_message = (
-                "Info: Es wurden keine Karten mit dem angegebenen Suchbegriff gefunden.<br><br>"
-                "Höchstwahrscheinlich gibt es keine fälligen Karten vergangener Lerntage.<br>"
-                "Du kannst diese Warnung einfach wegklicken."
-            )
-        else:
-            error_message = f"Error: {e}"
-
-        if not silent:
-            showWarning(error_message)
-        return error_message
-
-    return None
+def report_result(result: DeckResult, silent: bool = False) -> None:
+    """Show failures (always) and decks without cards (unless silent). Main thread only."""
+    if result.failed:
+        showWarning("<br><br>".join(f"<b>{name}</b>: {msg}" for name, msg in result.failed))
+    elif result.skipped and not silent:
+        tooltip(f"{len(result.skipped)} Stapel ohne Karten wurden nicht erstellt (z.B. keine TOP-100/High-Yield Karten an diesem Tag).", period=5000)
