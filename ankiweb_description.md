@@ -22,6 +22,16 @@ Bitte <a href="https://github.com/ProjektAnki/notetype-addon/issues" rel="nofoll
 **Aktiver Support stets nur für die aktuelle Version von Anki (aktuell: 24.04.1)!**
 
 ## Updates
+- 2026-10-21: LERNPLAN-MANAGER-UPDATE — eigene Reihenfolge für die Lerntage
+  - Lerntage per Drag & Drop umsortieren und als gelernt abhaken; der automatische Tageswechsel folgt deiner Reihenfolge
+  - `!VORHERIGE LERNTAGE` und `!FÄLLIGE KARTEN VERGANGENER LERNTAGE` enthalten alle gelernten Tage, egal in welcher Reihenfolge
+  - Zuverlässigere Stapel-Erstellung (ein Rückgängig-Schritt, keine leeren Reststapel)
+- <strong>2026-05-24: UMZUG des Ankizin-Decks zu [AnkiCollab](https://www.ankicollab.com/notes/decke-schaufeln-reiche)</strong>
+- 2025-06-24: LERNPLAN-MANAGER-UPDATE — mehr und spezifischere Optionen für Ankizin V5
+- 2025-05-01: LERNPLAN-MANAGER-UPDATE — Pünktlich zum Tag der Arbeit wird die Anki-Arbeit noch weniger
+- 2025-03-02: LERNPLAN-MANAGER — Der Lernplan-Manager nimmt dir die essentiellsten Aufgaben der täglichen Deck-Erstellung im Lernplan ab!
+- 2024-12-24: WEIHNACHTS-Update — 3 neue Notiztypen (`Vocab`, `AnatomieTrainer` und `IO`), Einstellungen für Vorder- und Rückseite nun konsolidiert, kleine Styling-Fixes und Indent-Optimierungen
+  - INFO: `IO` basiert auf dem nativen Anki-IO-Notiztyp, eingeführt in Version 23.10 — frühere Anki-Versionen werden **nicht** mehr supported und mit Updates versorgt, AddOn bleibt aber verfügbar!
 - 2024-09-30: Kleine Styling-Fixes, PopUp-Fenster für neue Deck-Versionen
 - 2024-06-26: Fix von AnkiWeb
 - 2024-05-25: Fix von `Selective One By One`-Verhalten

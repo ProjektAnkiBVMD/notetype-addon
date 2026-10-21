@@ -27,6 +27,10 @@ Add-On-Kreuzkompatibilitäten sind nicht garantiert!
 
 ## Updates
 
+- 2026-10-21: LERNPLAN-MANAGER-UPDATE — eigene Reihenfolge für die Lerntage
+  - Lerntage per Drag & Drop umsortieren und als gelernt abhaken; der automatische Tageswechsel folgt deiner Reihenfolge
+  - `!VORHERIGE LERNTAGE` und `!FÄLLIGE KARTEN VERGANGENER LERNTAGE` enthalten alle gelernten Tage, egal in welcher Reihenfolge
+  - Zuverlässigere Stapel-Erstellung (ein Rückgängig-Schritt, keine leeren Reststapel)
 - <strong>2026-05-24: UMZUG des Ankizin-Decks zu [AnkiCollab](https://www.ankicollab.com/notes/decke-schaufeln-reiche)</strong>
 - 2025-06-24: LERNPLAN-MANAGER-UPDATE — mehr und spezifischere Optionen für Ankizin V5
 - 2025-05-01: LERNPLAN-MANAGER-UPDATE — Pünktlich zum Tag der Arbeit wird die Anki-Arbeit noch weniger
