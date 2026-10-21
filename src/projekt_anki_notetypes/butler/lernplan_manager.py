@@ -248,9 +248,7 @@ class LerntagDeckCreatorDialog(QDialog):
         kwargs = self._rebuild_kwargs()
         CollectionOp(
             mw, lambda col: rebuild_lernplan_decks(col, settings, **kwargs)
-        ).success(report_result).with_progress(
-            "Lerntag-Karten werden gesammelt..."
-        ).run_in_background()
+        ).success(report_result).run_in_background()  # shows its own progress popup
         self.accept()
 
     def _rebuild_kwargs(self) -> dict:
