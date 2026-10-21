@@ -9,6 +9,8 @@ from .lernplan_decks import (
     LerntagSettings,
     effective_today,
     get_lerntag_list,
+    get_lerntag_order,
+    is_past_day,
     rebuild_lernplan_decks,
     set_past_day,
     update_past_days,
@@ -68,6 +70,14 @@ class LerntagDeckCreatorDialog(QDialog):
         )
         main_layout.addWidget(logo_label)
 
+    def _fixed_font(self) -> QFont:
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        font.setPointSize(font.pointSize() + 2)
+        return font
+
+    def _selected_lerntag(self) -> str | None:
+        return self.lerntag_combo.currentData()
+
     def _setup_lerntag_combo(
         self,
         layout: QLayout,
@@ -77,9 +87,7 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lerntag_combo_label = QLabel(label_text)
         layout.addWidget(self.lerntag_combo_label)
         self.lerntag_combo = QComboBox()
-        fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
-        fixed_font.setPointSize(fixed_font.pointSize() + 2)
-        self.lerntag_combo.setFont(fixed_font)
+        self.lerntag_combo.setFont(self._fixed_font())
         for number, topic in get_lerntag_list(mw.col):
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
@@ -179,7 +187,7 @@ class LerntagDeckCreatorDialog(QDialog):
     def _read_settings(self) -> LerntagSettings:
         highyield_leicht = self.highyield_all_button.isChecked()
         return LerntagSettings(
-            lerntag=(self.lerntag_combo.currentData() or "001").zfill(3),
+            lerntag=(self._selected_lerntag() or self._lerntag).zfill(3),
             highyield_stark=self.highyield_stark_button.isChecked() or highyield_leicht,
             highyield_leicht=highyield_leicht,
             lowyield=self.lowyield_button.isChecked(),
@@ -209,7 +217,7 @@ class LerntagDeckCreatorDialog(QDialog):
     #   • _rebuild_kwargs()     -> prefix, cleanup, previous/due decks
 
     def create_lerntag_deck_wrapper(self):
-        if not self.lerntag_combo.count():
+        if not self._selected_lerntag():
             showWarning("Keine Lerntage gefunden. Ist Ankizin korrekt installiert?")
             return
         settings = self.save_config(mark_today=True)
@@ -238,6 +246,9 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._autocreate_previous = lernplan_conf.get("autocreate_previous", False)
         self._autocreate_no_previous = lernplan_conf.get("autocreate_no_previous", False)
         self._wochentage = lernplan_conf.get("wochentage", DEFAULT_WOCHENTAGE)
+        self._order = get_lerntag_order(mw.col, lernplan_conf)
+        self._topics = {n: t.replace("_", " ") for n, t in get_lerntag_list(mw.col)}
+        self._past_days = lernplan_conf.get("past_days", [])
 
     def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
         self.setWindowTitle("Lernplan-Manager (automatisch)")
@@ -260,11 +271,73 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.autocreate_button.toggled.connect(self.toggle_settings)
         right_layout.addWidget(self.autocreate_button)
 
-        past_days_info_label = QLabel("<i>Lerntage werden automatisch in den Verlaufsliste aufgenommen, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>")
+        past_days_info_label = QLabel("<i>Lerntage werden automatisch als gelernt (Haken) markiert, sobald der Lernplan-Manager <b>automatisch</b> zu einem neuen Lerntag wechselt.</i>")
         past_days_info_label.setWordWrap(True)
         right_layout.addWidget(past_days_info_label)
 
         right_layout.addSpacing(10)
+
+    def _setup_lerntag_list(self, layout: QVBoxLayout) -> None:
+        layout.addWidget(QLabel(
+            "<b>Lerntage:</b> Reihenfolge per Drag & Drop ändern, "
+            "Haken = bereits gelernt, ▶ = aktueller Lerntag"
+        ))
+        self.lerntag_list = QListWidget()
+        self.lerntag_list.setFont(self._fixed_font())
+        self.lerntag_list.setMinimumHeight(220)
+        self.lerntag_list.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
+        self.lerntag_list.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self._current = self._lerntag
+        done = {n for n in self._order if is_past_day(self._past_days, int(n))}
+        self._fill_lerntag_list(self._order, done)
+        layout.addWidget(self.lerntag_list)
+
+        buttons_layout = QHBoxLayout()
+        current_btn = QPushButton("Als aktuellen Lerntag setzen")
+        current_btn.clicked.connect(self._set_current_lerntag)
+        buttons_layout.addWidget(current_btn)
+        reset_btn = QPushButton("Reihenfolge zurücksetzen")
+        reset_btn.clicked.connect(self._reset_lerntag_order)
+        buttons_layout.addWidget(reset_btn)
+        buttons_layout.addStretch()
+        layout.addLayout(buttons_layout)
+
+    def _lerntag_rows(self) -> list[tuple[str, bool]]:
+        """(number, done) in the order currently shown."""
+        items = [self.lerntag_list.item(row) for row in range(self.lerntag_list.count())]
+        return [(i.data(Qt.ItemDataRole.UserRole), i.checkState() == Qt.CheckState.Checked) for i in items]
+
+    def _fill_lerntag_list(self, order: list[str], done: set[str]) -> None:
+        self.lerntag_list.clear()
+        for number in order:
+            item = QListWidgetItem()
+            item.setData(Qt.ItemDataRole.UserRole, number)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if number in done else Qt.CheckState.Unchecked)
+            self.lerntag_list.addItem(item)
+        self._refresh_current_marker()
+
+    def _refresh_current_marker(self) -> None:
+        for row in range(self.lerntag_list.count()):
+            item = self.lerntag_list.item(row)
+            number = item.data(Qt.ItemDataRole.UserRole)
+            is_current = number == self._current
+            item.setText(f"{'▶' if is_current else ' '} {number} - {self._topics[number]}")
+            font = item.font()
+            font.setBold(is_current)
+            item.setFont(font)
+
+    def _set_current_lerntag(self) -> None:
+        if item := self.lerntag_list.currentItem():
+            self._current = item.data(Qt.ItemDataRole.UserRole)
+            self._refresh_current_marker()
+
+    def _reset_lerntag_order(self) -> None:
+        rows = self._lerntag_rows()
+        self._fill_lerntag_list(sorted((n for n, _ in rows), key=int), {n for n, done in rows if done})
+
+    def _selected_lerntag(self) -> str | None:
+        return self._current if self.lerntag_list.count() else None
 
     def _setup_autocreate_option(
         self,
@@ -304,7 +377,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         settings_layout.addWidget(self.weekdays)
 
         settings_layout.addSpacing(10)
-        self._setup_lerntag_combo(settings_layout, self._lerntag, label_text="<b>Aktueller Lerntag:</b>")
+        self._setup_lerntag_list(settings_layout)
         self._setup_extra_choices(settings_layout, self._top100, self._create_subchapter_decks)
         self._setup_yield_group(settings_layout, self._highyield_stark, self._highyield_leicht, self._normyield, self._lowyield)
 
@@ -356,11 +429,6 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
         buttons_layout.addSpacing(10)
 
-        manage_past_days_btn = QPushButton("Verlauf verwalten...")
-        manage_past_days_btn.setFixedWidth(160)
-        manage_past_days_btn.clicked.connect(self.open_past_days_dialog)
-        buttons_layout.addWidget(manage_past_days_btn)
-
         self.deactivate_button = QPushButton("Lernplan-Manager deaktivieren")
         self.deactivate_button.setFixedWidth(240)
         self.deactivate_button.setVisible(self._autocreate)
@@ -404,6 +472,12 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.reject()
 
     def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
+        rows = self._lerntag_rows()
+        section["lerntag_order"] = [number for number, _ in rows]
+        past_days = section.setdefault("past_days", [])
+        for number, done in rows:
+            set_past_day(past_days, int(number), done)
+        # the day being left counts as learned, even if its checkbox was not ticked
         update_past_days(section.get("lerntag"), settings.lerntag, conf)
         super()._update_section(conf, section, settings, mark_today)
 
@@ -438,127 +512,6 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         result.setToolTip(tooltip)
         result.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         return result
-
-    def open_past_days_dialog(self):
-        """Open the Past Days management dialog"""
-        PastDaysDialog(self).exec()
-
-
-class PastDaysDialog(QDialog):
-    """Dialog to manage which past learning days are included in the past_days array"""
-
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setWindowTitle("Verlauf verwalten")
-        self.setMinimumHeight(400)
-
-        layout = QVBoxLayout(self)
-
-        # Explanation
-        layout.addWidget(
-            QLabel(
-                "Hier kannst Du die Lerntage verwalten, die in Deinem Verlauf gespeichert sind.<br>"
-                "Aktiviere oder deaktiviere einzelne Lerntage nach Bedarf."
-            )
-        )
-        layout.addSpacing(10)
-
-        # Scrollable list of past days
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setContentsMargins(0, 0, 0, 0)
-        scroll_layout.setSpacing(0)
-
-        # Get the config to find past_days
-        conf = _get_config()
-        lernplan_conf = conf.get("lernplan", {})
-        past_days = lernplan_conf.get("past_days", [])
-
-        # Create checkboxes for each past day
-        self.day_checkboxes = {}
-        lerntag_list = get_lerntag_list(mw.col)
-        lerntag_dict = {int(num): topic for num, topic in lerntag_list}
-        row_texts = []
-
-        # Show every lerntag in the plan and use past_days to preselect it.
-        for day_idx, topic in sorted(lerntag_dict.items()):
-            row_text = f"Lerntag <code>{str(day_idx).zfill(3)}</code> - {topic.replace('_', ' ')}"
-            row_texts.append(row_text)
-
-            row_widget = QWidget()
-            row_layout = QHBoxLayout(row_widget)
-            row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(10)
-
-            checkbox = QCheckBox()
-            checkbox.setChecked(day_idx < len(past_days) and past_days[day_idx])
-            self.day_checkboxes[day_idx] = checkbox
-            row_layout.addWidget(checkbox)
-
-            label = QLabel(row_text)
-            row_layout.addWidget(label)
-            row_layout.addStretch()
-
-            scroll_layout.addWidget(row_widget)
-
-        # If no lerntage exist yet
-        if not self.day_checkboxes:
-            scroll_layout.addWidget(QLabel("<i>Keine Lerntage im Lernplan gefunden</i>"))
-
-        # scroll_layout.addStretch()
-        scroll_area.setWidget(scroll_widget)
-        layout.addWidget(scroll_area)
-
-        if row_texts:
-            label_font_metrics = QFontMetrics(self.font())
-            widest_row = max(label_font_metrics.horizontalAdvance(text) for text in row_texts)
-            checkbox_width = QCheckBox().sizeHint().width()
-            chrome_width = 120
-            target_width = widest_row + checkbox_width + chrome_width
-            self.setMinimumWidth(target_width)
-            self.resize(target_width, self.sizeHint().height())
-        else:
-            self.setMinimumWidth(500)
-
-        # Buttons
-        button_layout = QHBoxLayout()
-
-        ok_btn = QPushButton("OK")
-        ok_btn.clicked.connect(self.save_and_close)
-        button_layout.addWidget(ok_btn)
-
-        cancel_btn = QPushButton("Abbrechen")
-        cancel_btn.clicked.connect(self.reject)
-        button_layout.addWidget(cancel_btn)
-        
-        button_layout.addStretch()
-        
-        reset_btn = QPushButton("Zurücksetzen")
-        reset_btn.clicked.connect(self.reset_all)
-        button_layout.addWidget(reset_btn)
-
-        layout.addLayout(button_layout)
-
-    def reset_all(self):
-        """Reset all past days to False"""
-        for checkbox in self.day_checkboxes.values():
-            checkbox.setChecked(False)
-
-    def save_and_close(self):
-        """Save the checkbox states to config and close"""
-        conf = _get_config()
-        past_days = conf.setdefault("lernplan", {}).setdefault("past_days", [])
-
-        # Update past_days based on checkbox states for every lerntag in the plan.
-        for day_idx, checkbox in self.day_checkboxes.items():
-            set_past_day(past_days, day_idx, checkbox.isChecked())
-
-        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-
-        self.accept()
 
 
 def open_lernplan_manager(self):
