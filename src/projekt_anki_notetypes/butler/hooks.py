@@ -156,6 +156,8 @@ def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
 
 
 def auto_rebuild_filtered_decks():
+    # Runs after the lernplan decks are created and also adds "(is:new or is:due)"
+    # to their searches (unless the deck name contains REBUILD) - this is intended.
     col = mw.col
     if col is None:
         raise Exception("collection not available")
