@@ -319,6 +319,10 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         current_btn = QPushButton("Als aktuellen Lerntag setzen")
         current_btn.clicked.connect(self._set_current_lerntag)
         buttons_layout.addWidget(current_btn)
+        for text, delta in (("Nach oben", -1), ("Nach unten", 1)):
+            move_btn = QPushButton(text)
+            move_btn.clicked.connect(lambda _, delta=delta: self._move_selected_lerntage(delta))
+            buttons_layout.addWidget(move_btn)
         reset_btn = QPushButton("Reihenfolge zurücksetzen")
         reset_btn.clicked.connect(self._reset_lerntag_order)
         buttons_layout.addWidget(reset_btn)
@@ -369,6 +373,16 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         layout.addWidget(row_widget.checkbox)
         layout.addWidget(row_widget.label, 1)
         return row_widget
+
+    def _move_selected_lerntage(self, delta: int) -> None:
+        """Move the selected rows one step up (-1) or down (+1)."""
+        rows = sorted(self.lerntag_list.row(item) for item in self.lerntag_list.selectedItems())
+        if not rows or rows[0] + delta < 0 or rows[-1] + delta >= self.lerntag_list.count():
+            return
+        for row in rows if delta < 0 else reversed(rows):
+            self.lerntag_list.insertItem(row + delta, self.lerntag_list.takeItem(row))
+        for row in rows:  # the row widgets are recreated by _refresh_lerntag_rows
+            self.lerntag_list.item(row + delta).setSelected(True)
 
     def _set_current_lerntag(self) -> None:
         if item := self.lerntag_list.currentItem():
