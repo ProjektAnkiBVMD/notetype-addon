@@ -21,7 +21,7 @@ PREVIOUS_PARENT = "!VORHERIGE LERNTAGE"
 _ROOT = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS"
 _TOP100_TAG = f"{_ROOT}::M2-TOP100-Themen"
 _LERNTAG_LIST_RE = re.compile(
-    r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
+    r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_([^:]+)(?:::.*)?$"
 )
 _YIELD_ROOT = "#Ankizin_*::!MARKIERE_DIESE_KARTEN"
 
