@@ -1,6 +1,6 @@
 import datetime
 
-from anki import hooks, notes
+from anki import notes
 from anki.scheduler import FilteredDeckForUpdate
 from anki.utils import int_time
 from aqt import gui_hooks, mw, editor
@@ -9,7 +9,6 @@ from aqt.operations.scheduling import (
     add_or_update_filtered_deck,
     rebuild_filtered_deck
 )
-from aqt.qt import *
 from aqt.reviewer import RefreshNeeded
 
 from ..constants import ADDON_DIR_NAME

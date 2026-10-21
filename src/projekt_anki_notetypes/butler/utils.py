@@ -1,10 +1,8 @@
 import webbrowser
 import aqt
-import anki
 import re
 
 from aqt import mw
-from aqt.qt import *
 from aqt.operations import QueryOp, CollectionOp
 from anki.collection import EmptyCardsReport, OpChanges
 from aqt.emptycards import EmptyCardsDialog
@@ -47,7 +45,7 @@ def async_general_housekeeping() -> None:
         return empty_cards_report
 
     QueryOp(parent=aqt.mw, op=op, success=on_success).with_progress(
-        f"Finale Änderungen werden durchgeführt..."
+        "Finale Änderungen werden durchgeführt..."
     ).run_in_background()
 
 
