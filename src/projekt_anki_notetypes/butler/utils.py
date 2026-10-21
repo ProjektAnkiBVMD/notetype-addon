@@ -185,17 +185,3 @@ def create_filtered_deck(
         return error_message
 
     return None
-
-
-def remove_filtered_deck(deck_id):
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    mw.progress.start()
-
-    col.sched.empty_filtered_deck(deck_id)
-    col.decks.remove([deck_id])
-
-    mw.progress.finish()
-    mw.reset()

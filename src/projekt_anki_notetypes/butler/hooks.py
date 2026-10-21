@@ -14,36 +14,15 @@ from aqt.reviewer import RefreshNeeded
 
 from ..constants import ADDON_DIR_NAME
 from .browser import filtered_deck_hk
-from .lernplan_manager import (
-    _update_past_days,
-    create_lerntag_deck,
-    create_lerntag_due_deck,
-    create_previous_lerntag_decks,
+from .lernplan_decks import (
+    LerntagSettings,
+    effective_today,
     get_lerntag_list,
-    remove_previous_lerntag_decks,
+    rebuild_lernplan_decks,
+    update_past_days,
 )
+from .lernplan_manager import report_result
 from .menu import get_rebuild_config
-
-
-def _get_effective_today():
-    """Get today's date adjusted for rollover time"""
-    rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
-    now = datetime.datetime.now()
-    today = now.date()
-    # Adjust date for rollover - if before rollover time, still considered previous day
-    if now.hour < rollover:
-        today = today - datetime.timedelta(days=1)
-    return today
-
-
-def _extract_yield_settings(lernplan_conf):
-    """Extract yield settings from config"""
-    return (
-        lernplan_conf.get("highyield_stark", lernplan_conf.get("highyield", False)),
-        lernplan_conf.get("highyield_leicht", lernplan_conf.get("highyield", False)),
-        lernplan_conf.get("lowyield", False),
-        lernplan_conf.get("top100", False),
-    ) # fmt: skip
 
 
 def run_today_setup():
@@ -57,7 +36,7 @@ def run_today_setup():
 
         # Check if the rebuild hooks should be run right now
         last_updated = datetime.datetime.fromisoformat(last_updated).date()
-        today = _get_effective_today()
+        today = effective_today(mw.col)
 
         if last_updated < today:
             return True
@@ -83,7 +62,7 @@ def lernplan_auto_create():
 
     # Check if today is a scheduled lernplan day
     weekdays = lernplan_conf["wochentage"]
-    today_weekday = _get_effective_today().weekday()
+    today_weekday = effective_today(mw.col).weekday()
     if not weekdays[today_weekday]:
         return  # Today is not a lernplan day
 
@@ -91,26 +70,33 @@ def lernplan_auto_create():
     current_lerntag = int(lernplan_conf.get("lerntag", "001"))
     next_lerntag = current_lerntag + 1
     # Derive the last day dynamically instead of hardcoding 85 (AMBOSS-M2-100-Tage)
-    max_day = max((int(num) for num, _ in get_lerntag_list()), default=85)
+    max_day = max((int(num) for num, _ in get_lerntag_list(mw.col)), default=85)
     if next_lerntag > max_day:
         return  # Lernplan is finished
 
     # Record the day we are leaving in the history (past_days)
-    _update_past_days(current_lerntag, next_lerntag, conf)
+    update_past_days(current_lerntag, next_lerntag, conf)
 
-    # Update configuration
-    lerntag_str = str(next_lerntag).zfill(3)
-    lernplan_conf["lerntag"] = lerntag_str
-    lernplan_conf["last_updated"] = _get_effective_today().isoformat()
+    lernplan_conf["lerntag"] = str(next_lerntag).zfill(3)
+    due = lernplan_conf.get("autocreate_due", False)
+    result = rebuild_lernplan_decks(
+        mw.col,
+        LerntagSettings.from_conf(lernplan_conf),
+        cleanup=True,
+        previous=lernplan_conf.get("autocreate_previous", False),
+        due=due,
+        past_days=lernplan_conf.get("past_days", []),
+    )
+
+    # Only persist the new day once the decks exist, so a crash retries on the next start
+    today = effective_today(mw.col).isoformat()
+    lernplan_conf["last_updated"] = today
+    if due:
+        lernplan_conf["last_due_updated"] = today
     mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
-    # Create decks
-    yield_settings = _extract_yield_settings(lernplan_conf)
-    remove_previous_lerntag_decks()
-    create_lerntag_deck(lerntag_str, *yield_settings)
-
-    if lernplan_conf.get("autocreate_previous", False):
-        create_previous_lerntag_decks(lerntag_str, *yield_settings)
+    report_result(result, silent=True)
+    mw.reset()
 
 
 def lernplan_due_deck_auto_create():
@@ -130,25 +116,27 @@ def lernplan_due_deck_auto_create():
 
     # Check if update is needed today
     last_due_updated = lernplan_conf.get("last_due_updated", None)
-    today = _get_effective_today()
+    today = effective_today(mw.col)
 
     if last_due_updated is not None:
         last_due_date = datetime.datetime.fromisoformat(last_due_updated).date()
         if last_due_date >= today:
             return  # Already updated today
 
-    # Get current lerntag (no advancement for due deck)
-    current_lerntag = lernplan_conf.get("lerntag", "001")
+    # Current lerntag stays as it is, only the due deck is refreshed
+    result = rebuild_lernplan_decks(
+        mw.col,
+        LerntagSettings.from_conf(lernplan_conf),
+        current=False,
+        due=True,
+        past_days=lernplan_conf.get("past_days", []),
+    )
 
-    # Update configuration
     lernplan_conf["last_due_updated"] = today.isoformat()
     mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
-    # Create deck
-    yield_settings = _extract_yield_settings(lernplan_conf)
-    create_lerntag_due_deck(current_lerntag, *yield_settings)
-
-    print("Due deck updated")
+    report_result(result, silent=True)
+    mw.reset()
 
 
 def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
@@ -189,7 +177,7 @@ def auto_rebuild_filtered_decks():
     else:
         # Check if the rebuild hooks should be run right now
         last_rebuild = datetime.datetime.fromisoformat(last_rebuild).date()
-        today = _get_effective_today()
+        today = effective_today(mw.col)
         should_run = last_rebuild < today
 
     if not should_run:

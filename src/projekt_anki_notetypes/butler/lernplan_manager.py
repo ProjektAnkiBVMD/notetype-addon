@@ -1,31 +1,21 @@
-import datetime
-import re
-
-import anki
-import aqt
 from aqt import mw
+from aqt.operations import CollectionOp
 from aqt.qt import *
-from aqt.utils import showWarning
+from aqt.utils import showWarning, tooltip
 
 from ..constants import ADDON_DIR_NAME
-from .utils import (
-    check_ankizin_installation,
-    create_filtered_deck,
-    remove_filtered_deck,
+from .lernplan_decks import (
+    LERNTAG_PREFIX,
+    DeckResult,
+    LerntagSettings,
+    effective_today,
+    get_lerntag_list,
+    rebuild_lernplan_decks,
+    update_past_days,
 )
+from .utils import check_ankizin_installation
 
 DEFAULT_WOCHENTAGE = [True] * 5 + [False] * 2
-
-
-def _get_effective_today():
-    """Get today's date adjusted for rollover time"""
-    rollover = mw.col.get_config("rollover")  # returns int, e.g. 4 for 4am
-    now = datetime.datetime.now()
-    today = now.date()
-    # Adjust date for rollover - if before rollover time, still considered previous day
-    if now.hour < rollover:
-        today = today - datetime.timedelta(days=1)
-    return today
 
 
 def _get_config() -> dict:
@@ -34,90 +24,12 @@ def _get_config() -> dict:
     return conf if conf is not None else {}
 
 
-def _extract_yield_settings(lernplan_conf):
-    """Extract yield settings from config"""
-    return (
-        lernplan_conf.get("highyield_stark", lernplan_conf.get("highyield", False)),
-        lernplan_conf.get("highyield_leicht", lernplan_conf.get("highyield", False)),
-        lernplan_conf.get("lowyield", False),
-        lernplan_conf.get("top100", False),
-    ) # fmt: skip
-
-
-def _build_yield_search(col, highyield_stark: bool, highyield_leicht: bool, lowyield: bool) -> str:
-    """Build search string for yield-based card filtering."""
-    if highyield_stark:
-        high_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::stark_gelb_M2",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-*",
-        ] # fmt: skip
-        if highyield_leicht:
-            high_yield_tags.extend([
-                "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_high_yield_(IMPP-Relevanz)::leicht_gelb_M2",
-                "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::02-*",
-            ]) # fmt: skip
-        high_yield_search = " OR ".join([f'"tag:{tag}"' for tag in high_yield_tags]) # fmt: skip
-        return f" ({high_yield_search})"
-    elif not lowyield:
-        low_yield_tags = [
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_low_yield",
-            "#Ankizin_*::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::04-*",
-        ] # fmt: skip
-        low_yield_search = " OR ".join([f'"tag:{tag}"' for tag in low_yield_tags]) # fmt: skip
-        return f" -({low_yield_search})"
-    return ""
-
-
-def _update_past_days(prev_lerntag, new_lerntag, conf):
-    """Mark the PREVIOUS day as True when switching to a new lerntag.
-
-    Only the day being left (prev_lerntag) is added to past_days.
-    This is called automatically when the user changes to a different learning day.
-    """
-    if not prev_lerntag or prev_lerntag == new_lerntag:
-        # No previous lerntag or no change, nothing to do
-        return conf
-
-    lernplan_conf = conf.get("lernplan", {})
-    past_days = lernplan_conf.get("past_days", [])
-
-    # Ensure array is properly sized
-    col = mw.col
-    pattern = re.compile(r"#Ankizin_[^:]+::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_(\d{3})_")
-    target_size = 1
-    for tag in col.tags.all():
-        match = pattern.match(tag)
-        if match:
-            target_size = max(target_size, int(match.group(1)) + 1)
-
-    while len(past_days) <= int(prev_lerntag):
-        past_days.append(False)
-
-    # Mark only the previous day as True (the day being left)
-    past_days[int(prev_lerntag)] = True
-
-    lernplan_conf["past_days"] = past_days
-    conf["lernplan"] = lernplan_conf
-    return conf
-
-
-def get_lerntag_list() -> list[tuple[str, str]]:
-    """Return sorted list of (number_str, topic_str) for all Lerntag tags."""
-    col = mw.col
-    lerntag_pattern = re.compile(
-        r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)(?:::[^:]+)*::M2_Lerntag_(\d{3})_(.+)$"
-    )
-    lerntag_tags = [tag for tag in col.tags.all() if lerntag_pattern.match(tag)]
-
-    unique_lerntag = {}
-    for tag in lerntag_tags:
-        match = lerntag_pattern.match(tag)
-        if match:
-            number, topic = match.group(1), match.group(2)
-            if number not in unique_lerntag:
-                unique_lerntag[number] = topic
-
-    return sorted(unique_lerntag.items(), key=lambda x: int(x[0]))
+def report_result(result: DeckResult, silent: bool = False) -> None:
+    """Show failures (always) and decks without cards (unless silent). Main thread only."""
+    if result.failed:
+        showWarning("<br><br>".join(f"<b>{name}</b>: {msg}" for name, msg in result.failed))
+    elif result.skipped and not silent:
+        tooltip(f"{len(result.skipped)} Stapel ohne Karten wurden nicht erstellt (z.B. keine TOP-100/High-Yield Karten an diesem Tag).", period=5000)
 
 
 class LerntagDeckCreatorDialog(QDialog):
@@ -143,12 +55,14 @@ class LerntagDeckCreatorDialog(QDialog):
     def _load_config(self) -> None:
         conf = _get_config()
         lernplan_conf = conf.get(self._conf_key, {})
-        self._lerntag = int(lernplan_conf.get("lerntag", "001")) - 1
-        self._highyield_stark, self._highyield_leicht, self._lowyield, self._top100 = (
-            _extract_yield_settings(lernplan_conf)
-        )
+        settings = LerntagSettings.from_conf(lernplan_conf)
+        self._lerntag = settings.lerntag
+        self._highyield_stark = settings.highyield_stark
+        self._highyield_leicht = settings.highyield_leicht
+        self._lowyield = settings.lowyield
+        self._top100 = settings.top100
         self._normyield = lernplan_conf.get("normyield", True)
-        self._create_subchapter_decks = lernplan_conf.get("create_subchapter_decks", False)
+        self._create_subchapter_decks = settings.subchapters
 
     def _setup_logo(self, main_layout: QHBoxLayout) -> None:
         logo_label = QLabel()
@@ -165,7 +79,7 @@ class LerntagDeckCreatorDialog(QDialog):
     def _setup_lerntag_combo(
         self,
         layout: QLayout,
-        lerntag: int,
+        lerntag: str,
         label_text: str = "<b>Lerntag:</b>",
     ) -> None:
         self.lerntag_combo_label = QLabel(label_text)
@@ -174,10 +88,10 @@ class LerntagDeckCreatorDialog(QDialog):
         fixed_font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
         fixed_font.setPointSize(fixed_font.pointSize() + 2)
         self.lerntag_combo.setFont(fixed_font)
-        for number, topic in get_lerntag_list():
+        for number, topic in get_lerntag_list(mw.col):
             display_text = f"{number} - {topic.replace('_', ' ')}"
             self.lerntag_combo.addItem(display_text, number)
-        self.lerntag_combo.setCurrentIndex(lerntag)
+        self.lerntag_combo.setCurrentIndex(max(self.lerntag_combo.findData(lerntag), 0))
         layout.addWidget(self.lerntag_combo)
 
     def _setup_extra_choices(
@@ -270,104 +184,54 @@ class LerntagDeckCreatorDialog(QDialog):
         event.ignore()
         self.reject()
 
-    def _read_widget_values(self) -> tuple[str, bool, bool, bool, bool]:
-        lerntag = self.lerntag_combo.currentData().zfill(3)
-        highyield_stark = self.highyield_stark_button.isChecked()
+    def _read_settings(self) -> LerntagSettings:
         highyield_leicht = self.highyield_all_button.isChecked()
-        if highyield_leicht:
-            highyield_stark = True
-        lowyield = self.lowyield_button.isChecked()
-        top100 = self.top100_button.isChecked()
-        return lerntag, highyield_stark, highyield_leicht, lowyield, top100
+        return LerntagSettings(
+            lerntag=(self.lerntag_combo.currentData() or "001").zfill(3),
+            highyield_stark=self.highyield_stark_button.isChecked() or highyield_leicht,
+            highyield_leicht=highyield_leicht,
+            lowyield=self.lowyield_button.isChecked(),
+            top100=self.top100_button.isChecked(),
+            subchapters=self.create_subchapter_decks_button.isChecked(),
+        )
 
-    def _write_common_config(
-        self,
-        lernplan_conf: dict,
-        lerntag: str,
-        highyield_stark: bool,
-        highyield_leicht: bool,
-        lowyield: bool,
-        top100: bool,
-    ) -> None:
-        lernplan_conf["lerntag"] = lerntag
-        lernplan_conf["highyield_stark"] = highyield_stark
-        lernplan_conf["highyield_leicht"] = highyield_leicht
-        lernplan_conf["highyield"] = None
-        lernplan_conf["normyield"] = self.standard_button.isChecked()
-        lernplan_conf["lowyield"] = lowyield
-        lernplan_conf["top100"] = top100
-        lernplan_conf["create_subchapter_decks"] = self.create_subchapter_decks_button.isChecked()
+    def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
+        """Hook: write the settings into `section` (= conf[self._conf_key])."""
+        section.update(settings.to_conf())
 
-    def save_config(self):
+    def save_config(self, mark_today: bool = False) -> LerntagSettings:
         conf = _get_config()
-        if self._conf_key not in conf:
-            conf[self._conf_key] = {}
-        lernplan_conf = conf[self._conf_key]
-
-        lerntag, highyield_stark, highyield_leicht, lowyield, top100 = self._read_widget_values()
-        self._write_common_config(lernplan_conf, lerntag, highyield_stark, highyield_leicht, lowyield, top100)
-
-        create_subchapter = self.create_subchapter_decks_button.isChecked()
-
+        settings = self._read_settings()
+        self._update_section(conf, conf.setdefault(self._conf_key, {}), settings, mark_today)
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-        return lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter
+        return settings
 
-    # ==== DECK CREATION FLOW (LerntagDeckCreatorDialog & LernplanManagerDialog) ====
+    # ==== DECK CREATION FLOW ====
     #
-    # LerntagDeckCreatorDialog orchestrates the flow with hooks:
-    #   1. create_lerntag_deck_wrapper()
-    #      ├─ _pre_create_cleanup()            [overridden in LernplanManagerDialog]
-    #      ├─ save_config()                    [overridden in LernplanManagerDialog]
-    #      └─ mw.taskman.with_progress()
-    #         ├─ create_lerntag_deck()
-    #         └─ _create_additional_decks()    [overridden in LernplanManagerDialog]
+    # create_lerntag_deck_wrapper() saves the config, then runs ONE CollectionOp
+    # (rebuild_lernplan_decks) which cleans up, creates the decks and merges all
+    # of it into a single undo step. UI feedback happens in the success callback.
     #
-    # LernplanManagerDialog overrides:
-    #   • _pre_create_cleanup()        -> remove_previous_lerntag_decks()
-    #   • save_config()                -> lernplan-specific config (due, previous, autocreate)
-    #   • _create_additional_decks()   -> create due/previous decks
-    #
-    # WHY THIS DESIGN:
-    #   - LerntagDeckCreatorDialog handles task coordination (progress popup, reset)
-    #   - LernplanManagerDialog handles lernplan-specific logic (what to create, what to clean)
-    #   - Minimal duplication: LernplanManagerDialog only implements the differences
+    # LernplanManagerDialog only differs in:
+    #   • _update_section()     -> lernplan-specific config (autocreate, weekdays, ...)
+    #   • _rebuild_kwargs()     -> prefix, cleanup, previous/due decks
 
     def create_lerntag_deck_wrapper(self):
-        self._pre_create_cleanup()
-        config_tuple = self.save_config()
-        lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter = config_tuple[:6]
-
-        def create_lerntag():
-            create_lerntag_deck(
-                lerntag,
-                highyield_stark, highyield_leicht, lowyield,
-                top100,
-                create_subchapter_decks=create_subchapter,
-                deck_name_prefix=self._get_deck_name_prefix(),
-            )
-
-        def on_done(_):
-            self._create_additional_decks(config_tuple)
-            mw.reset()
-
-        mw.taskman.with_progress(
-            create_lerntag,
-            on_done=on_done,
-            label="Lerntag-Karten werden gesammelt...",
-            immediate=True,
-        )
+        if not self.lerntag_combo.count():
+            showWarning("Keine Lerntage gefunden. Ist Ankizin korrekt installiert?")
+            return
+        settings = self.save_config(mark_today=True)
+        kwargs = self._rebuild_kwargs()
+        CollectionOp(
+            mw, lambda col: rebuild_lernplan_decks(col, settings, **kwargs)
+        ).success(report_result).with_progress(
+            "Lerntag-Karten werden gesammelt..."
+        ).run_in_background()
         self.accept()
 
-    def _get_deck_name_prefix(self):
-        # Hook for subclass to customize deck name prefix.
-        return "Lerntag "
-
-    def _pre_create_cleanup(self):
-        # Hook for subclass to clean up old decks before creation.
-        pass
-
-    def _create_additional_decks(self, config_tuple):
-        mw.reset()
+    def _rebuild_kwargs(self) -> dict:
+        # Hook for subclass: prefix, cleanup, previous, due, past_days
+        return {"prefix": "Lerntag "}
 
 class LernplanManagerDialog(LerntagDeckCreatorDialog):
     def __init__(self, parent):
@@ -547,62 +411,31 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         event.ignore()
         self.reject()
 
-    def save_config(self):
-        # Get config and read widget values once
-        conf = mw.addonManager.getConfig(ADDON_DIR_NAME) or {}
-        lernplan_conf = conf.setdefault("lernplan", {})
+    def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
+        update_past_days(section.get("lerntag"), settings.lerntag, conf)
+        super()._update_section(conf, section, settings, mark_today)
 
-        lerntag, highyield_stark, highyield_leicht, lowyield, top100 = self._read_widget_values()
+        section["autocreate"] = self.autocreate_button.isChecked()
+        section["autocreate_due"] = self.autocreate_due_button.isChecked()
+        section["autocreate_previous"] = self.autocreate_previous_button.isChecked()
+        section["autocreate_no_previous"] = self.autocreate_no_previous_button.isChecked()
+        section["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
+        # Only mark "today is handled" when decks were created (or on first activation),
+        # otherwise merely closing the dialog would skip today's automatic day change.
+        if mark_today or "last_updated" not in section:
+            today = effective_today(mw.col)
+            section["last_updated"] = today.isoformat()
+            section["last_due_updated"] = today.isoformat()
+            section["lernplan_started_on"] = today.weekday()
 
-        # Update past days
-        prev_lerntag = lernplan_conf.get("lerntag", "001")
-        _update_past_days(prev_lerntag, lerntag, conf)
-
-        # Write common config (same for LerntagDeckCreatorDialog and LernplanManagerDialog)
-        self._write_common_config(lernplan_conf, lerntag, highyield_stark, highyield_leicht, lowyield, top100)
-
-        # Read return flags
-        create_subchapter = self.create_subchapter_decks_button.isChecked()
-        create_due = self.autocreate_due_button.isChecked()
-        create_previous = self.autocreate_previous_button.isChecked()
-
-        # Write lernplan-specific fields
-        lernplan_conf["autocreate"] = self.autocreate_button.isChecked()
-        lernplan_conf["autocreate_due"] = create_due
-        lernplan_conf["autocreate_previous"] = create_previous
-        lernplan_conf["autocreate_no_previous"] = self.autocreate_no_previous_button.isChecked()
-        lernplan_conf["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
-        today = _get_effective_today()
-        lernplan_conf["last_updated"] = today.isoformat()
-        lernplan_conf["last_due_updated"] = today.isoformat()
-        lernplan_conf["lernplan_started_on"] = today.weekday()
-
-        # Write once
-        mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-
-        return lerntag, highyield_stark, highyield_leicht, lowyield, top100, create_subchapter, create_due, create_previous
-
-    def _pre_create_cleanup(self):
-        remove_previous_lerntag_decks()
-
-    def _get_deck_name_prefix(self):
-        return "!LERNTAG "
-
-    def _create_additional_decks(self, config_tuple):
-        (
-            lerntag,
-            highyield_stark, highyield_leicht, lowyield,
-            top100,
-            _, create_due_deck, create_previous,
-        ) = config_tuple
-        
-        if not create_due_deck and not create_previous:
-            return
-        
-        if create_due_deck:
-            create_lerntag_due_deck(lerntag, highyield_stark, highyield_leicht, lowyield, top100)
-        if create_previous:
-            create_previous_lerntag_decks(lerntag, highyield_stark, highyield_leicht, lowyield, top100)
+    def _rebuild_kwargs(self) -> dict:
+        return {
+            "prefix": LERNTAG_PREFIX,
+            "cleanup": True,
+            "previous": self.autocreate_previous_button.isChecked(),
+            "due": self.autocreate_due_button.isChecked(),
+            "past_days": _get_config().get("lernplan", {}).get("past_days", []),
+        }
 
     def _info_icon_label(self, tooltip: str) -> QLabel:
         dummy = QCheckBox()
@@ -656,7 +489,7 @@ class PastDaysDialog(QDialog):
 
         # Create checkboxes for each past day
         self.day_checkboxes = {}
-        lerntag_list = get_lerntag_list()
+        lerntag_list = get_lerntag_list(mw.col)
         lerntag_dict = {int(num): topic for num, topic in lerntag_list}
         row_texts = []
 
@@ -749,217 +582,6 @@ class PastDaysDialog(QDialog):
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
         self.accept()
-
-
-def remove_previous_lerntag_decks():
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    # match only main Lerntage
-    for deck in mw.col.decks.all_names_and_ids():
-        if (
-            deck.name.startswith("!LERNTAG ")
-            or deck.name.startswith("!FÄLLIGE KARTEN VERGANGENER LERNTAGE")
-        ) and col.decks.is_filtered(deck.id):
-            remove_filtered_deck(deck.id)
-
-
-def create_previous_lerntag_decks(
-    lerntag,
-    highyield_stark,
-    highyield_leicht,
-    lowyield,
-    top100=False,
-    create_subchapter_decks=False,
-):
-    conf = _get_config()
-    lernplan_conf = conf.get("lernplan", {})
-    past_days = lernplan_conf.get("past_days", [])
-
-    previous_days = [
-        i
-        for i in range(1, int(lerntag))
-        if i < len(past_days) and past_days[i]
-    ]
-
-    if not previous_days:
-        return
-
-    for i in reversed(previous_days):
-        create_lerntag_deck(
-            str(i).zfill(3),
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100,
-            create_subchapter_decks=create_subchapter_decks,
-            sup_deck_name="!VORHERIGE LERNTAGE",
-            silent=True,
-        )
-
-
-def create_lerntag_due_deck(
-    lerntag,
-    highyield_stark,
-    highyield_leicht,
-    lowyield,
-    top100=False,
-    silent=False,
-):
-    # Due cards only make sense if there is a past Lerntag
-    if int(lerntag) < 2:
-        return
-
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    # Build lerntage list from past_days array
-    conf = _get_config()
-    lernplan_conf = conf.get("lernplan", {})
-    past_days = lernplan_conf.get("past_days", [])
-
-    lerntage_list = []
-    for i in range(1, len(past_days)):
-        if past_days[i]:
-            lerntage_list.append(str(i).zfill(3))
-
-    if not lerntage_list:
-        # No past days to create deck for
-        return
-
-    lerntage = "|".join(lerntage_list)
-    tag_pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({lerntage})"
-    search = col.build_search_string(f'is:due "tag:re:{tag_pattern}"')
-    deck_name = "!FÄLLIGE KARTEN VERGANGENER LERNTAGE"
-
-    if top100:
-        top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
-        search += f' "tag:{top100_tag}"'
-
-    search += _build_yield_search(col, highyield_stark, highyield_leicht, lowyield)
-    search += " -is:suspended"
-    create_filtered_deck(deck_name, search, duedeck=True, unsuspend=False, silent=silent)
-
-
-def create_lerntag_deck(
-    lerntag,
-    highyield_stark,
-    highyield_leicht,
-    lowyield,
-    top100=False,
-    create_subchapter_decks=False,
-    deck_name_prefix: str = None,
-    sup_deck_name: str = None,
-    silent=False,
-):
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    subchapter_pairs = set()
-    errors = []
-    if create_subchapter_decks:
-        lerntag_zfill = str(lerntag).zfill(3)
-        pattern = re.compile(f"#Ankizin_[^:]+::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag_zfill}_(.+?)::([^:]+)$") # fmt: skip
-        for tag in col.tags.all():
-            match = pattern.match(tag)
-            if match:
-                subchapter_pairs.add((match.group(1), match.group(2)))
-
-    if not create_subchapter_decks:
-        error = _create_lerntag_filtered_deck(
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100=top100,
-            deck_name_prefix=deck_name_prefix,
-            sup_deck_name=sup_deck_name,
-            silent=silent,
-        )
-        if error:
-            errors.append(error)
-        return
-
-    for chapter, subchapter in sorted(subchapter_pairs):
-        error = _create_lerntag_filtered_deck(
-            lerntag,
-            highyield_stark,
-            highyield_leicht,
-            lowyield,
-            top100=top100,
-            deck_name_prefix=deck_name_prefix,
-            sup_deck_name=sup_deck_name,
-            chapter=chapter,
-            subchapter=subchapter,
-            silent=True,
-        )
-        if error:
-            errors.append(error)
-
-    if errors and not silent:
-        unique_errors = list(dict.fromkeys(errors))
-        showWarning("<br><br>".join(unique_errors))
-
-    return
-
-
-def _create_lerntag_filtered_deck(
-    lerntag,
-    highyield_stark,
-    highyield_leicht,
-    lowyield,
-    top100=False,
-    deck_name_prefix: str = None,
-    sup_deck_name: str = None,
-    chapter: str = None,
-    subchapter: str = None,
-    silent=False,
-):
-    col = mw.col
-    if col is None:
-        raise Exception("collection not available")
-
-    tag_pattern = f"#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_{lerntag}_"
-    if chapter:
-        tag_pattern += chapter
-        if subchapter:
-            tag_pattern += f"::{subchapter}"
-    tag_pattern += "*"
-
-    search = col.build_search_string(f'"tag:{tag_pattern}"')
-    deck_name = deck_name_prefix if deck_name_prefix else "!LERNTAG "
-    deck_name += f"{lerntag}"
-
-    if chapter:
-        deck_name += f" - {chapter.replace('_', ' ')}"
-    if sup_deck_name:
-        deck_name = f"{sup_deck_name}::{deck_name}"
-
-    if top100:
-        top100_tag = "#Ankizin_*::#M2_M3_Klinik::#AMBOSS::M2-TOP100-Themen"
-        search += f' "tag:{top100_tag}"'
-
-    search += _build_yield_search(col, highyield_stark, highyield_leicht, lowyield)
-
-    if top100:
-        deck_name += " - TOP-100"
-
-    if highyield_stark:
-        deck_name += (
-            " - high-yield (alle)"
-            if highyield_leicht
-            else " - high-yield (stark gelb)"
-        )
-    elif lowyield:
-        deck_name += " - inkl. low-yield"
-        
-    if subchapter:
-        deck_name += f"::{subchapter.replace('_', ' ')}"
-
-    create_filtered_deck(deck_name, search, top100=top100, silent=silent)
 
 
 def open_lernplan_manager(self):
