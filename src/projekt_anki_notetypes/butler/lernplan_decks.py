@@ -42,6 +42,26 @@ def get_lerntag_list(col: Collection) -> list[tuple[str, str]]:
     return sorted(unique.items(), key=lambda x: int(x[0]))
 
 
+def get_lerntag_order(col: Collection, lernplan_conf: dict) -> list[str]:
+    """Saved Lerntag order without vanished tags; new Lerntage are appended in numeric order."""
+    existing = [number for number, _ in get_lerntag_list(col)]
+    saved = [n for n in lernplan_conf.get("lerntag_order", []) if n in existing]
+    return saved + [n for n in existing if n not in saved]
+
+
+def is_past_day(past_days: list, idx: int) -> bool:
+    return idx < len(past_days) and past_days[idx]
+
+
+def next_lerntag(order: list[str], current: str, past_days: list) -> str | None:
+    """Next unfinished Lerntag after `current`; None if the plan is finished.
+
+    If `current` is not in the order anymore (tag vanished), start from the top.
+    """
+    start = order.index(current) + 1 if current in order else 0
+    return next((n for n in order[start:] if not is_past_day(past_days, int(n))), None)
+
+
 def set_past_day(past_days: list, idx: int, value: bool) -> None:
     """Set past_days[idx], growing the list if needed."""
     past_days.extend([False] * (idx + 1 - len(past_days)))

@@ -17,7 +17,8 @@ from .browser import filtered_deck_hk
 from .lernplan_decks import (
     LerntagSettings,
     effective_today,
-    get_lerntag_list,
+    get_lerntag_order,
+    next_lerntag,
     rebuild_lernplan_decks,
     update_past_days,
 )
@@ -81,18 +82,20 @@ def lernplan_auto_create():
     if not weekdays[today_weekday]:
         return  # Today is not a lernplan day
 
-    # Calculate and validate next lerntag
-    current_lerntag = int(lernplan_conf.get("lerntag", "001"))
-    next_lerntag = current_lerntag + 1
-    # Derive the last day dynamically instead of hardcoding 85 (AMBOSS-M2-100-Tage)
-    max_day = max((int(num) for num, _ in get_lerntag_list(mw.col)), default=85)
-    if next_lerntag > max_day:
+    # Calculate and validate next lerntag (in the user's order, skipping finished days)
+    current_lerntag = lernplan_conf.get("lerntag", "001")
+    new_lerntag = next_lerntag(
+        get_lerntag_order(mw.col, lernplan_conf),
+        current_lerntag,
+        lernplan_conf.get("past_days", []),
+    )
+    if new_lerntag is None:
         return  # Lernplan is finished
 
     # Record the day we are leaving in the history (past_days)
-    update_past_days(current_lerntag, next_lerntag, conf)
+    update_past_days(current_lerntag, new_lerntag, conf)
 
-    lernplan_conf["lerntag"] = str(next_lerntag).zfill(3)
+    lernplan_conf["lerntag"] = new_lerntag
     due = lernplan_conf.get("autocreate_due", False)
     today = effective_today(mw.col).isoformat()
     lernplan_conf["last_updated"] = today
