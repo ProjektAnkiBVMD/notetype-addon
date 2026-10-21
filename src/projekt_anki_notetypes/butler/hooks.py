@@ -47,6 +47,21 @@ def run_today_setup():
     return False
 
 
+def _rebuild_lernplan_decks(conf, **kwargs):
+    """Rebuild the decks for conf['lernplan'], then persist conf and refresh the UI."""
+    lernplan_conf = conf["lernplan"]
+    result = rebuild_lernplan_decks(
+        mw.col,
+        LerntagSettings.from_conf(lernplan_conf),
+        past_days=lernplan_conf.get("past_days", []),
+        **kwargs,
+    )
+    # only persist after the decks exist, so a crash retries on the next start
+    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+    report_result(result, silent=True)
+    mw.reset()
+
+
 def lernplan_auto_create():
     """Auto-create lernplan decks based on schedule and configuration"""
     # Get configuration
@@ -79,24 +94,17 @@ def lernplan_auto_create():
 
     lernplan_conf["lerntag"] = str(next_lerntag).zfill(3)
     due = lernplan_conf.get("autocreate_due", False)
-    result = rebuild_lernplan_decks(
-        mw.col,
-        LerntagSettings.from_conf(lernplan_conf),
-        cleanup=True,
-        previous=lernplan_conf.get("autocreate_previous", False),
-        due=due,
-        past_days=lernplan_conf.get("past_days", []),
-    )
-
-    # Only persist the new day once the decks exist, so a crash retries on the next start
     today = effective_today(mw.col).isoformat()
     lernplan_conf["last_updated"] = today
     if due:
         lernplan_conf["last_due_updated"] = today
-    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
 
-    report_result(result, silent=True)
-    mw.reset()
+    _rebuild_lernplan_decks(
+        conf,
+        cleanup=True,
+        previous=lernplan_conf.get("autocreate_previous", False),
+        due=due,
+    )
 
 
 def lernplan_due_deck_auto_create():
@@ -124,19 +132,8 @@ def lernplan_due_deck_auto_create():
             return  # Already updated today
 
     # Current lerntag stays as it is, only the due deck is refreshed
-    result = rebuild_lernplan_decks(
-        mw.col,
-        LerntagSettings.from_conf(lernplan_conf),
-        current=False,
-        due=True,
-        past_days=lernplan_conf.get("past_days", []),
-    )
-
     lernplan_conf["last_due_updated"] = today.isoformat()
-    mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-
-    report_result(result, silent=True)
-    mw.reset()
+    _rebuild_lernplan_decks(conf, current=False, due=True)
 
 
 def try_rebuild_filtered_deck(filtered_deck: FilteredDeckForUpdate):
