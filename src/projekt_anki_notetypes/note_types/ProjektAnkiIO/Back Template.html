@@ -1,4 +1,4 @@
-<!-- version 6136d80 -->
+<!-- version e167e06 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -1029,6 +1029,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           var cnv = document.getElementById("image-occlusion-highlight-canvas")
         }
 
+        // match the native canvas size, otherwise overlay and hit-test misalign
+        var nativeCnv = document.getElementById("image-occlusion-canvas")
+        cnv.width = nativeCnv.width
+        cnv.height = nativeCnv.height
+
         var ctx = cnv.getContext("2d")
         ctx.clearRect(0, 0, cnv.width, cnv.height);
 
@@ -1036,27 +1041,26 @@ replace the arrows/dashes from the statement below with double curly brackets-->
         if (occ == null) { return }
         makeOcclusionsClickable(initial = false);
 
-        let left = parseFloat(occ.getAttribute("data-left"))
-        let top = parseFloat(occ.getAttribute("data-top"))
-        let width = parseFloat(occ.getAttribute("data-width"))
-        let height = parseFloat(occ.getAttribute("data-height"))
-
-        ctx.fillStyle = getComputedStyle(cnv).getPropertyValue("--highlight-rect-bg");
-        ctx.fillRect(left * cnv.width, top * cnv.height, width * cnv.width, height * cnv.height)
+        // native look (active mask border color), just thicker to mark the next mask
+        ctx.strokeStyle = getComputedStyle(cnv).getPropertyValue("--active-rect-border");
+        // 4 CSS px, independent of how much the canvas is stretched
+        ctx.lineWidth = 4 * cnv.width / (cnv.clientWidth || cnv.width)
+        ctx.stroke(rectPath(occ, cnv))
       }
 
-      const rectToPoints = function (occ, cnv) {
-        let left = parseFloat(occ.getAttribute("data-left")) * cnv.width;
-        let top = parseFloat(occ.getAttribute("data-top")) * cnv.height;
-        let width = parseFloat(occ.getAttribute("data-width")) * cnv.width;
-        let height = parseFloat(occ.getAttribute("data-height")) * cnv.height;
+      // rect as Path2D, rotated (degrees) around its top-left corner like native drawShape
+      const rectPath = function (occ, cnv) {
+        const num = (name) => parseFloat(occ.getAttribute(name)) || 0
+        const left = num("data-left") * cnv.width
+        const top = num("data-top") * cnv.height
+        const width = num("data-width") * cnv.width
+        const height = num("data-height") * cnv.height
 
-        return [
-          [left, top],
-          [left + width, top],
-          [left + width, top + height],
-          [left, top + height],
-        ]
+        const rect = new Path2D()
+        rect.rect(left, top, width, height)
+        const path = new Path2D()
+        path.addPath(rect, new DOMMatrix().translate(left, top).rotate(num("data-angle")).translate(-left, -top))
+        return path
       }
 
       // function from @markE on stackoverflow (https://stackoverflow.com/a/22318584)
@@ -1064,19 +1068,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       const makeOcclusionsClickable = function (initial) {
         var cnv = document.getElementById("image-occlusion-highlight-canvas")
         var ctx = cnv.getContext("2d")
-        let occlusions = document.querySelectorAll(".cloze[data-shape='rect']")
-
-        // function to draw (but not fill/stroke) a shape
-        // (needed because isPointInPath only tests the last defined path)
-        function define(occ, cnv, ctx) {
-          var path = new Path2D();
-          var points = rectToPoints(occ, cnv)
-          ctx.beginPath();
-          ctx.moveTo(points[0][0], points[0][1]);
-          for (var i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1]);
-          }
-        }
 
         // called when user clicks the mouse
         function handleClick(e) {
@@ -1091,12 +1082,12 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           var x = (e.clientX - rect.left) * scaleX;
           var y = (e.clientY - rect.top) * scaleY;
 
-          // check if the click was inside any of the occlusions
+          // check if the click was inside any of the still hidden occlusions
+          let occlusions = document.querySelectorAll(".cloze[data-shape='rect']")
           for (var i = 0; i < occlusions.length; i++) {
             var occ = occlusions[i];
-            define(occ, cnv, ctx);
             console.log(occ)
-            if (ctx.isPointInPath(x, y)) {
+            if (ctx.isPointInPath(rectPath(occ, cnv), x, y)) {
               revealCloze(occ);
               return;
             }
@@ -1108,6 +1099,11 @@ replace the arrows/dashes from the statement below with double curly brackets-->
 
         if (initial) {
           cnv.addEventListener("click", handleClick);
+          // native setup() sizes its canvas after the image loads and on window resize; follow it
+          new MutationObserver(() => markNextOcclusion(false)).observe(
+            document.getElementById("image-occlusion-canvas"),
+            { attributes: true, attributeFilter: ["width", "height"] }
+          );
         }
       }
 
@@ -1167,7 +1163,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           document.documentElement.removeAttribute("onclick")
           document.getElementById("button-reveal-next").style.display = "none";
         }
-        if (!nextHidden) {
+        if (nextHidden.length == 0) {
           return
         }
         revealCloze(nextHidden[0])

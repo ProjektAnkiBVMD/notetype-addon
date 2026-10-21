@@ -1,4 +1,4 @@
-<!-- version 6136d80 -->
+<!-- version e167e06 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -1293,7 +1293,7 @@ replace the arrows/dashes from the statement below with double curly brackets-->
           document.documentElement.removeAttribute("onclick")
           document.getElementById("button-reveal-next").style.display = "none";
         }
-        if (!nextHidden) {
+        if (nextHidden.length == 0) {
           return
         }
         const cloze = clozeElOfClozeHidden(nextHidden[0]);
