@@ -55,13 +55,7 @@ class LerntagDeckCreatorDialog(QDialog):
         main_layout.addWidget(self._scroll_area)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
-        self._fitted = False
-
-    def showEvent(self, event) -> None:
-        super().showEvent(event)
-        if not self._fitted:  # child widgets only report their real size once shown
-            self._fitted = True
-            QTimer.singleShot(0, self._fit_to_content)
+        self._fit_to_content()
 
     def _fit_to_content(self) -> None:
         """Size the window to its content, but never taller than the screen."""
@@ -406,7 +400,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         layout.addLayout(button_layout)
 
     def _setup_main_content(self, right_layout: QVBoxLayout) -> None:
-        self.settings_frame = QFrame()
+        self.settings_frame = QFrame(self._content)  # parented now, or its size is unknown before show
         self.settings_frame.setVisible(self._autocreate)
         settings_layout = QVBoxLayout()
         settings_layout.setContentsMargins(0, 0, 0, 0)
