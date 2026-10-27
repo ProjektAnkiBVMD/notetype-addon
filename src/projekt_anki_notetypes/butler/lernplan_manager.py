@@ -40,6 +40,7 @@ def _get_config() -> dict:
 
 
 class LerntagDeckCreatorDialog(QDialog):
+    mark_done_cb: QCheckBox | None = None  # only the manual deck creator has it
     include_unfinished_cb: QCheckBox | None = None  # only the Lernplan-Manager has it
 
     def __init__(self, parent, conf_key: str = "man_lernplan"):
@@ -215,6 +216,11 @@ class LerntagDeckCreatorDialog(QDialog):
             self._normyield,
             self._lowyield,
         )
+        self.mark_done_cb = QCheckBox("Lerntag als gelernt markieren (z. B. für eine Klausur vorgelernt)")
+        self.mark_done_cb.setChecked(True)
+        self.mark_done_cb.setToolTip("Der automatische Lernplan-Manager überspringt diesen Lerntag dann.")
+        right_layout.addWidget(self.mark_done_cb)
+
     def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
         buttons_layout = QHBoxLayout()
         confirm_btn = QPushButton("Stapel erstellen!")
@@ -268,6 +274,10 @@ class LerntagDeckCreatorDialog(QDialog):
             showWarning("Keine Lerntage gefunden. Ist Ankizin korrekt installiert?")
             return
         settings = self.save_config(mark_today=True)
+        if self.mark_done_cb and self.mark_done_cb.isChecked():
+            conf = _get_config()
+            set_past_day(conf.setdefault("lernplan", {}).setdefault("past_days", []), int(settings.lerntag), True)
+            mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
         kwargs = self._rebuild_kwargs()
         CollectionOp(
             mw, lambda col: rebuild_lernplan_decks(col, settings, **kwargs)
