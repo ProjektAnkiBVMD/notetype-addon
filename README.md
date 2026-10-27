@@ -27,10 +27,13 @@ Add-On-Kreuzkompatibilitäten sind nicht garantiert!
 
 ## Updates
 
-- 2026-10-21: LERNPLAN-MANAGER-UPDATE — eigene Reihenfolge für die Lerntage
+- 2026-11-01: NOVEMBER-UPDATE — eigene Reihenfolge der Lerntage und neue Features im Lernplan-Manager
   - Lerntage per Drag & Drop umsortieren und als gelernt abhaken; der automatische Tageswechsel folgt deiner Reihenfolge
   - `!VORHERIGE LERNTAGE` und `!FÄLLIGE KARTEN VERGANGENER LERNTAGE` enthalten alle gelernten Tage, egal in welcher Reihenfolge
   - Zuverlässigere Stapel-Erstellung (ein Rückgängig-Schritt, keine leeren Reststapel)
+  - Übernommen aus "Ankizin-Lernplan Plus" von Lukas Schaffner:
+    - Einzelne Zusatz- und Pausentage per Kalender; der Lernplan als Kalender-Datei (`.ics`) exportierbar
+    - Fortschritt & Prognose: alle Lerntage als farbige Kacheln in deiner Reihenfolge, dahinter die Kreuzen-Tage (AMBOSS-Examen) in Violett; voraussichtliches Plan-Ende und Puffer bis zum M2-Termin (M2 F27 oder M2 H27), auch auf der Anki-Startseite
 - <strong>2026-05-24: UMZUG des Ankizin-Decks zu [AnkiCollab](https://www.ankicollab.com/notes/decke-schaufeln-reiche)</strong>
 - 2025-06-24: LERNPLAN-MANAGER-UPDATE — mehr und spezifischere Optionen für Ankizin V5
 - 2025-05-01: LERNPLAN-MANAGER-UPDATE — Pünktlich zum Tag der Arbeit wird die Anki-Arbeit noch weniger
