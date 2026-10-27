@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 from anki.utils import ids2str
 from aqt import mw
-from aqt.qt import QUrl, QAction, QMessageBox, QPixmap
+from aqt.qt import QUrl, QAction, QPixmap
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
 from aqt.gui_hooks import (
@@ -17,7 +17,7 @@ from aqt.gui_hooks import (
     editor_will_show_context_menu,
 )
 from aqt.qt import QMenu, QPushButton, qtmajor, qconnect
-from aqt.utils import askUserDialog, tooltip, openLink
+from aqt.utils import askUserDialog, tooltip
 
 from bs4 import BeautifulSoup
 
@@ -114,7 +114,7 @@ def maybe_show_notetypes_update_notice():
         pass
 
 
-# NOTE: has to be updated manually each time there is a new major version
+# NOTE: the text has to be updated manually each time ADDON_VERSION is bumped for a noteworthy release
 def maybe_show_deck_update_notice():
     # can happen when restoring data from backup
     if not mw.col:
@@ -125,40 +125,28 @@ def maybe_show_deck_update_notice():
         return
 
     update_dialog = askUserDialog(
-        title="Ankizin Deck-Update",
-        text="<h1>Ankizin ist <a href='https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/'>UMGEZOGEN zu AnkiCollab</a>!</h1>"
-        "AnkiCollab ist ein von dem Ankizin Projekt selbst entwickeltes Add-on, "
-        "welches euch ermöglicht, immer auf dem neusten Stand von Ankizin zu sein "
-        "sowie Änderungsvorschläge einzureichen.<br>"
-        "AnkiCollab ist keine Pflicht, ersetzt aber das warten auf neue Ankizin-Versionen.<br>"
-        "Wer das nicht möchte, kann wie gewohnt mit Ankizin V5 weiterlernen 😄"
-        "<h2>Was sollst du nun tun?</h2>"
-        "<h3>Einmal auf AnkiCollab umziehen!</h3>"
+        title="Ankizin Notiztypen-Update",
+        text="<h1>NOVEMBER-UPDATE: Neues im Lernplan-Manager</h1>"
         "<ul>"
-        "<li>Für AnkiHub-User: siehe Link unten</li>"
-        "<li>Für Nicht-AnkiHub-User: gleicher Link unten</li>"
+        "<li><b>Eigene Reihenfolge:</b> Lerntage per Drag &amp; Drop umsortieren und als gelernt abhaken</li>"
+        "<li><b>Fortschritt &amp; Prognose:</b> alle Lerntage als farbige Kacheln, voraussichtliches Plan-Ende und Puffer bis zum M2-Termin (M2 F27 oder M2 H27)</li>"
+        "<li><b>Zusatz- und Pausentage</b> per Kalender; der Lernplan lässt sich als Kalender-Datei (.ics) exportieren</li>"
         "</ul>"
-        "<h2>Warum das Ganze?</h2>"
-        "AnkiCollab ist völlig unabhängig, selbst programmiert und komplett kostenlos (rein durch Spenden und Preisgelder getragen).<br><br>"
-        "<small><i>Da das eine enorm wichtige Änderung ist (und jetzt auch alle stets up-to-date bleiben können), kommt dieses Pop-Up so lange, bist du sagst 'Ich bin schon up-to-date'.</i></small>",
+        "Fortschritt, Prognose, Kalender und .ics stammen aus <i>Ankizin-Lernplan Plus</i> von Lukas Schaffner.<br><br>"
+        "Zur Erinnerung: Ankizin ist <a href='https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/'>zu AnkiCollab umgezogen</a>.<br><br>"
+        "<small><i>Dieses Pop-Up kommt einmal pro Version, bis du auf 'Verstanden' klickst.</i></small>",
         buttons=reversed(
             [
-                "Ich bin schon up-to-date",
+                "Verstanden",
                 "Erinnere mich später!",
             ]
         ),
     )
     update_dialog.setIconPixmap(QPixmap("icons:ankizin.png"))
     update_dialog.setMaximumHeight(500)
-    # update_dialog.setIconSize(QSize(62, 62))
-    link_button = update_dialog.addButton(
-        "Umzug → AnkiCollab!", QMessageBox.ButtonRole.RejectRole
-    )
-    link_button_url = "https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/"
-    link_button.clicked.connect(lambda _, url=link_button_url: openLink(url))
 
     answer = update_dialog.run()
-    if answer == "Ich bin schon up-to-date":
+    if answer == "Verstanden":
         conf["latest_notified_deck_version"] = ADDON_VERSION
         mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
     else:
