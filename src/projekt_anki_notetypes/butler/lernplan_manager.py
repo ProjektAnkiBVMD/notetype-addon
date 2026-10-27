@@ -138,7 +138,7 @@ class LerntagDeckCreatorDialog(QDialog):
         create_subchapter_decks: bool,
         include_unfinished: bool | None = None,
     ) -> None:
-        extra_choices_group_box = QGroupBox()
+        extra_choices_group_box = QGroupBox("Auswahl:")
         extra_choices_buttons_layout = QVBoxLayout()
         extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
@@ -173,7 +173,7 @@ class LerntagDeckCreatorDialog(QDialog):
         normyield: bool,
         lowyield: bool,
     ) -> None:
-        yield_group_box = QGroupBox()
+        yield_group_box = QGroupBox("Karten:")
         yield_buttons_layout = QVBoxLayout()
         yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
 
@@ -396,25 +396,28 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
     def _mark_extra_days(self) -> None:
         self._calendar.setDateTextFormat(QDate(), QTextCharFormat())  # reset all marks
+        palette = self._calendar.palette()  # skipped days follow the light/dark theme
         for days, background, foreground, tip in (
-            (self._extra_days, "#43a047", "#ffffff", "Zusätzlicher Lerntag"),
-            (self._skip_days, "#bdbdbd", "#757575", "Ausgesetzt"),
+            (self._extra_days, QColor("#43a047"), QColor("#ffffff"), "Zusätzlicher Lerntag"),
+            (
+                self._skip_days,
+                palette.color(QPalette.ColorRole.Mid),
+                palette.color(QPalette.ColorRole.PlaceholderText),
+                "Ausgesetzt",
+            ),
         ):
             fmt = QTextCharFormat()
-            fmt.setBackground(QColor(background))
-            fmt.setForeground(QColor(foreground))
+            fmt.setBackground(background)
+            fmt.setForeground(foreground)
             fmt.setFontStrikeOut(days is self._skip_days)
             fmt.setToolTip(tip)
             for day in days:
                 self._calendar.setDateTextFormat(QDate(day), fmt)
 
     def _setup_lerntag_list(self, outer_layout: QVBoxLayout) -> None:
-        group = QGroupBox()
+        group = QGroupBox("Lerntage:")
         layout = QVBoxLayout(group)
-        layout.addWidget(QLabel(
-            "<b>Lerntage:</b> Reihenfolge per Drag & Drop ändern, "
-            "Haken = bereits gelernt, ▶ = aktueller Lerntag"
-        ))
+        layout.addWidget(QLabel("Reihenfolge per Drag & Drop ändern, Haken = bereits gelernt, ▶ = aktueller Lerntag"))
         self.lerntag_list = QListWidget()
         self.lerntag_list.setFont(self._fixed_font())
         self.lerntag_list.setMinimumHeight(220)
@@ -660,7 +663,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._setup_extra_choices(settings_layout, self._top100, self._create_subchapter_decks, self._include_unfinished)
         self._setup_yield_group(settings_layout, self._highyield_stark, self._highyield_leicht, self._normyield, self._lowyield)
 
-        autocreate_group_box = QGroupBox()
+        autocreate_group_box = QGroupBox("Vergangene Lerntage:")
         autocreate_options_layout = QVBoxLayout()
         autocreate_options_layout.setContentsMargins(5, 5, 5, 5)
 
