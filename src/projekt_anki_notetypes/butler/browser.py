@@ -4,11 +4,6 @@ from aqt.qt import *
 from anki.collection import SearchNode
 from aqt.browser import SidebarItem, SidebarTreeView, SidebarItemType
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from aqt.browser import SidebarTreeView  # type: ignore
-
 from .lernplan_decks import create_filtered_decks
 from .utils import report_result
 

@@ -2,14 +2,9 @@ import aqt
 from aqt import mw
 from aqt.qt import *
 from aqt.qt import qconnect
-from aqt.utils import showInfo, askUser, openLink
+from aqt.utils import showInfo, openLink
 from aqt.gui_hooks import profile_did_open
-import anki
-import anki.hooks
-import re
-import webbrowser
 import json
-from aqt.utils import showInfo
 import aqt.forms.preferences
 
 from .ankizin_helper import AnkizinHelper
@@ -114,7 +109,7 @@ def setup_rebuild_settings_toggle():
                 return
 
             config = get_rebuild_config()
-            auto_rebuild_checkbox = QCheckBox(f"Auswahlstapel automatisch organisieren (Ankizin)") # fmt: skip
+            auto_rebuild_checkbox = QCheckBox("Auswahlstapel automatisch organisieren (Ankizin)") # fmt: skip
             auto_rebuild_checkbox.setChecked(config.get("autoRebuildDecksOnStartup", True)) # fmt: skip
             auto_rebuild_checkbox.setToolTip(
                 "Wenn du diese Option aktivierst, werden Auswahlstapel "

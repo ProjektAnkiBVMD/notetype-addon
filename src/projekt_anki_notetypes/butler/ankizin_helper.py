@@ -2,9 +2,6 @@ from aqt import mw
 from aqt.qt import *
 from aqt.utils import showInfo
 import re
-import anki
-from aqt.utils import showInfo, showWarning
-from aqt import mw
 from aqt.operations import CollectionOp
 from anki.collection import OpChanges
 from ..utils import create_backup
@@ -179,7 +176,7 @@ class AnkizinHelper:
     def suspend_cards_from_deck(self, cids=[], all=False):
         # Get the deck object
         if all:
-            sus_cids = mw.col.find_cards(f"tag:#Ankizin_v*")
+            sus_cids = mw.col.find_cards("tag:#Ankizin_v*")
             mw.col.sched.suspend_cards(sus_cids)
             return
 
