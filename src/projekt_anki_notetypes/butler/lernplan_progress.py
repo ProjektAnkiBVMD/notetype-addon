@@ -6,6 +6,7 @@ import datetime
 import html
 
 from aqt import mw
+from aqt.qt import QColor, QEvent, QPainter, QRect, QToolTip, QWidget, Qt
 
 from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
@@ -28,13 +29,63 @@ GRID_LEGEND = "🟩 gelernt&nbsp;&nbsp;🟧 aktueller Lerntag&nbsp;&nbsp;⬛ off
 _DONE, _CURRENT, _OPEN, _KREUZEN = "#43a047", "#fb8c00", "#616161", "#7e57c2"
 
 
+def _tile_color(number: str, finished: set[str], current: str, kreuzen: set[str]) -> str:
+    return _CURRENT if number == current else _DONE if number in finished else _KREUZEN if number in kreuzen else _OPEN
+
+
+class ProgressTiles(QWidget):
+    """The Lerntage as colored tiles, 20 per row, with the topic as tooltip."""
+
+    SIZE, GAP = 26, 3
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._tiles: list[tuple[str, str, str]] = []  # (color, label, tooltip)
+
+    def set_tiles(
+        self, order: list[str], finished: set[str], current: str, topics: dict[str, str], kreuzen: set[str]
+    ) -> None:
+        self._tiles = [
+            (_tile_color(n, finished, current, kreuzen), f"{int(n):02d}", f"{n} - {topics.get(n, '').replace('_', ' ')}") for n in order
+        ]
+        step = self.SIZE + self.GAP
+        rows = -(-len(order) // GRID_COLUMNS)
+        self.setFixedSize(min(len(order), GRID_COLUMNS) * step - self.GAP, max(rows * step - self.GAP, 0))
+        self.update()
+
+    def _rect(self, index: int) -> QRect:
+        step = self.SIZE + self.GAP
+        return QRect(index % GRID_COLUMNS * step, index // GRID_COLUMNS * step, self.SIZE, self.SIZE)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        for index, (color, label, _tip) in enumerate(self._tiles):
+            rect = self._rect(index)
+            painter.setBrush(QColor(color))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(rect, 4, 4)
+            painter.setPen(QColor("#ffffff"))
+            painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, label)
+
+    def event(self, event) -> bool:
+        if event.type() == QEvent.Type.ToolTip:
+            tip = next((tip for i, (_c, _l, tip) in enumerate(self._tiles) if self._rect(i).contains(event.pos())), None)
+            if tip:
+                QToolTip.showText(event.globalPos(), tip, self)
+            else:
+                QToolTip.hideText()
+            return True
+        return super().event(event)
+
+
 def progress_grid_html(
     order: list[str], finished: set[str], current: str, topics: dict[str, str], kreuzen: set[str] = frozenset()
 ) -> str:
     """One colored cell per Lerntag in the user's order: current, finished, open or a Kreuzen-Tag."""
     cells = []
     for number in order:
-        color = _CURRENT if number == current else _DONE if number in finished else _KREUZEN if number in kreuzen else _OPEN
+        color = _tile_color(number, finished, current, kreuzen)
         cells.append(
             f'<td bgcolor="{color}" align="center" width="24" title="{number} - {html.escape(topics.get(number, ""))}">'
             f'<font color="#ffffff">{int(number):02d}</font></td>'

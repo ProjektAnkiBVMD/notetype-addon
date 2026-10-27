@@ -4,7 +4,7 @@ import os
 from aqt import mw
 from aqt.operations import CollectionOp
 from aqt.qt import *
-from aqt.utils import askUser, showWarning
+from aqt.utils import askUser, disable_help_button, showWarning
 
 from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
@@ -23,7 +23,7 @@ from .lernplan_decks import (
     update_past_days,
 )
 from .lernplan_calendar import build_ics
-from .lernplan_progress import GRID_LEGEND, progress_grid_html, summary_lines
+from .lernplan_progress import GRID_LEGEND, ProgressTiles, summary_lines
 from .lernplan_schedule import (
     DEFAULT_WOCHENTAGE,
     M2_TERMINE,
@@ -46,6 +46,7 @@ class LerntagDeckCreatorDialog(QDialog):
 
     def __init__(self, parent, conf_key: str = "man_lernplan"):
         super().__init__(parent)
+        disable_help_button(self)
         self._conf_key = conf_key
         self.setWindowTitle("Lerntag-Auswahlstapel erstellen")
 
@@ -290,14 +291,14 @@ class LerntagDeckCreatorDialog(QDialog):
         return {"prefix": "Lerntag "}
 
 class LernplanManagerDialog(LerntagDeckCreatorDialog):
-    _grid_label: QLabel | None = None  # the progress group is created after the Lerntag list, which already updates it
+    _tiles: ProgressTiles | None = None  # the progress group is created after the Lerntag list, which already updates it
 
     def __init__(self, parent):
         super().__init__(parent, conf_key="lernplan")
         # the platform's highlighted (on macOS blue) main button, instead of whichever button has the focus
         for button in self.findChildren(QPushButton):
             button.setAutoDefault(False)
-        self.confirm_button.setDefault(True)
+        self._sync_buttons(self._autocreate)
 
     def _load_config(self) -> None:
         super()._load_config()
@@ -449,14 +450,14 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         """Fortschritt & Prognose: the Lerntage in their current order, the projected end and the M2 buffer."""
         group = QGroupBox("Fortschritt && Prognose:")
         group_layout = QVBoxLayout()
-        self._grid_label = QLabel()
-        self._grid_label.setTextFormat(Qt.TextFormat.RichText)
-        group_layout.addWidget(self._grid_label)
+        self._tiles = ProgressTiles()
+        group_layout.addWidget(self._tiles, alignment=Qt.AlignmentFlag.AlignLeft)
         group_layout.addWidget(QLabel(f"<small>{GRID_LEGEND}</small>"))
         self._progress_label = QLabel()
         group_layout.addWidget(self._progress_label)
 
-        kreuzen_layout = QHBoxLayout()
+        form = QFormLayout()
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
         self._kreuzen_spin = QSpinBox()
         self._kreuzen_spin.setRange(0, 30)
         self._kreuzen_spin.setValue(len(self._kreuzen))
@@ -467,12 +468,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             "wenn du die Kreuzen-Tage nicht mitplanen möchtest."
         )
         self._kreuzen_spin.valueChanged.connect(self._sync_kreuzen_rows)
-        kreuzen_layout.addWidget(QLabel("Kreuzen-Tage nach dem letzten Lerntag:"))
-        kreuzen_layout.addWidget(self._kreuzen_spin)
-        kreuzen_layout.addStretch()
-        group_layout.addLayout(kreuzen_layout)
+        form.addRow("Kreuzen-Tage nach dem letzten Lerntag:", self._kreuzen_spin)
 
-        m2_layout = QHBoxLayout()
         self._m2_dates = list(M2_TERMINE.values())
         self._m2_combo = QComboBox()
         self._m2_combo.addItems(["Kein M2-Termin", *M2_TERMINE])
@@ -481,10 +478,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._m2_combo.currentIndexChanged.connect(self._update_progress_view)
         for button in self.weekday_buttons:
             button.toggled.connect(self._update_progress_view)
-        m2_layout.addWidget(QLabel("M2-Prüfungstermin:"))
-        m2_layout.addWidget(self._m2_combo)
-        m2_layout.addStretch()
-        group_layout.addLayout(m2_layout)
+        form.addRow("M2-Prüfungstermin:", self._m2_combo)
+        group_layout.addLayout(form)
 
         export_button = QPushButton("📅 Lernplan als Kalender exportieren (.ics)")
         export_button.setToolTip("Exportiert alle offenen Lerntage als ganztägige Termine, z. B. für den iCloud-Kalender.")
@@ -540,14 +535,14 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
     def _update_progress_view(self, *_) -> None:
-        if self._grid_label is None:
+        if self._tiles is None:
             return  # the list is filled before the progress group exists
         rows = self._lerntag_rows()
         order = [number for number, _ in rows]
         finished = {number for number, done in rows if done}
         schedule = self._compute_schedule(rows)
         m2 = self._m2_selected()
-        self._grid_label.setText(progress_grid_html(order, finished, self._current, self._topics, set(self._kreuzen)))
+        self._tiles.set_tiles(order, finished, self._current, self._topics, set(self._kreuzen))
         finish = schedule[-1][1] if schedule else None
         self._progress_label.setText("<br>".join(summary_lines(len(finished), len(order), finish, m2)))
 
@@ -702,39 +697,31 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
         self._setup_progress(settings_layout)
-
-        buttons_layout = QHBoxLayout()
-
-        self.confirm_button = QPushButton("Speichern und loslernen!")
-        self.confirm_button.setFixedWidth(200)
-        self.confirm_button.clicked.connect(self.create_lerntag_deck_wrapper)
-        buttons_layout.addWidget(self.confirm_button)
-
-        buttons_layout.addSpacing(10)
-
-        self.deactivate_button = QPushButton("Lernplan-Manager deaktivieren")
-        self.deactivate_button.setFixedWidth(240)
-        self.deactivate_button.setVisible(self._autocreate)
-        self.deactivate_button.clicked.connect(self.deactivate_lernplan_manager)
-        buttons_layout.addWidget(self.deactivate_button)
-
-        buttons_layout.addStretch()
-
-        settings_layout.addLayout(buttons_layout)
         self.settings_frame.setLayout(settings_layout)
         right_layout.addWidget(self.settings_frame)
 
     def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
-        self.save_button = QPushButton("Speichern")
-        self.save_button.setFixedWidth(120)
-        self.save_button.setVisible(not self._autocreate)
+        box = QDialogButtonBox()
+        role = QDialogButtonBox.ButtonRole
+        self.confirm_button = box.addButton("Speichern und loslernen!", role.AcceptRole)
+        self.confirm_button.clicked.connect(self.create_lerntag_deck_wrapper)
+        self.save_button = box.addButton("Speichern", role.AcceptRole)
         self.save_button.clicked.connect(self.save_and_close)
-        right_layout.addWidget(self.save_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        self.deactivate_button = box.addButton("Lernplan-Manager deaktivieren", role.DestructiveRole)
+        self.deactivate_button.clicked.connect(self.deactivate_lernplan_manager)
+        right_layout.addWidget(box)
+        self._sync_buttons(self._autocreate)
+
+    def _sync_buttons(self, active: bool) -> None:
+        """Show the buttons that fit the state and highlight the main one."""
+        self.confirm_button.setVisible(active)
+        self.deactivate_button.setVisible(active)
+        self.save_button.setVisible(not active)
+        (self.confirm_button if active else self.save_button).setDefault(True)
 
     def toggle_settings(self, checked):
         self.settings_frame.setVisible(checked)
-        self.save_button.setVisible(not checked)
-        self.deactivate_button.setVisible(checked)
+        self._sync_buttons(checked)
         self._fit_to_content()
 
     def save_and_close(self):
