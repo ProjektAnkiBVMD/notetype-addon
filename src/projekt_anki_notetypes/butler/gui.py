@@ -1,28 +1,23 @@
-from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo, askUser, disable_help_button
-import anki.hooks
-import re
-import webbrowser
-import anki
-from aqt.utils import showInfo
-from aqt import mw
+from aqt.utils import disable_help_button
 
 
-class FirstSetupConfigDialog(QDialog):
+class _HelperDialog(QDialog):
+    """Logo, explanation, checkboxes and one confirm button; subclasses add the checkboxes."""
+
+    title = ""
+    info = ""
+
     def __init__(self, parent, helper):
         super().__init__(parent)
         disable_help_button(self)
         self.helper = helper
-        self.setWindowTitle("Ankizin Installations-Konfiguration")
+        self.setWindowTitle(self.title)
 
         main_layout = QHBoxLayout(self)
-
-        # Logo
         logo_label = QLabel()
-        logo_pixmap = QPixmap("icons:ankizin.png")
         logo_label.setPixmap(
-            logo_pixmap.scaled(
+            QPixmap("icons:ankizin.png").scaled(
                 100,
                 100,
                 Qt.AspectRatioMode.KeepAspectRatio,
@@ -31,33 +26,15 @@ class FirstSetupConfigDialog(QDialog):
         )
         main_layout.addWidget(logo_label)
 
-        # Right side layout
         right_layout = QVBoxLayout()
-
-        # Explanatory text
-        info_label = QLabel(
-            "Neu bei Ankizin? Herzlich Willkommen!<br>"
-            "Aller Anfang ist schwer. Um dein Leben etwas leichter zu machen, kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
-        )
+        info_label = QLabel(self.info)
         info_label.setWordWrap(True)
         right_layout.addWidget(info_label)
-
-        # Checkboxes
-        self.delete_cb = QCheckBox("Zum Löschen markierte Karten entfernen")
-        self.delete_cb.setChecked(self.helper.delete_outdated_cards)
-        right_layout.addWidget(self.delete_cb)
-
-        self.suspend_all_cb = QCheckBox("Alle Karten aussetzen")
-        self.suspend_all_cb.setChecked(self.helper.suspend_all_cards)
-        right_layout.addWidget(self.suspend_all_cb)
-
-        self.deck_cb = QCheckBox(
-            "Empfohlene Einstellungen übernehmen (sinnvoll, wenn du neu bei Anki bist!)"
+        self.delete_cb = self._checkbox(
+            right_layout, "Zum Löschen markierte Karten entfernen", helper.delete_outdated_cards
         )
-        self.deck_cb.setChecked(self.helper.update_deck_config)
-        right_layout.addWidget(self.deck_cb)
+        self._add_checkboxes(right_layout)
 
-        # Confirm button
         buttons = QDialogButtonBox()
         confirm_btn = buttons.addButton("Loslegen!", QDialogButtonBox.ButtonRole.AcceptRole)
         confirm_btn.setDefault(True)
@@ -65,78 +42,60 @@ class FirstSetupConfigDialog(QDialog):
         right_layout.addWidget(buttons)
 
         main_layout.addLayout(right_layout)
-
         self.setWindowIcon(QIcon("icons:ankizin.png"))
+
+    @staticmethod
+    def _checkbox(layout: QVBoxLayout, text: str, checked: bool) -> QCheckBox:
+        checkbox = QCheckBox(text)
+        checkbox.setChecked(checked)
+        layout.addWidget(checkbox)
+        return checkbox
+
+    def _add_checkboxes(self, layout: QVBoxLayout) -> None:
+        raise NotImplementedError
 
     def confirm(self):
         self.helper.set_delete_outdated_cards(self.delete_cb.isChecked())
+        self._save()
+        self.accept()
+
+    def _save(self) -> None:
+        raise NotImplementedError
+
+    def closeEvent(self, event):
+        event.ignore()
+        self.reject()
+
+
+class FirstSetupConfigDialog(_HelperDialog):
+    title = "Ankizin Installations-Konfiguration"
+    info = (
+        "Neu bei Ankizin? Herzlich Willkommen!<br>"
+        "Aller Anfang ist schwer. Um dein Leben etwas leichter zu machen, kannst du hier ein paar Einstellungen automatisch vornehmen lassen."
+    )
+
+    def _add_checkboxes(self, layout):
+        self.suspend_all_cb = self._checkbox(layout, "Alle Karten aussetzen", self.helper.suspend_all_cards)
+        self.deck_cb = self._checkbox(
+            layout,
+            "Empfohlene Einstellungen übernehmen (sinnvoll, wenn du neu bei Anki bist!)",
+            self.helper.update_deck_config,
+        )
+
+    def _save(self):
         self.helper.set_update_deck_config(self.deck_cb.isChecked())
         self.helper.set_suspend_all_cards(self.suspend_all_cb.isChecked())
-        self.accept()
-
-    def closeEvent(self, event):
-        event.ignore()
-        self.reject()
 
 
-class UpdateConfigDialog(QDialog):
-    def __init__(self, parent, helper):
-        super().__init__(parent)
-        disable_help_button(self)
-        self.helper = helper
-        self.setWindowTitle("Ankizin Update-Konfiguration")
+class UpdateConfigDialog(_HelperDialog):
+    title = "Ankizin Update-Konfiguration"
+    info = (
+        "Frisch eine neue Version von Ankizin heruntergeladen?<br>"
+        "Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
+    )
 
-        main_layout = QHBoxLayout(self)
+    def _add_checkboxes(self, layout):
+        self.suspend_new_cb = self._checkbox(layout, "Neue Karten aussetzen", self.helper.suspend_new_cards)
 
-        # Logo
-        logo_label = QLabel()
-        logo_pixmap = QPixmap("icons:ankizin.png")
-        logo_label.setPixmap(
-            logo_pixmap.scaled(
-                100,
-                100,
-                Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation,
-            )
-        )
-        main_layout.addWidget(logo_label)
-
-        # Right side layout
-        right_layout = QVBoxLayout()
-
-        # Explanatory text
-        info_label = QLabel(
-            "Frisch eine neue Version von Ankizin heruntergeladen?<br>"
-            "Hier kannst du einige Aufräumarbeiten automatisch erledigen lassen."
-        )
-        info_label.setWordWrap(True)
-        right_layout.addWidget(info_label)
-
-        # Checkboxes
-        self.delete_cb = QCheckBox("Zum Löschen markierte Karten entfernen")
-        self.delete_cb.setChecked(self.helper.delete_outdated_cards)
-        right_layout.addWidget(self.delete_cb)
-
-        self.suspend_new_cb = QCheckBox("Neue Karten aussetzen")
-        self.suspend_new_cb.setChecked(self.helper.suspend_new_cards)
-        right_layout.addWidget(self.suspend_new_cb)
-
-        # Confirm button
-        buttons = QDialogButtonBox()
-        confirm_btn = buttons.addButton("Loslegen!", QDialogButtonBox.ButtonRole.AcceptRole)
-        confirm_btn.setDefault(True)
-        confirm_btn.clicked.connect(self.confirm)
-        right_layout.addWidget(buttons)
-
-        main_layout.addLayout(right_layout)
-
-        self.setWindowIcon(QIcon("icons:ankizin.png"))
-
-    def confirm(self):
-        self.helper.set_delete_outdated_cards(self.delete_cb.isChecked())
+    def _save(self):
         self.helper.set_suspend_new_cards(self.suspend_new_cb.isChecked())
-        self.accept()
-
-    def closeEvent(self, event):
-        event.ignore()
-        self.reject()
