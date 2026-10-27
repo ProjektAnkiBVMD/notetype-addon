@@ -8,7 +8,14 @@ import html
 from aqt import mw
 
 from ..constants import ADDON_DIR_NAME
-from .lernplan_decks import effective_today, get_lerntag_list, get_lerntag_order, is_past_day
+from .lernplan_decks import (
+    effective_today,
+    get_kreuzen_tage,
+    get_lerntag_order,
+    get_lerntag_topics,
+    is_past_day,
+    kreuzen_count,
+)
 from .lernplan_schedule import (
     DEFAULT_WOCHENTAGE,
     compute_schedule,
@@ -19,14 +26,16 @@ from .lernplan_schedule import (
 )
 
 GRID_COLUMNS = 20
-_DONE, _CURRENT, _OPEN = "#43a047", "#fb8c00", "#616161"
+_DONE, _CURRENT, _OPEN, _KREUZEN = "#43a047", "#fb8c00", "#616161", "#7e57c2"
 
 
-def progress_grid_html(order: list[str], finished: set[str], current: str, topics: dict[str, str]) -> str:
-    """One colored cell per Lerntag in the user's order: finished, current or open."""
+def progress_grid_html(
+    order: list[str], finished: set[str], current: str, topics: dict[str, str], kreuzen: set[str] = frozenset()
+) -> str:
+    """One colored cell per Lerntag in the user's order: current, finished, open or a Kreuzen-Tag."""
     cells = []
     for number in order:
-        color = _CURRENT if number == current else _DONE if number in finished else _OPEN
+        color = _CURRENT if number == current else _DONE if number in finished else _KREUZEN if number in kreuzen else _OPEN
         cells.append(
             f'<td bgcolor="{color}" align="center" width="24" title="{number} - {html.escape(topics.get(number, ""))}">'
             f'<font color="#ffffff">{int(number):02d}</font></td>'
@@ -54,7 +63,8 @@ def deck_browser_progress_hk(deck_browser, content) -> None:
         order = get_lerntag_order(mw.col, conf)
         if not conf.get("autocreate") or not conf.get("lerntag") or not order:
             return
-        topics = {n: t.replace("_", " ") for n, t in get_lerntag_list(mw.col)}
+        count = kreuzen_count(conf)
+        topics = get_lerntag_topics(mw.col, count)
         current = str(conf["lerntag"]).zfill(3)
         finished = {n for n in order if is_past_day(conf.get("past_days", []), int(n))}
 
@@ -83,7 +93,7 @@ def deck_browser_progress_hk(deck_browser, content) -> None:
             '<div style="background:rgba(128,128,128,.25);border-radius:6px;height:12px;margin:8px 0;overflow:hidden;">'
             f'<div style="width:{pct}%;background:{"#e53935" if behind else _DONE};height:100%;"></div></div>'
             f'<div style="opacity:.85;">{info}</div>'
-            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics)}</div></div>'
+            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics, set(get_kreuzen_tage(mw.col, count)))}</div></div>'
         )
     except Exception as e:
         # the home screen must never break because of the progress display

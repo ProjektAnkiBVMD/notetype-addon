@@ -10,13 +10,17 @@ from aqt.operations.scheduling import (
     rebuild_filtered_deck
 )
 from aqt.reviewer import RefreshNeeded
+from aqt.utils import tooltip
 
 from ..constants import ADDON_DIR_NAME
 from .browser import filtered_deck_hk
 from .lernplan_decks import (
     LerntagSettings,
     effective_today,
+    get_kreuzen_tage,
     get_lerntag_order,
+    get_lerntag_topics,
+    kreuzen_count,
     next_lerntag,
     rebuild_lernplan_decks,
     update_past_days,
@@ -97,6 +101,10 @@ def lernplan_auto_create():
     )
     if new_lerntag is None:
         return  # Lernplan is finished
+
+    count = kreuzen_count(lernplan_conf)
+    if new_lerntag in get_kreuzen_tage(mw.col, count):
+        tooltip(f"📚 Heute kreuzen: {get_lerntag_topics(mw.col, count)[new_lerntag]}", period=8000)
 
     # Record the day we are leaving in the history (past_days)
     update_past_days(current_lerntag, new_lerntag, conf)

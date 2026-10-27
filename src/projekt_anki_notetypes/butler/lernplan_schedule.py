@@ -15,6 +15,18 @@ M2_TERMINE = {
 }
 
 
+KREUZEN_TAGE = 15  # AMBOSS: 2 Wiederholungsexamen (6 Tage) + 3 Generalproben (9 Tage)
+
+
+def kreuzen_label(index: int) -> str:
+    """Description of the index-th (1-based) Kreuzen-Tag after the last Lerntag."""
+    if index <= 6:
+        return f"{(index - 1) // 3 + 1}. Wiederholungsexamen (Tag {(index - 1) % 3 + 1}/3)"
+    if index <= 15:
+        return f"{(index - 7) // 3 + 1}. Generalprobe (Tag {(index - 7) % 3 + 1}/3)"
+    return f"Zusätzlicher Examenstag {index - 15} (z. B. Altexamen)"
+
+
 def parse_date(value) -> datetime.date | None:
     """ISO date string (as stored in the config) as a date; None if missing or invalid."""
     try:

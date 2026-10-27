@@ -12,9 +12,12 @@ from .lernplan_decks import (
     OBSOLETE_CONFIG_KEYS,
     LerntagSettings,
     effective_today,
+    get_kreuzen_tage,
     get_lerntag_list,
     get_lerntag_order,
+    get_lerntag_topics,
     is_past_day,
+    kreuzen_count,
     rebuild_lernplan_decks,
     set_past_day,
     update_past_days,
@@ -303,7 +306,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._autocreate_previous = lernplan_conf.get("autocreate_previous", False)
         self._wochentage = lernplan_conf.get("wochentage", DEFAULT_WOCHENTAGE)
         self._order = get_lerntag_order(mw.col, lernplan_conf)
-        self._topics = {n: t.replace("_", " ") for n, t in get_lerntag_list(mw.col)}
+        self._kreuzen = get_kreuzen_tage(mw.col, kreuzen_count(lernplan_conf))
+        self._topics = get_lerntag_topics(mw.col, kreuzen_count(lernplan_conf))
         self._past_days = lernplan_conf.get("past_days", [])
         self._extra_days = parse_dates(lernplan_conf.get("extra_days"))
         self._skip_days = parse_dates(lernplan_conf.get("skip_days"))
@@ -447,9 +451,25 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._grid_label = QLabel()
         self._grid_label.setTextFormat(Qt.TextFormat.RichText)
         group_layout.addWidget(self._grid_label)
-        group_layout.addWidget(QLabel("<small>Grün = gelernt, Orange = aktueller Lerntag, Grau = offen</small>"))
+        group_layout.addWidget(QLabel("<small>Grün = gelernt, Orange = aktueller Lerntag, Grau = offen, Violett = Kreuzen-Tag (AMBOSS-Examen)</small>"))
         self._progress_label = QLabel()
         group_layout.addWidget(self._progress_label)
+
+        kreuzen_layout = QHBoxLayout()
+        self._kreuzen_spin = QSpinBox()
+        self._kreuzen_spin.setRange(0, 30)
+        self._kreuzen_spin.setValue(len(self._kreuzen))
+        self._kreuzen_spin.setSuffix(" Tage")
+        self._kreuzen_spin.setToolTip(
+            "AMBOSS-Plan: 2 Wiederholungsexamen (6 Tage) + 3 Generalproben (9 Tage) = 15 Tage.<br>"
+            "Erhöhe den Wert, wenn du zusätzlich Altexamen kreuzen willst, oder setze ihn auf 0,<br>"
+            "wenn du die Kreuzen-Tage nicht mitplanen möchtest."
+        )
+        self._kreuzen_spin.valueChanged.connect(self._sync_kreuzen_rows)
+        kreuzen_layout.addWidget(QLabel("Kreuzen-Tage nach dem letzten Lerntag:"))
+        kreuzen_layout.addWidget(self._kreuzen_spin)
+        kreuzen_layout.addStretch()
+        group_layout.addLayout(kreuzen_layout)
 
         m2_layout = QHBoxLayout()
         self._m2_checkbox = QCheckBox("M2-Prüfungstermin:")
@@ -483,6 +503,16 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         group.setLayout(group_layout)
         layout.addWidget(group)
         self._update_progress_view()
+
+    def _sync_kreuzen_rows(self, count: int) -> None:
+        """Add or remove Kreuzen-Tage at the end of the list, keeping the rest of the order."""
+        rows = self._lerntag_rows()
+        wanted = get_kreuzen_tage(mw.col, count)
+        numbers = [n for n, _ in rows if n not in self._kreuzen or n in wanted]
+        numbers += [n for n in wanted if n not in numbers]
+        self._kreuzen = wanted
+        self._topics = get_lerntag_topics(mw.col, count)
+        self._fill_lerntag_list(numbers, {n for n, done in rows if done})
 
     def _m2_selected(self) -> datetime.date | None:
         if not self._m2_checkbox.isChecked():
@@ -532,7 +562,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         finished = {number for number, done in rows if done}
         schedule = self._compute_schedule(rows)
         m2 = self._m2_selected()
-        self._grid_label.setText(progress_grid_html(order, finished, self._current, self._topics))
+        self._grid_label.setText(progress_grid_html(order, finished, self._current, self._topics, set(self._kreuzen)))
         self._progress_label.setText(
             "<br>".join(summary_lines(len(finished), len(order), finish_date(schedule, effective_today(mw.col)), m2))
         )
@@ -754,6 +784,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         section["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
         section["extra_days"] = sorted(d.isoformat() for d in self._extra_days)
         section["skip_days"] = sorted(d.isoformat() for d in self._skip_days)
+        section["kreuzen_tage"] = self._kreuzen_spin.value()
         m2 = self._m2_selected()
         section["m2_date"] = m2.isoformat() if m2 else None
         # Only mark "today is handled" when decks were created (or on first activation),

@@ -38,6 +38,13 @@ class TestLernplanSchedule(unittest.TestCase):
         self.assertIsNone(sched.compute_schedule(["1", "2", "3", "4"], MON, none, days))
         self.assertIsNone(sched.compute_schedule(["1"], MON, none))
 
+    def test_kreuzen_labels_follow_the_amboss_plan(self):
+        self.assertEqual(sched.kreuzen_label(1), "1. Wiederholungsexamen (Tag 1/3)")
+        self.assertEqual(sched.kreuzen_label(6), "2. Wiederholungsexamen (Tag 3/3)")
+        self.assertEqual(sched.kreuzen_label(7), "1. Generalprobe (Tag 1/3)")
+        self.assertEqual(sched.kreuzen_label(15), "3. Generalprobe (Tag 3/3)")
+        self.assertEqual(sched.kreuzen_label(16), "Zusätzlicher Examenstag 1 (z. B. Altexamen)")
+
     def test_finish_date(self):
         self.assertEqual(sched.finish_date([], MON), MON)
         self.assertIsNone(sched.finish_date(None, MON))
