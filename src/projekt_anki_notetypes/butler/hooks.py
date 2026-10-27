@@ -24,6 +24,8 @@ from .lernplan_decks import (
 from .utils import report_result
 from .menu import get_rebuild_config
 
+SYNC_TIMEOUT_MS = 120_000  # fallback if no sync attempt concludes
+
 
 def run_today_setup():
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
@@ -260,6 +262,8 @@ def profile_loaded_hk():
                 pass  # Hook wasn't registered, ignore
 
         gui_hooks.sync_did_finish.append(on_sync_finished_hk)
+        # no sync attempt concluded (e.g. pending login): run anyway; reload_data is a no-op when it already ran today
+        mw.progress.timer(SYNC_TIMEOUT_MS, on_sync_finished_hk, repeat=False, parent=mw)
     else:
         # No auto-sync or not configured for sync, run immediately
         reload_data_hk()
