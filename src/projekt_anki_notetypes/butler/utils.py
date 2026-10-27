@@ -29,9 +29,8 @@ def fix_integrity() -> None:
 def async_general_housekeeping() -> None:
     def on_success(report: EmptyCardsReport) -> None:
         if report.notes:
-            print(f"Deleting {report.notes} notes")
-            dialog = EmptyCardsDialog(aqt.mw, report)
-            dialog._delete_cards(keep_notes=True)
+            # show the empty cards instead of deleting them silently
+            EmptyCardsDialog(aqt.mw, report).show()
 
         # Cheesy af, ich will das async machen aber erst nachdem sicher alle Karten gelöscht wurden. Also spawn ich hier noch ne op
         print("Fixing collection integrity")
