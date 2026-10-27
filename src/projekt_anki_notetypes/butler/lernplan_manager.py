@@ -28,6 +28,8 @@ def _get_config() -> dict:
 
 
 class LerntagDeckCreatorDialog(QDialog):
+    include_unfinished_cb: QCheckBox | None = None  # only the Lernplan-Manager has it
+
     def __init__(self, parent, conf_key: str = "man_lernplan"):
         super().__init__(parent)
         self._conf_key = conf_key
@@ -76,6 +78,7 @@ class LerntagDeckCreatorDialog(QDialog):
         self._top100 = settings.top100
         self._normyield = not (settings.highyield_stark or settings.lowyield)
         self._create_subchapter_decks = settings.subchapters
+        self._include_unfinished = settings.include_unfinished
 
     def _setup_logo(self, main_layout: QHBoxLayout) -> None:
         logo_label = QLabel()
@@ -118,6 +121,7 @@ class LerntagDeckCreatorDialog(QDialog):
         layout: QLayout,
         top100: bool,
         create_subchapter_decks: bool,
+        include_unfinished: bool | None = None,
     ) -> None:
         extra_choices_group_box = QGroupBox()
         extra_choices_buttons_layout = QVBoxLayout()
@@ -132,6 +136,16 @@ class LerntagDeckCreatorDialog(QDialog):
         self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
         self.create_subchapter_decks_button.setToolTip("Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages.")
         extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
+
+        if include_unfinished is not None:  # only the Lernplan-Manager builds the due deck
+            self.include_unfinished_cb = QCheckBox("Nicht geschaffte Karten vergangener Lerntage weiter einplanen")
+            self.include_unfinished_cb.setChecked(include_unfinished)
+            self.include_unfinished_cb.setToolTip(
+                "Neue Karten und Karten im Lernen, die du an ihrem Lerntag nicht geschafft hast, landen im Stapel "
+                "<code>!FÄLLIGE&nbsp;KARTEN&nbsp;VERGANGENER&nbsp;LERNTAGE</code>.<br>"
+                "Ohne diese Option enthält er nur fällige Karten und die übrigen fallen aus dem Lernplan."
+            )
+            extra_choices_buttons_layout.addWidget(self.include_unfinished_cb)
 
         extra_choices_group_box.setLayout(extra_choices_buttons_layout)
         layout.addWidget(extra_choices_group_box)
@@ -189,7 +203,6 @@ class LerntagDeckCreatorDialog(QDialog):
             self._normyield,
             self._lowyield,
         )
-
     def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
         buttons_layout = QHBoxLayout()
         confirm_btn = QPushButton("Stapel erstellen!")
@@ -212,6 +225,7 @@ class LerntagDeckCreatorDialog(QDialog):
             lowyield=self.lowyield_button.isChecked(),
             top100=self.top100_button.isChecked(),
             subchapters=self.create_subchapter_decks_button.isChecked(),
+            include_unfinished=self.include_unfinished_cb is None or self.include_unfinished_cb.isChecked(),
         )
 
     def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
@@ -435,7 +449,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
         settings_layout.addSpacing(10)
         self._setup_lerntag_list(settings_layout)
-        self._setup_extra_choices(settings_layout, self._top100, self._create_subchapter_decks)
+        self._setup_extra_choices(settings_layout, self._top100, self._create_subchapter_decks, self._include_unfinished)
         self._setup_yield_group(settings_layout, self._highyield_stark, self._highyield_leicht, self._normyield, self._lowyield)
 
         autocreate_group_box = QGroupBox()

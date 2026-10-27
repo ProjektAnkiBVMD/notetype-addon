@@ -86,6 +86,7 @@ class LerntagSettings:
     lowyield: bool = False
     top100: bool = False
     subchapters: bool = False
+    include_unfinished: bool = True  # due deck also takes new/learning cards of finished days
 
     @classmethod
     def from_conf(cls, conf: dict) -> "LerntagSettings":
@@ -98,6 +99,7 @@ class LerntagSettings:
             lowyield=conf.get("lowyield", False),
             top100=conf.get("top100", False),
             subchapters=conf.get("create_subchapter_decks", False),
+            include_unfinished=conf.get("include_unfinished", True),
         )
 
     def to_conf(self) -> dict:
@@ -108,6 +110,7 @@ class LerntagSettings:
             "lowyield": self.lowyield,
             "top100": self.top100,
             "create_subchapter_decks": self.subchapters,
+            "include_unfinished": self.include_unfinished,
         }
 
 
@@ -214,7 +217,10 @@ def _due_spec(col: Collection, s: LerntagSettings, finished: list[int]) -> tuple
         return None  # due cards only make sense if there is a past Lerntag
     days = "|".join(str(i).zfill(3) for i in finished)
     pattern = f"#Ankizin_(.*?)::#M2_M3_Klinik::#AMBOSS::M2-100-Tage-Lernplan::M2_Lerntag_({days})"
-    search = col.build_search_string(f'is:due "tag:re:{pattern}"') + _filters(s) + " -is:suspended"
+    # Without include_unfinished, cards left new/learning on their day fall out of the plan once that
+    # day's deck is removed. Suspended cards (days never started) stay excluded either way.
+    state = "(is:due OR is:learn OR is:new)" if s.include_unfinished else "is:due"
+    search = col.build_search_string(f'{state} "tag:re:{pattern}"') + _filters(s) + " -is:suspended"
     return (DUE_DECK_NAME, search, False)
 
 
