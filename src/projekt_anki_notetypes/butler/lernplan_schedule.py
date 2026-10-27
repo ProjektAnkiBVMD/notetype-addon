@@ -8,6 +8,12 @@ import datetime
 
 DEFAULT_WOCHENTAGE = [True] * 5 + [False] * 2
 
+# first exam day of the M2 dates a Lernplan can be planned towards
+M2_TERMINE = {
+    "M2 F27 (13.–15. April 2027)": datetime.date(2027, 4, 13),
+    "M2 H27 (12.–14. Oktober 2027)": datetime.date(2027, 10, 12),
+}
+
 
 def parse_date(value) -> datetime.date | None:
     """ISO date string (as stored in the config) as a date; None if missing or invalid."""

@@ -21,6 +21,7 @@ from .lernplan_decks import (
     rebuild_lernplan_decks,
     update_past_days,
 )
+from .lernplan_progress import deck_browser_progress_hk
 from .lernplan_schedule import is_lernplan_day, parse_dates
 from .utils import report_result
 from .menu import get_rebuild_config
@@ -348,6 +349,7 @@ def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
     gui_hooks.browser_will_search.append(browser_search_hk)
+    gui_hooks.deck_browser_will_render_content.append(deck_browser_progress_hk)
     # for Anki 25.06 and later, we can use the new hook
     if hasattr(gui_hooks, "day_did_change"):
         gui_hooks.day_did_change.append(reload_data_hk)

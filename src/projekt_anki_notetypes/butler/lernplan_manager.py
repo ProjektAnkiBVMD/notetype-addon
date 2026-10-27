@@ -1,9 +1,10 @@
 import datetime
+import os
 
 from aqt import mw
 from aqt.operations import CollectionOp
 from aqt.qt import *
-from aqt.utils import showWarning
+from aqt.utils import askUser, showWarning
 
 from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
@@ -18,7 +19,17 @@ from .lernplan_decks import (
     set_past_day,
     update_past_days,
 )
-from .lernplan_schedule import DEFAULT_WOCHENTAGE, parse_dates
+from .lernplan_calendar import build_ics
+from .lernplan_progress import progress_grid_html, summary_lines
+from .lernplan_schedule import (
+    DEFAULT_WOCHENTAGE,
+    M2_TERMINE,
+    compute_schedule,
+    finish_date,
+    parse_date,
+    parse_dates,
+    remaining_lerntage,
+)
 from .utils import check_ankizin_installation, report_result
 
 
@@ -268,6 +279,8 @@ class LerntagDeckCreatorDialog(QDialog):
         return {"prefix": "Lerntag "}
 
 class LernplanManagerDialog(LerntagDeckCreatorDialog):
+    _grid_label: QLabel | None = None  # the progress group is created after the Lerntag list, which already updates it
+
     def __init__(self, parent):
         super().__init__(parent, conf_key="lernplan")
 
@@ -284,6 +297,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._past_days = lernplan_conf.get("past_days", [])
         self._extra_days = parse_dates(lernplan_conf.get("extra_days"))
         self._skip_days = parse_dates(lernplan_conf.get("skip_days"))
+        self._m2_date = parse_date(lernplan_conf.get("m2_date"))
 
     def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
         self.setWindowTitle("Lernplan-Manager (automatisch)")
@@ -363,6 +377,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         else:
             self._extra_days.add(day)
         self._mark_extra_days()
+        self._update_progress_view()
 
     def _mark_extra_days(self) -> None:
         self._calendar.setDateTextFormat(QDate(), QTextCharFormat())  # reset all marks
@@ -378,7 +393,9 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             for day in days:
                 self._calendar.setDateTextFormat(QDate(day), fmt)
 
-    def _setup_lerntag_list(self, layout: QVBoxLayout) -> None:
+    def _setup_lerntag_list(self, outer_layout: QVBoxLayout) -> None:
+        group = QGroupBox()
+        layout = QVBoxLayout(group)
         layout.addWidget(QLabel(
             "<b>Lerntage:</b> Reihenfolge per Drag & Drop ändern, "
             "Haken = bereits gelernt, ▶ = aktueller Lerntag"
@@ -411,6 +428,104 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         buttons_layout.addWidget(reset_btn)
         buttons_layout.addStretch()
         layout.addLayout(buttons_layout)
+        outer_layout.addWidget(group)
+
+    def _setup_progress(self, layout: QVBoxLayout) -> None:
+        """Fortschritt & Prognose: the Lerntage in their current order, the projected end and the M2 buffer."""
+        group = QGroupBox("Fortschritt && Prognose:")
+        group_layout = QVBoxLayout()
+        self._grid_label = QLabel()
+        self._grid_label.setTextFormat(Qt.TextFormat.RichText)
+        group_layout.addWidget(self._grid_label)
+        group_layout.addWidget(QLabel("<small>Grün = gelernt, Orange = aktueller Lerntag, Grau = offen</small>"))
+        self._progress_label = QLabel()
+        group_layout.addWidget(self._progress_label)
+
+        m2_layout = QHBoxLayout()
+        self._m2_checkbox = QCheckBox("M2-Prüfungstermin:")
+        self._m2_checkbox.setToolTip("Zeigt, wie viele Puffertage zwischen dem letzten Lerntag und dem M2 bleiben.")
+        self._m2_dates = list(M2_TERMINE.values())
+        self._m2_combo = QComboBox()
+        self._m2_combo.addItems([*M2_TERMINE, "Eigenes Datum"])
+        self._m2_edit = QDateEdit()
+        self._m2_edit.setCalendarPopup(True)
+        self._m2_edit.setDisplayFormat("dd.MM.yyyy")
+        self._m2_edit.setDate(QDate(self._m2_date or datetime.date.today() + datetime.timedelta(days=90)))
+        self._m2_combo.setCurrentIndex(self._m2_dates.index(self._m2_date) if self._m2_date in self._m2_dates else len(self._m2_dates))
+        self._m2_checkbox.setChecked(self._m2_date is not None)
+        self._update_m2_controls()
+        self._m2_checkbox.toggled.connect(self._update_m2_controls)
+        self._m2_combo.currentIndexChanged.connect(self._update_m2_controls)
+        self._m2_edit.dateChanged.connect(self._update_progress_view)
+        for button in self.weekday_buttons:
+            button.toggled.connect(self._update_progress_view)
+        m2_layout.addWidget(self._m2_checkbox)
+        m2_layout.addWidget(self._m2_combo)
+        m2_layout.addWidget(self._m2_edit)
+        m2_layout.addStretch()
+        group_layout.addLayout(m2_layout)
+
+        export_button = QPushButton("📅 Lernplan als Kalender exportieren (.ics)")
+        export_button.setToolTip("Exportiert alle offenen Lerntage als ganztägige Termine, z. B. für den iCloud-Kalender.")
+        export_button.clicked.connect(self._export_ics)
+        group_layout.addWidget(export_button, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        group.setLayout(group_layout)
+        layout.addWidget(group)
+        self._update_progress_view()
+
+    def _m2_selected(self) -> datetime.date | None:
+        if not self._m2_checkbox.isChecked():
+            return None
+        index = self._m2_combo.currentIndex()
+        return self._m2_dates[index] if index < len(self._m2_dates) else self._m2_edit.date().toPyDate()
+
+    def _update_m2_controls(self, *_) -> None:
+        self._m2_combo.setEnabled(self._m2_checkbox.isChecked())
+        self._m2_edit.setEnabled(self._m2_checkbox.isChecked() and self._m2_combo.currentIndex() == len(self._m2_dates))
+        self._update_progress_view()
+
+    def _compute_schedule(self, rows: list[tuple[str, bool]]) -> list[tuple[str, datetime.date]] | None:
+        remaining = remaining_lerntage([n for n, _ in rows], self._current, {n for n, done in rows if done})
+        return compute_schedule(
+            remaining,
+            effective_today(mw.col),
+            [b.isChecked() for b in self.weekday_buttons],
+            self._extra_days,
+            self._skip_days,
+        )
+
+    def _export_ics(self) -> None:
+        schedule = self._compute_schedule(self._lerntag_rows())
+        if not schedule:
+            showWarning("Es gibt keine offenen Lerntage zu exportieren (oder keinen ausgewählten Wochentag).")
+            return
+        m2 = self._m2_selected()
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Lernplan als Kalender exportieren", os.path.expanduser("~/Lernplan.ics"), "Kalender-Datei (*.ics)"
+        )
+        if not path:
+            return
+        with open(path, "w", encoding="utf-8", newline="") as file:
+            file.write(build_ics(schedule, self._topics, m2))
+        if askUser(
+            f"{len(schedule)} Lerntage wurden exportiert. In der Kalender-App öffnen?<br><br>"
+            "<i>Bei einem erneuten Export in denselben Kalender werden die Termine aktualisiert, nicht doppelt angelegt.</i>"
+        ):
+            QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+
+    def _update_progress_view(self, *_) -> None:
+        if self._grid_label is None:
+            return  # the list is filled before the progress group exists
+        rows = self._lerntag_rows()
+        order = [number for number, _ in rows]
+        finished = {number for number, done in rows if done}
+        schedule = self._compute_schedule(rows)
+        m2 = self._m2_selected()
+        self._grid_label.setText(progress_grid_html(order, finished, self._current, self._topics))
+        self._progress_label.setText(
+            "<br>".join(summary_lines(len(finished), len(order), finish_date(schedule, effective_today(mw.col)), m2))
+        )
 
     def _lerntag_rows(self) -> list[tuple[str, bool]]:
         """(number, done) in the order currently shown."""
@@ -441,6 +556,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             row_widget.label.setFont(font)
             row_widget.label.setText(f"{'▶' if is_current else ' '} {number} - {self._topics[number]}")
             item.setSizeHint(row_widget.sizeHint())
+        self._update_progress_view()
 
     def _create_lerntag_row(self, number: str) -> QWidget:
         # The label ignores mouse presses, so they reach the list and start a drag.
@@ -449,13 +565,18 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         layout.setContentsMargins(4, 0, 0, 0)
         row_widget.checkbox = QCheckBox()
         row_widget.checkbox.setChecked(number in self._done)
-        row_widget.checkbox.toggled.connect(
-            lambda checked: self._done.add(number) if checked else self._done.discard(number)
-        )
+        row_widget.checkbox.toggled.connect(lambda checked: self._set_done(number, checked))
         row_widget.label = QLabel()
         layout.addWidget(row_widget.checkbox)
         layout.addWidget(row_widget.label, 1)
         return row_widget
+
+    def _set_done(self, number: str, done: bool) -> None:
+        if done:
+            self._done.add(number)
+        else:
+            self._done.discard(number)
+        self._update_progress_view()
 
     def _move_selected_lerntage(self, delta: int) -> None:
         """Move the selected rows one step up (-1) or down (+1)."""
@@ -556,6 +677,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
         autocreate_group_box.setLayout(autocreate_options_layout)
         settings_layout.addWidget(autocreate_group_box)
+        self._setup_progress(settings_layout)
 
         buttons_layout = QHBoxLayout()
 
@@ -622,6 +744,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         section["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
         section["extra_days"] = sorted(d.isoformat() for d in self._extra_days)
         section["skip_days"] = sorted(d.isoformat() for d in self._skip_days)
+        m2 = self._m2_selected()
+        section["m2_date"] = m2.isoformat() if m2 else None
         # Only mark "today is handled" when decks were created (or on first activation),
         # otherwise merely closing the dialog would skip today's automatic day change.
         if mark_today or "last_updated" not in section:
