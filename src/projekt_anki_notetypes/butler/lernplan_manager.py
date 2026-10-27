@@ -23,15 +23,13 @@ from .lernplan_decks import (
     update_past_days,
 )
 from .lernplan_calendar import build_ics
-from .lernplan_progress import progress_grid_html, summary_lines
+from .lernplan_progress import GRID_LEGEND, progress_grid_html, summary_lines
 from .lernplan_schedule import (
     DEFAULT_WOCHENTAGE,
     M2_TERMINE,
     compute_schedule,
-    finish_date,
     parse_date,
     parse_dates,
-    remaining_lerntage,
 )
 from .utils import check_ankizin_installation, report_result
 
@@ -296,6 +294,10 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
     def __init__(self, parent):
         super().__init__(parent, conf_key="lernplan")
+        # the platform's highlighted (on macOS blue) main button, instead of whichever button has the focus
+        for button in self.findChildren(QPushButton):
+            button.setAutoDefault(False)
+        self.confirm_button.setDefault(True)
 
     def _load_config(self) -> None:
         super()._load_config()
@@ -421,9 +423,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.lerntag_list.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.lerntag_list.setDefaultDropAction(Qt.DropAction.MoveAction)
         # Qt drops item widgets when a row is moved, so recreate the missing ones afterwards
-        self.lerntag_list.model().rowsInserted.connect(
-            lambda *_: QTimer.singleShot(0, self._refresh_lerntag_rows)
-        )
+        for signal in (self.lerntag_list.model().rowsInserted, self.lerntag_list.model().rowsMoved):
+            signal.connect(lambda *_: QTimer.singleShot(0, self._refresh_lerntag_rows))
         self._current = self._lerntag
         done = {n for n in self._order if is_past_day(self._past_days, int(n))}
         self._fill_lerntag_list(self._order, done)
@@ -433,7 +434,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         current_btn = QPushButton("Als aktuellen Lerntag setzen")
         current_btn.clicked.connect(self._set_current_lerntag)
         buttons_layout.addWidget(current_btn)
-        for text, delta in (("Nach oben", -1), ("Nach unten", 1)):
+        for text, delta in (("↑ Nach oben", -1), ("↓ Nach unten", 1)):
             move_btn = QPushButton(text)
             move_btn.clicked.connect(lambda _, delta=delta: self._move_selected_lerntage(delta))
             buttons_layout.addWidget(move_btn)
@@ -451,7 +452,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._grid_label = QLabel()
         self._grid_label.setTextFormat(Qt.TextFormat.RichText)
         group_layout.addWidget(self._grid_label)
-        group_layout.addWidget(QLabel("<small>Grün = gelernt, Orange = aktueller Lerntag, Grau = offen, Violett = Kreuzen-Tag (AMBOSS-Examen)</small>"))
+        group_layout.addWidget(QLabel(f"<small>{GRID_LEGEND}</small>"))
         self._progress_label = QLabel()
         group_layout.addWidget(self._progress_label)
 
@@ -472,26 +473,16 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         group_layout.addLayout(kreuzen_layout)
 
         m2_layout = QHBoxLayout()
-        self._m2_checkbox = QCheckBox("M2-Prüfungstermin:")
-        self._m2_checkbox.setToolTip("Zeigt, wie viele Puffertage zwischen dem letzten Lerntag und dem M2 bleiben.")
         self._m2_dates = list(M2_TERMINE.values())
         self._m2_combo = QComboBox()
-        self._m2_combo.addItems([*M2_TERMINE, "Eigenes Datum"])
-        self._m2_edit = QDateEdit()
-        self._m2_edit.setCalendarPopup(True)
-        self._m2_edit.setDisplayFormat("dd.MM.yyyy")
-        self._m2_edit.setDate(QDate(self._m2_date or datetime.date.today() + datetime.timedelta(days=90)))
-        self._m2_combo.setCurrentIndex(self._m2_dates.index(self._m2_date) if self._m2_date in self._m2_dates else len(self._m2_dates))
-        self._m2_checkbox.setChecked(self._m2_date is not None)
-        self._update_m2_controls()
-        self._m2_checkbox.toggled.connect(self._update_m2_controls)
-        self._m2_combo.currentIndexChanged.connect(self._update_m2_controls)
-        self._m2_edit.dateChanged.connect(self._update_progress_view)
+        self._m2_combo.addItems(["Kein M2-Termin", *M2_TERMINE])
+        self._m2_combo.setToolTip("Zeigt, wie viele Puffertage zwischen dem letzten Lerntag und dem M2 bleiben.")
+        self._m2_combo.setCurrentIndex(self._m2_dates.index(self._m2_date) + 1 if self._m2_date in self._m2_dates else 0)
+        self._m2_combo.currentIndexChanged.connect(self._update_progress_view)
         for button in self.weekday_buttons:
             button.toggled.connect(self._update_progress_view)
-        m2_layout.addWidget(self._m2_checkbox)
+        m2_layout.addWidget(QLabel("M2-Prüfungstermin:"))
         m2_layout.addWidget(self._m2_combo)
-        m2_layout.addWidget(self._m2_edit)
         m2_layout.addStretch()
         group_layout.addLayout(m2_layout)
 
@@ -515,22 +506,16 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._fill_lerntag_list(numbers, {n for n, done in rows if done})
 
     def _m2_selected(self) -> datetime.date | None:
-        if not self._m2_checkbox.isChecked():
-            return None
         index = self._m2_combo.currentIndex()
-        return self._m2_dates[index] if index < len(self._m2_dates) else self._m2_edit.date().toPyDate()
-
-    def _update_m2_controls(self, *_) -> None:
-        self._m2_combo.setEnabled(self._m2_checkbox.isChecked())
-        self._m2_edit.setEnabled(self._m2_checkbox.isChecked() and self._m2_combo.currentIndex() == len(self._m2_dates))
-        self._update_progress_view()
+        return self._m2_dates[index - 1] if index else None
 
     def _compute_schedule(self, rows: list[tuple[str, bool]]) -> list[tuple[str, datetime.date]] | None:
-        remaining = remaining_lerntage([n for n, _ in rows], self._current, {n for n, done in rows if done})
         return compute_schedule(
-            remaining,
-            effective_today(mw.col),
+            [n for n, _ in rows],
+            {n for n, done in rows if done},
+            self._current,
             [b.isChecked() for b in self.weekday_buttons],
+            effective_today(mw.col),
             self._extra_days,
             self._skip_days,
         )
@@ -563,9 +548,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         schedule = self._compute_schedule(rows)
         m2 = self._m2_selected()
         self._grid_label.setText(progress_grid_html(order, finished, self._current, self._topics, set(self._kreuzen)))
-        self._progress_label.setText(
-            "<br>".join(summary_lines(len(finished), len(order), finish_date(schedule, effective_today(mw.col)), m2))
-        )
+        finish = schedule[-1][1] if schedule else None
+        self._progress_label.setText("<br>".join(summary_lines(len(finished), len(order), finish, m2)))
 
     def _lerntag_rows(self) -> list[tuple[str, bool]]:
         """(number, done) in the order currently shown."""
@@ -721,10 +705,10 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
 
         buttons_layout = QHBoxLayout()
 
-        confirm_btn = QPushButton("Speichern und loslernen!")
-        confirm_btn.setFixedWidth(200)
-        confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
-        buttons_layout.addWidget(confirm_btn)
+        self.confirm_button = QPushButton("Speichern und loslernen!")
+        self.confirm_button.setFixedWidth(200)
+        self.confirm_button.clicked.connect(self.create_lerntag_deck_wrapper)
+        buttons_layout.addWidget(self.confirm_button)
 
         buttons_layout.addSpacing(10)
 

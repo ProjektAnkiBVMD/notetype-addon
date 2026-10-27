@@ -47,31 +47,26 @@ def is_lernplan_day(day: datetime.date, wochentage: list, extra_days=(), skip_da
     return day in extra_days or bool(wochentage[day.weekday()])
 
 
-def remaining_lerntage(order: list[str], current: str, finished: set[str]) -> list[str]:
-    """The current Lerntag followed by all unfinished ones after it, in the user's order."""
-    start = order.index(current) + 1 if current in order else 0
-    return [current] + [n for n in order[start:] if n not in finished and n != current]
-
-
 def compute_schedule(
-    remaining: list[str],
-    today: datetime.date,
+    order: list[str],
+    finished: set[str],
+    current: str,
     wochentage: list,
+    today: datetime.date,
     extra_days=(),
     skip_days=(),
 ) -> list[tuple[str, datetime.date]] | None:
-    """Assign a date to every remaining Lerntag: the first one is today, the rest follow on the next
-    Lernplan days. None if no Lernplan day can ever come (no weekday and no extra day)."""
+    """Date of every open Lerntag in the user's order, starting with `current` today and continuing on the
+    next Lernplan days. None if no Lernplan day can ever come (no weekday and no extra day)."""
     extra = set(extra_days) - set(skip_days)
     if not any(wochentage) and not extra:
         return None
-    if not remaining:
-        return []
 
+    start = order.index(current) + 1 if current in order else 0
     last_extra = max(extra, default=today)
-    schedule = [(remaining[0], today)]
+    schedule = [(current, today)]
     day = today
-    for number in remaining[1:]:
+    for number in (n for n in order[start:] if n not in finished and n != current):
         while True:
             day += datetime.timedelta(days=1)
             if is_lernplan_day(day, wochentage, extra, skip_days):
@@ -80,10 +75,3 @@ def compute_schedule(
                 return None  # only extra days are left, and they ran out
         schedule.append((number, day))
     return schedule
-
-
-def finish_date(schedule: list[tuple[str, datetime.date]] | None, today: datetime.date) -> datetime.date | None:
-    """Day of the last Lerntag, today if nothing is left, None if the plan can't finish."""
-    if schedule is None:
-        return None
-    return schedule[-1][1] if schedule else today

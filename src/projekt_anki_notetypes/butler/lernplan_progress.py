@@ -19,13 +19,12 @@ from .lernplan_decks import (
 from .lernplan_schedule import (
     DEFAULT_WOCHENTAGE,
     compute_schedule,
-    finish_date,
     parse_date,
     parse_dates,
-    remaining_lerntage,
 )
 
 GRID_COLUMNS = 20
+GRID_LEGEND = "🟩 gelernt&nbsp;&nbsp;🟧 aktueller Lerntag&nbsp;&nbsp;⬛ offen&nbsp;&nbsp;🟪 Kreuzen-Tag (AMBOSS-Examen)"
 _DONE, _CURRENT, _OPEN, _KREUZEN = "#43a047", "#fb8c00", "#616161", "#7e57c2"
 
 
@@ -70,13 +69,15 @@ def deck_browser_progress_hk(deck_browser, content) -> None:
 
         today = effective_today(mw.col)
         schedule = compute_schedule(
-            remaining_lerntage(order, current, finished),
-            today,
+            order,
+            finished,
+            current,
             conf.get("wochentage", DEFAULT_WOCHENTAGE),
+            today,
             parse_dates(conf.get("extra_days")),
             parse_dates(conf.get("skip_days")),
         )
-        finish = finish_date(schedule, today)
+        finish = schedule[-1][1] if schedule else None
         m2 = parse_date(conf.get("m2_date"))
 
         pct = len(finished) * 100 // len(order)
@@ -93,7 +94,8 @@ def deck_browser_progress_hk(deck_browser, content) -> None:
             '<div style="background:rgba(128,128,128,.25);border-radius:6px;height:12px;margin:8px 0;overflow:hidden;">'
             f'<div style="width:{pct}%;background:{"#e53935" if behind else _DONE};height:100%;"></div></div>'
             f'<div style="opacity:.85;">{info}</div>'
-            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics, set(get_kreuzen_tage(mw.col, count)))}</div></div>'
+            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics, set(get_kreuzen_tage(mw.col, count)))}'
+            f'<small>{GRID_LEGEND}</small></div></div>'
         )
     except Exception as e:
         # the home screen must never break because of the progress display
