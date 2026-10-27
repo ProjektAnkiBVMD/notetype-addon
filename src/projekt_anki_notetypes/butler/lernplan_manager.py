@@ -1,3 +1,5 @@
+import datetime
+
 from aqt import mw
 from aqt.operations import CollectionOp
 from aqt.qt import *
@@ -16,9 +18,8 @@ from .lernplan_decks import (
     set_past_day,
     update_past_days,
 )
+from .lernplan_schedule import DEFAULT_WOCHENTAGE, parse_dates
 from .utils import check_ankizin_installation, report_result
-
-DEFAULT_WOCHENTAGE = [True] * 5 + [False] * 2
 
 
 def _get_config() -> dict:
@@ -281,6 +282,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._order = get_lerntag_order(mw.col, lernplan_conf)
         self._topics = {n: t.replace("_", " ") for n, t in get_lerntag_list(mw.col)}
         self._past_days = lernplan_conf.get("past_days", [])
+        self._extra_days = parse_dates(lernplan_conf.get("extra_days"))
+        self._skip_days = parse_dates(lernplan_conf.get("skip_days"))
 
     def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
         self.setWindowTitle("Lernplan-Manager (automatisch)")
@@ -308,6 +311,72 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         right_layout.addWidget(past_days_info_label)
 
         right_layout.addSpacing(10)
+
+    def _setup_extra_days(self, layout: QVBoxLayout) -> None:
+        """Drop-down with a calendar to add single extra Lernplan days or to skip single days."""
+        group = QGroupBox()
+        group_layout = QVBoxLayout()
+        toggle = QToolButton()
+        toggle.setText("Einzelne Zusatz- und Pausentage")
+        toggle.setCheckable(True)
+        toggle.setArrowType(Qt.ArrowType.RightArrow)
+        toggle.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        group_layout.addWidget(toggle)
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        hint = QLabel(
+            "<i>Klick auf einen Tag: Ein freier Tag wird zum Zusatz-Lerntag (grün), ein Lerntag wird "
+            "ausgesetzt (grau, durchgestrichen). Nochmal klicken setzt ihn zurück.</i>"
+        )
+        hint.setWordWrap(True)
+        content_layout.addWidget(hint)
+        self._calendar = QCalendarWidget()
+        self._calendar.setMinimumDate(QDate.currentDate())
+        self._calendar.setVerticalHeaderFormat(QCalendarWidget.VerticalHeaderFormat.NoVerticalHeader)
+        self._calendar.clicked.connect(self._toggle_extra_day)
+        content_layout.addWidget(self._calendar)
+        content.setVisible(False)
+        group_layout.addWidget(content)
+        group.setLayout(group_layout)
+        layout.addWidget(group)
+
+        def on_toggled(checked: bool) -> None:
+            content.setVisible(checked)
+            toggle.setArrowType(Qt.ArrowType.DownArrow if checked else Qt.ArrowType.RightArrow)
+            self._fit_to_content()
+
+        toggle.toggled.connect(on_toggled)
+        self._mark_extra_days()
+        if any(day >= datetime.date.today() for day in self._extra_days | self._skip_days):
+            toggle.setChecked(True)  # planned days are not hidden
+
+    def _toggle_extra_day(self, qdate: QDate) -> None:
+        day = qdate.toPyDate()
+        if day in self._extra_days:
+            self._extra_days.discard(day)
+        elif day in self._skip_days:
+            self._skip_days.discard(day)
+        elif self.weekday_buttons[day.weekday()].isChecked():
+            self._skip_days.add(day)
+        else:
+            self._extra_days.add(day)
+        self._mark_extra_days()
+
+    def _mark_extra_days(self) -> None:
+        self._calendar.setDateTextFormat(QDate(), QTextCharFormat())  # reset all marks
+        for days, background, foreground, tip in (
+            (self._extra_days, "#43a047", "#ffffff", "Zusätzlicher Lerntag"),
+            (self._skip_days, "#bdbdbd", "#757575", "Ausgesetzt"),
+        ):
+            fmt = QTextCharFormat()
+            fmt.setBackground(QColor(background))
+            fmt.setForeground(QColor(foreground))
+            fmt.setFontStrikeOut(days is self._skip_days)
+            fmt.setToolTip(tip)
+            for day in days:
+                self._calendar.setDateTextFormat(QDate(day), fmt)
 
     def _setup_lerntag_list(self, layout: QVBoxLayout) -> None:
         layout.addWidget(QLabel(
@@ -446,6 +515,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             weekdays_layout.addWidget(button)
         self.weekdays.setLayout(weekdays_layout)
         settings_layout.addWidget(self.weekdays)
+        self._setup_extra_days(settings_layout)
 
         settings_layout.addSpacing(10)
         self._setup_lerntag_list(settings_layout)
@@ -550,6 +620,8 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         section["autocreate_due"] = self.autocreate_due_button.isChecked()
         section["autocreate_previous"] = self.autocreate_previous_button.isChecked()
         section["wochentage"] = [button.isChecked() for button in self.weekday_buttons]
+        section["extra_days"] = sorted(d.isoformat() for d in self._extra_days)
+        section["skip_days"] = sorted(d.isoformat() for d in self._skip_days)
         # Only mark "today is handled" when decks were created (or on first activation),
         # otherwise merely closing the dialog would skip today's automatic day change.
         if mark_today or "last_updated" not in section:

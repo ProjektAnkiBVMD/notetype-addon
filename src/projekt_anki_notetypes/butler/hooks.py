@@ -21,6 +21,7 @@ from .lernplan_decks import (
     rebuild_lernplan_decks,
     update_past_days,
 )
+from .lernplan_schedule import is_lernplan_day, parse_dates
 from .utils import report_result
 from .menu import get_rebuild_config
 
@@ -78,10 +79,13 @@ def lernplan_auto_create():
         return
 
     # Check if today is a scheduled lernplan day
-    weekdays = lernplan_conf["wochentage"]
-    today_weekday = effective_today(mw.col).weekday()
-    if not weekdays[today_weekday]:
-        return  # Today is not a lernplan day
+    if not is_lernplan_day(
+        effective_today(mw.col),
+        lernplan_conf["wochentage"],
+        parse_dates(lernplan_conf.get("extra_days")),
+        parse_dates(lernplan_conf.get("skip_days")),
+    ):
+        return  # Today is not a lernplan day (free weekday or skipped)
 
     # Calculate and validate next lerntag (in the user's order, skipping finished days)
     current_lerntag = lernplan_conf.get("lerntag", "001")
