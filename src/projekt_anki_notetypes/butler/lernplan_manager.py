@@ -224,13 +224,11 @@ class LerntagDeckCreatorDialog(QDialog):
         right_layout.addWidget(self.mark_done_cb)
 
     def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
-        buttons_layout = QHBoxLayout()
-        confirm_btn = QPushButton("Stapel erstellen!")
-        confirm_btn.setFixedWidth(200)
+        box = QDialogButtonBox()
+        confirm_btn = box.addButton("Stapel erstellen!", QDialogButtonBox.ButtonRole.AcceptRole)
+        confirm_btn.setDefault(True)
         confirm_btn.clicked.connect(self.create_lerntag_deck_wrapper)
-        buttons_layout.addWidget(confirm_btn)
-        buttons_layout.addStretch()
-        right_layout.addLayout(buttons_layout)
+        right_layout.addWidget(box)
 
     def closeEvent(self, event):
         event.ignore()

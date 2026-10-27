@@ -1,6 +1,6 @@
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo, askUser
+from aqt.utils import showInfo, askUser, disable_help_button
 import anki.hooks
 import re
 import webbrowser
@@ -12,6 +12,7 @@ from aqt import mw
 class FirstSetupConfigDialog(QDialog):
     def __init__(self, parent, helper):
         super().__init__(parent)
+        disable_help_button(self)
         self.helper = helper
         self.setWindowTitle("Ankizin Installations-Konfiguration")
 
@@ -57,12 +58,11 @@ class FirstSetupConfigDialog(QDialog):
         right_layout.addWidget(self.deck_cb)
 
         # Confirm button
-        confirm_btn = QPushButton("Loslegen!")
-        confirm_btn.setFixedWidth(200)
-        right_layout.addWidget(
-            confirm_btn, alignment=Qt.AlignmentFlag.AlignHCenter
-        )
+        buttons = QDialogButtonBox()
+        confirm_btn = buttons.addButton("Loslegen!", QDialogButtonBox.ButtonRole.AcceptRole)
+        confirm_btn.setDefault(True)
         confirm_btn.clicked.connect(self.confirm)
+        right_layout.addWidget(buttons)
 
         main_layout.addLayout(right_layout)
 
@@ -82,6 +82,7 @@ class FirstSetupConfigDialog(QDialog):
 class UpdateConfigDialog(QDialog):
     def __init__(self, parent, helper):
         super().__init__(parent)
+        disable_help_button(self)
         self.helper = helper
         self.setWindowTitle("Ankizin Update-Konfiguration")
 
@@ -121,12 +122,11 @@ class UpdateConfigDialog(QDialog):
         right_layout.addWidget(self.suspend_new_cb)
 
         # Confirm button
-        confirm_btn = QPushButton("Loslegen!")
-        confirm_btn.setFixedWidth(150)
-        right_layout.addWidget(
-            confirm_btn, alignment=Qt.AlignmentFlag.AlignHCenter
-        )
+        buttons = QDialogButtonBox()
+        confirm_btn = buttons.addButton("Loslegen!", QDialogButtonBox.ButtonRole.AcceptRole)
+        confirm_btn.setDefault(True)
         confirm_btn.clicked.connect(self.confirm)
+        right_layout.addWidget(buttons)
 
         main_layout.addLayout(right_layout)
 
