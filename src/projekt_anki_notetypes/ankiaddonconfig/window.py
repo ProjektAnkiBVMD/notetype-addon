@@ -26,6 +26,7 @@ from aqt.qt import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QDialogButtonBox,
     QScrollArea,
     QSizePolicy,
     QSpinBox,
@@ -36,7 +37,7 @@ from aqt.qt import (
     QTabWidget,
     QWidget,
 )
-from aqt.utils import restoreGeom, saveGeom, tooltip
+from aqt.utils import disable_help_button, restoreGeom, saveGeom, tooltip
 
 from .collapsible_section import CollapsibleSection
 from .errors import InvalidConfigValueError
@@ -51,6 +52,7 @@ class ConfigWindow(QDialog):
     def __init__(self, conf: "ConfigManager", parent=None) -> None:
         QDialog.__init__(self, parent, Qt.WindowType.Window)  # type: ignore
         self.conf = conf
+        disable_help_button(self)
         self.mgr = mw.addonManager
         self.widget_updates: List[Callable[[], None]] = []
         self.should_save_hook: List[Callable[[], bool]] = []
@@ -82,17 +84,17 @@ class ConfigWindow(QDialog):
         self.setup_buttons(self.btn_layout)
 
     def setup_buttons(self, btn_box: "ConfigLayout") -> None:
-        btn_box.addStretch(1)
-
-        self.cancel_btn = QPushButton("Abbrechen")
+        box = QDialogButtonBox()
+        role = QDialogButtonBox.ButtonRole
+        self.cancel_btn = box.addButton("Abbrechen", role.RejectRole)
         self.cancel_btn.clicked.connect(self.on_cancel)  # type: ignore
-        btn_box.addWidget(self.cancel_btn)
 
-        self.save_btn = QPushButton("Speichern")
-        self.save_btn.setDefault(True)
+        self.save_btn = box.addButton("Speichern", role.AcceptRole)
         self.save_btn.setShortcut("Strg+Enter")
         self.save_btn.clicked.connect(self.on_save)  # type: ignore
-        btn_box.addWidget(self.save_btn)
+        btn_box.addWidget(box)
+        self.cancel_btn.setAutoDefault(False)  # or it is highlighted instead of Speichern
+        self.save_btn.setDefault(True)
 
     def update_widgets(self) -> None:
         for widget_update in self.widget_updates:

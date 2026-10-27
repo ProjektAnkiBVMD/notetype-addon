@@ -24,6 +24,7 @@ class CollapsibleSection(QWidget):
         self.toggle_button.setToolButtonStyle(
             Qt.ToolButtonStyle.ToolButtonTextBesideIcon
         )
+        self.toggle_button.setArrowType(Qt.ArrowType.RightArrow)
 
         self.toggle_button.setStyleSheet("QToolButton { border: none; }")
         self.toggle_button.pressed.connect(self.on_pressed)
@@ -56,7 +57,10 @@ class CollapsibleSection(QWidget):
     def on_pressed(self):
         self.setContentLayout(self.content_area.layout())
 
-        checked = self.toggle_button.isChecked()
+        checked = self.toggle_button.isChecked()  # still the state before this press
+        self.toggle_button.setArrowType(
+            Qt.ArrowType.RightArrow if checked else Qt.ArrowType.DownArrow
+        )
         self.toggle_animation.setDirection(
             QAbstractAnimation.Direction.Forward
             if not checked
