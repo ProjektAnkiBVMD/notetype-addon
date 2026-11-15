@@ -6,17 +6,20 @@ if TYPE_CHECKING:
     from anki.notes import Note, NoteId
 
 from anki.utils import ids2str
+import aqt.editor
 from aqt import mw
-from aqt.qt import QUrl, QAction, QPixmap
+from aqt.qt import QUrl, QPixmap
 from aqt.browser import Browser
 from aqt.editor import EditorWebView
+from aqt.operations.note import update_note
 from aqt.gui_hooks import (
     browser_will_show_context_menu,
     card_layout_will_show,
     profile_did_open,
     editor_will_show_context_menu,
+    webview_will_show_context_menu,
 )
-from aqt.qt import QMenu, QPushButton, qtmajor, qconnect
+from aqt.qt import QMenu, QPushButton, qtmajor
 from aqt.utils import askUserDialog, tooltip
 
 from bs4 import BeautifulSoup
@@ -52,6 +55,7 @@ def setup():
     profile_did_open.append(on_profile_did_open)
     browser_will_show_context_menu.append(on_browser_will_show_context_menu)
     editor_will_show_context_menu.append(on_editor_will_show_context_menu)
+    webview_will_show_context_menu.append(on_webview_will_show_context_menu)
 
 
 def on_profile_did_open():
@@ -156,10 +160,14 @@ def maybe_show_deck_update_notice():
 
 def copy_resources_into_media_folder():
     # add resources of all notetypes to collection media folder
-    for file in Path(RESOURCES_PATH).iterdir():
-        # if not mw.col.media.have(file.name):
-        #     mw.col.media.add_file(str(file.absolute()))
-        mw.col.media.add_file(str(file.absolute()))
+    media = mw.col.media
+    for file in RESOURCES_PATH.iterdir():
+        # add_file would store a changed file as "name-<hash>.ext", so the templates would keep
+        # using the old one: trash the outdated copy first (identical files are left untouched)
+        target = Path(media.dir()) / file.name
+        if target.exists() and target.read_bytes() != file.read_bytes():
+            media.trash_files([file.name])
+        media.add_file(str(file))
 
 
 def replace_default_addon_config_action():
@@ -183,9 +191,7 @@ def note_autoopen_fields(note: "Note") -> List[str]:
     prefix = "autoopen::"
     for tag in note.tags:
         if tag.startswith(prefix):
-            tags.append(
-                tag[tag.index(prefix) + len(prefix) :].replace("_", " ")
-            )
+            tags.append(tag[len(prefix) :].replace("_", " "))
     return tags
 
 
@@ -218,17 +224,12 @@ def on_auto_reveal_fields_action(
         autoopen_tags.append(f"autoopen::{field.lower().replace(' ', '_')}")
 
     def task() -> None:
-        notes = []
-        for nid in selected_nids:
-            note = mw.col.get_note(nid)
-            notes.append(note)
-            new_tags = []
-            for tag in note.tags:
-                if not tag.startswith("autoopen::"):
-                    new_tags.append(tag)
-            new_tags.extend(autoopen_tags)
-            note.tags = new_tags
-            note.flush()
+        notes = [mw.col.get_note(nid) for nid in selected_nids]
+        for note in notes:
+            note.tags = [
+                tag for tag in note.tags if not tag.startswith("autoopen::")
+            ] + autoopen_tags
+        mw.col.update_notes(notes)  # one undo step; Note.flush() is deprecated
 
     def on_done(fut: Future) -> None:
         mw.progress.finish()
@@ -247,115 +248,96 @@ def on_browser_will_show_context_menu(
         "Ankizin: Felder automatisch aufdecken",
         lambda: on_auto_reveal_fields_action(browser, selected_nids),
     )
-    context_menu.addAction(action)
     if not selected_nids:
         action.setDisabled(True)
+
+
+def toggle_image_class(html: str, src: str, name: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+    for img in soup("img"):
+        if img.get("src", "").strip("/") != src:
+            continue
+        classes = img.get("class", [])
+        if name in classes:
+            classes.remove(name)
+        else:
+            classes.append(name)
+        if classes:
+            img["class"] = classes
+        else:
+            img.attrs.pop("class", None)
+    return soup.decode_contents()
+
+
+def image_has_class(html: str, src: str, name: str) -> bool:
+    soup = BeautifulSoup(html, "html.parser")
+    return any(
+        name in img.get("class", [])
+        for img in soup("img")
+        if img.get("src", "").strip("/") == src
+    )
 
 
 def on_editor_will_show_context_menu(
     webview: EditorWebView, menu: QMenu
 ) -> None:
-    def helper() -> None:
-        editor = webview.editor
-        url = data.mediaUrl()
-        if url.matches(
-            QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath
-        ):
-            src = url.path().strip("/")
-        else:
-            src = url.toString()
-        field = editor.note.fields[editor.currentField]
-        soup = BeautifulSoup(field, "html.parser")
-        return editor, src, soup
-
-    def is_blur_image() -> bool:
-        _, src, soup = helper()
-        for img in soup("img"):
-            if img.get("src", "").strip("/") != src:
-                continue
-            classes = img.get("class", [])
-            if "blur" in classes:
-                return True
-        return False
-
-    def on_blur_image() -> None:
-        editor, src, soup = helper()
-        for img in soup("img"):
-            if img.get("src", "").strip("/") != src:
-                continue
-            classes = img.get("class", [])
-            if "blur" in classes:
-                classes.remove("blur")
-            else:
-                classes.append("blur")
-            if classes:
-                img["class"] = classes
-            elif "class" in img.attrs:
-                del img["class"]
-        editor.note.fields[editor.currentField] = soup.decode_contents()
-        editor.loadNoteKeepingFocus()
-
-    def is_invert_image() -> bool:
-        _, src, soup = helper()
-        for img in soup("img"):
-            if img.get("src", "").strip("/") != src:
-                continue
-            classes = img.get("class", [])
-            if "invert" in classes:
-                return True
-        return False
-
-    def on_invert_image() -> None:
-        editor, src, soup = helper()
-        for img in soup("img"):
-            if img.get("src", "").strip("/") != src:
-                continue
-            classes = img.get("class", [])
-            if "invert" in classes:
-                classes.remove("invert")
-            else:
-                classes.append("invert")
-            if classes:
-                img["class"] = classes
-            elif "class" in img.attrs:
-                del img["class"]
-        editor.note.fields[editor.currentField] = soup.decode_contents()
-        editor.loadNoteKeepingFocus()
-
     if qtmajor >= 6:
         data = webview.lastContextMenuRequest()  # type: ignore
     else:
         data = webview.page().contextMenuData()
-    if data.mediaUrl().isValid():
-        menu.addSeparator()
-        blur_image_action = (
-            QAction(
-                "Ankizin: Bild nicht mehr weichzeichnen",
-                menu,
-            )
-            if is_blur_image()
-            else QAction(
-                "Ankizin: Bild weichzeichnen",
-                menu,
-            )
-        )
-        qconnect(blur_image_action.triggered, on_blur_image)
-        menu.addAction(blur_image_action)
+    url = data.mediaUrl()
+    editor = webview.editor
+    idx = editor.currentField
+    if not url.isValid() or idx is None:
+        return
 
-        invert_image_action = (
-            QAction(
-                "Ankizin: Bild nicht mehr invertieren",
-                menu,
-            )
-            if is_invert_image()
-            else QAction(
-                "Ankizin: Bild invertieren",
-                menu,
-            )
-        )
-        qconnect(invert_image_action.triggered, on_invert_image)
-        menu.addAction(invert_image_action)
-        menu.addSeparator()
+    # The legacy editor holds the note itself. The new one (experimental) keeps it in the
+    # web view, so we edit the saved note instead and let the editor reload it.
+    legacy = hasattr(editor, "note")
+    if legacy:
+        note = editor.note
+    elif editor.nid:
+        note = mw.col.get_note(editor.nid)
+    else:
+        return  # new editor in add mode: nothing is saved yet
+
+    if url.matches(QUrl(mw.serverURL()), QUrl.UrlFormattingOption.RemovePath):
+        src = url.path().strip("/")
+    else:
+        src = url.toString()
+
+    def toggle(name: str) -> None:
+        if legacy:
+            editor.note.fields[idx] = toggle_image_class(editor.note.fields[idx], src, name)
+            editor.loadNoteKeepingFocus()
+            return
+
+        def save_and_reload() -> None:  # runs once unsaved edits are saved
+            fresh = mw.col.get_note(editor.nid)
+            fresh.fields[idx] = toggle_image_class(fresh.fields[idx], src, name)
+            update_note(parent=webview, note=fresh).success(
+                lambda _: editor.reload_note()
+            ).run_in_background()
+
+        editor.call_after_note_saved(save_and_reload)
+
+    def add(name: str, text_on: str, text_off: str) -> None:
+        active = image_has_class(note.fields[idx], src, name)
+        menu.addAction(text_off if active else text_on, lambda: toggle(name))
+
+    menu.addSeparator()
+    add("blur", "Ankizin: Bild weichzeichnen", "Ankizin: Bild nicht mehr weichzeichnen")
+    add("invert", "Ankizin: Bild invertieren", "Ankizin: Bild nicht mehr invertieren")
+    menu.addSeparator()
+
+
+# NewEditorWebView only exists in newer Anki, and it fires no editor-specific menu hook
+NEW_EDITOR_WEBVIEW = getattr(aqt.editor, "NewEditorWebView", ())
+
+
+def on_webview_will_show_context_menu(webview, menu: QMenu) -> None:
+    if isinstance(webview, NEW_EDITOR_WEBVIEW):
+        on_editor_will_show_context_menu(webview, menu)
 
 
 if mw is not None:
