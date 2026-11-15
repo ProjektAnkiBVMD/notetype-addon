@@ -17,6 +17,7 @@ from ..gui.config_window import note_type_version
 from ..notetype_setting_definitions import projekt_anki_notetype_models
 
 ankizin_helper = None
+versions_action = None  # filled in after the profile is open
 
 
 def init_ankizin_helper(menu):
@@ -54,8 +55,9 @@ def get_rebuild_config():
     if conf is None:
         conf = {}
 
-    # Ensure the key exists, setting the default value if it doesn't.
+    # Ensure the keys exist, setting the default values if they don't.
     conf.setdefault("autoRebuildDecksOnStartup", True)
+    conf.setdefault("autoRebuildOnlyAnkizinDecks", False)
 
     return conf
 
@@ -67,14 +69,30 @@ def copy_config_to_clipboard():
     showInfo("Ankizin-Konfiguration wurde in die Zwischenablage kopiert.")
 
 
-def on_auto_rebuild_checkbox_changed(checked: bool):
-    """Called when the user clicks the checkbox in Preferences."""
+# (config key, label, tooltip) of the checkboxes in Anki's preferences
+REBUILD_OPTIONS = (
+    (
+        "autoRebuildDecksOnStartup",
+        "Auswahlstapel automatisch organisieren (Ankizin)",
+        "Wenn du diese Option aktivierst, werden Auswahlstapel "
+        "automatisch bei jedem Anki-Start neu erstellt",
+    ),
+    (
+        "autoRebuildOnlyAnkizinDecks",
+        "…nur Ankizin-Auswahlstapel (meine eigenen nicht anfassen)",
+        "Aktiv: nur Lernplan-Stapel und Stapel aus Ankizin-Schlagwörtern. "
+        "Aus: alle deine Auswahlstapel, auch selbst erstellte.",
+    ),
+)
+
+
+def set_rebuild_option(key: str, checked: bool):
+    """Called when the user clicks a checkbox in Preferences."""
     conf = get_rebuild_config()
-    key = "autoRebuildDecksOnStartup"
     conf[key] = checked
 
     mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
-    print("Auto rebuild setting changed:", conf[key])
+    print("Auto rebuild setting changed:", key, checked)
 
 
 def setup_rebuild_settings_toggle():
@@ -109,17 +127,12 @@ def setup_rebuild_settings_toggle():
                 return
 
             config = get_rebuild_config()
-            auto_rebuild_checkbox = QCheckBox("Auswahlstapel automatisch organisieren (Ankizin)") # fmt: skip
-            auto_rebuild_checkbox.setChecked(config.get("autoRebuildDecksOnStartup", True)) # fmt: skip
-            auto_rebuild_checkbox.setToolTip(
-                "Wenn du diese Option aktivierst, werden Auswahlstapel "
-                "automatisch bei jedem Anki-Start neu erstellt"
-            )
-            qconnect(
-                auto_rebuild_checkbox.stateChanged,
-                on_auto_rebuild_checkbox_changed,
-            )
-            layout.insertWidget(target_index + 1, auto_rebuild_checkbox)
+            for offset, (key, text, tooltip) in enumerate(REBUILD_OPTIONS, 1):
+                checkbox = QCheckBox(text)
+                checkbox.setChecked(config[key])
+                checkbox.setToolTip(tooltip)
+                qconnect(checkbox.toggled, lambda checked, key=key: set_rebuild_option(key, checked))
+                layout.insertWidget(target_index + offset, checkbox)
 
         except Exception as e:
             print(f"Ankizin Settings Hook error': {e}")
@@ -172,6 +185,11 @@ def init_version_info(menu):
     addon_version_info.setEnabled(False)  # Make it non-clickable
     debug_menu.addAction(addon_version_info)
 
+    global versions_action
+    versions_action = QAction("Ankizin-Versionen: …", mw)
+    versions_action.setEnabled(False)
+    debug_menu.addAction(versions_action)
+
     # Add copy button at the end
     debug_menu.addSeparator()
     copy_action = QAction("📋 Konfiguration kopieren", mw)
@@ -180,37 +198,9 @@ def init_version_info(menu):
 
 
 def update_version_info():
-    # Find DEBUG submenu
-    debug_menu = None
-    for action in get_ankizin_menu().actions():
-        if action.text() == "🆘 Hilfe + Mehr" and action.menu():
-            debug_menu = action.menu()
-            break
-
-    if not debug_menu:
-        return
-
-    versions = get_ankizin_versions()
-    ver_text = f"{', '.join(versions) if versions else 'kein Ankizin'}"
-    ver_text = f"Ankizin-Versionen: {ver_text}"
-
-    # Update existing entry if found
-    for action in debug_menu.actions():
-        if action.text().startswith("Ankizin-Versionen:"):
-            action.setText(ver_text)
-            return
-
-    # Create and insert new entry before the last separator
-    ver_action = QAction(ver_text, mw)
-    ver_action.setEnabled(False)
-
-    actions = debug_menu.actions()
-    for i in range(len(actions) - 1, -1, -1):
-        if actions[i].isSeparator():
-            debug_menu.insertAction(actions[i], ver_action)
-            return
-
-    debug_menu.addAction(ver_action)
+    if versions_action:
+        versions = get_ankizin_versions()
+        versions_action.setText(f"Ankizin-Versionen: {', '.join(versions) if versions else 'kein Ankizin'}")
 
 
 def menu_init():
