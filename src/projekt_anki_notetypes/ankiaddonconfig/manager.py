@@ -1,5 +1,3 @@
-import copy
-import json
 from sys import platform
 from typing import Any, Callable, Dict, Iterator, List, Optional
 
@@ -31,9 +29,6 @@ class ConfigManager:
         "Writes its config data to disk."
         mw.addonManager.writeConfig(self.addon_dir, self._config)
 
-    def to_json(self) -> str:
-        return json.dumps(self._config)
-
     def get_from_dict(self, dict_obj: dict, key: str) -> Any:
         "Raises KeyError if config doesn't exist"
         levels = key.split(".")
@@ -43,9 +38,6 @@ class ConfigManager:
                 level = int(level)
             return_val = return_val[level]
         return return_val
-
-    def copy(self) -> Dict:
-        return copy.deepcopy(self._config)
 
     def get(self, key: str, default: Any = None) -> Any:
         "Returns default or None if config doesn't exist"

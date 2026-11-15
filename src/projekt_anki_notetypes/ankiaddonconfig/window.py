@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
 
 from aqt import mw
@@ -16,7 +15,6 @@ from aqt.qt import (
     QDialog,
     QDoubleSpinBox,
     QDropEvent,
-    QFileDialog,
     QFont,
     QFontComboBox,
     QFrame,
@@ -119,10 +117,6 @@ class ConfigWindow(QDialog):
     def on_cancel(self) -> None:
         self.close()
 
-    def on_reset(self) -> None:
-        self.update_widgets()
-        tooltip("Klick Speichern um die Änderungen zu übernehmen.")
-
     def closeEvent(self, evt: QCloseEvent) -> None:
         # Discard the contents when clicked cancel,
         # and also in case the window was clicked without clicking any of the buttons
@@ -143,39 +137,6 @@ class ConfigWindow(QDialog):
         else:
             self.main_tab.insertTab(index, tab, name)
         return layout
-
-    def execute_on_save(self, hook: Callable[[], None]) -> None:
-        self._on_save_hook.append(hook)
-
-    def execute_on_close(self, hook: Callable[[], None]) -> None:
-        self._on_close_hook.append(hook)
-
-    def set_footer(
-        self,
-        text: str,
-        html: bool = False,
-        size: int = 0,
-        multiline: bool = False,
-        tooltip: Optional[str] = None,
-    ) -> QLabel:
-        footer = QLabel(text)
-        if html:
-            footer.setTextFormat(Qt.TextFormat.RichText)
-            footer.setOpenExternalLinks(True)
-        else:
-            footer.setTextFormat(Qt.TextFormat.PlainText)
-        if size:
-            font = QFont()
-            font.setPixelSize(size)
-            footer.setFont(font)
-        if multiline:
-            footer.setWordWrap(True)
-        if tooltip:
-            footer.setToolTip(tooltip)
-
-        self.main_layout.addWidget(footer)
-        return footer
-
 
 class ConfigLayout(QBoxLayout):
     def __init__(
@@ -474,57 +435,6 @@ class ConfigLayout(QBoxLayout):
 
         return button
 
-    def path_input(
-        self,
-        key: str,
-        description: Optional[str] = None,
-        tooltip: Optional[str] = None,
-        get_directory: bool = False,
-        filter: str = "Any files (*)",
-    ) -> Tuple[QLineEdit, QPushButton]:
-        "For path string config"
-
-        row = self.hlayout()
-        if description is not None:
-            row.text(description, tooltip=tooltip)
-            row.space(7)
-        line_edit = QLineEdit()
-        line_edit.setReadOnly(True)
-        row.addWidget(line_edit)
-        button = QPushButton("Browse")
-        row.addWidget(button)
-
-        if tooltip:
-            row.insertWidget(0, self._info_icon_label(tooltip))
-            line_edit.setToolTip(tooltip)
-
-        def update() -> None:
-            val = self.conf.get(key)
-            if not isinstance(val, str):
-                raise InvalidConfigValueError(key, "string file path", val)
-            line_edit.setText(val)
-
-        def get_path() -> None:
-            val = self.conf.get(key)
-            parent_dir = str(Path(val).parent)
-
-            if get_directory:
-                path = QFileDialog.getExistingDirectory(
-                    self.config_window, directory=parent_dir
-                )
-            else:
-                path = QFileDialog.getOpenFileName(
-                    self.config_window, directory=parent_dir, filter=filter
-                )[0]
-            if path:  # is None if cancelled
-                self.conf.set(key, path)
-                update()
-
-        self.widget_updates.append(update)
-        button.clicked.connect(get_path)  # type: ignore
-
-        return (line_edit, button)
-
     def shortcut_edit(
         self,
         key,
@@ -654,9 +564,6 @@ class ConfigLayout(QBoxLayout):
     def hseparator(self) -> QFrame:
         return self._separator(QFrame.Shape.HLine)
 
-    def vseparator(self) -> QFrame:
-        return self._separator(QFrame.Shape.VLine)
-
     def _container(self, direction: QBoxLayout.Direction) -> "ConfigLayout":
         """Adds (empty) QWidget > ConfigLayout.
 
@@ -668,14 +575,6 @@ class ConfigLayout(QBoxLayout):
         self.addWidget(container)
         return inner_layout
 
-    def hcontainer(self) -> "ConfigLayout":
-        """Adds (empty) QWidget > ConfigLayout."""
-        return self._container(QBoxLayout.Direction.RightToLeft)
-
-    def vcontainer(self) -> "ConfigLayout":
-        """Adds (empty) QWidget > ConfigLayout."""
-        return self._container(QBoxLayout.Direction.TopToBottom)
-
     def _layout(self, direction: QBoxLayout.Direction) -> "ConfigLayout":
         layout = ConfigLayout(self.config_window, direction)
         self.addLayout(layout)
@@ -683,9 +582,6 @@ class ConfigLayout(QBoxLayout):
 
     def hlayout(self) -> "ConfigLayout":
         return self._layout(QBoxLayout.Direction.LeftToRight)
-
-    def vlayout(self) -> "ConfigLayout":
-        return self._layout(QBoxLayout.Direction.TopToBottom)
 
     def space(self, space: int = 1) -> None:
         self.addSpacing(space)
@@ -716,32 +612,6 @@ class ConfigLayout(QBoxLayout):
         scroll.setVerticalScrollBarPolicy(vscrollbarpolicy)
         self.addWidget(scroll)
         return layout
-
-    def hscroll_layout(self, always: bool = False) -> "ConfigLayout":
-        """Adds QScrollArea > QWidget*2 > ConfigLayout, returns the layout."""
-        return self._scroll_layout(
-            QSizePolicy.Policy.Expanding,
-            QSizePolicy.Policy.Minimum,
-            (
-                Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-                if always
-                else Qt.ScrollBarPolicy.ScrollBarAsNeeded
-            ),
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
-        )
-
-    def vscroll_layout(self, always: bool = False) -> "ConfigLayout":
-        """Adds QScrollArea > QWidget*2 > ConfigLayout, returns the layout."""
-        return self._scroll_layout(
-            QSizePolicy.Policy.Minimum,
-            QSizePolicy.Policy.Expanding,
-            Qt.ScrollBarPolicy.ScrollBarAlwaysOff,
-            (
-                Qt.ScrollBarPolicy.ScrollBarAlwaysOn
-                if always
-                else Qt.ScrollBarPolicy.ScrollBarAsNeeded
-            ),
-        )
 
     def scroll_layout(
         self,
