@@ -3,6 +3,7 @@
 Depends on `anki` only (no `aqt`), so it can run on a worker thread inside a
 `CollectionOp` as well as synchronously from the startup hooks.
 """
+from __future__ import annotations
 import datetime
 import re
 from dataclasses import dataclass, field
@@ -51,22 +52,24 @@ def kreuzen_count(lernplan_conf: dict) -> int:
     return int(lernplan_conf.get("kreuzen_tage", KREUZEN_TAGE))
 
 
-def get_kreuzen_tage(col: Collection, count: int) -> list[str]:
-    """Numbers of the Kreuzen-Tage: Lerntage without cards (AMBOSS exams) behind the last Lerntag."""
-    last = max((int(number) for number, _ in get_lerntag_list(col)), default=None)
+def get_kreuzen_tage(lerntage: list[tuple[str, str]], count: int) -> list[str]:
+    """Numbers of the Kreuzen-Tage: Lerntage without cards (AMBOSS exams) behind the last Lerntag.
+
+    `lerntage` is get_lerntag_list(col); callers fetch it once, as it scans every tag."""
+    last = max((int(number) for number, _ in lerntage), default=None)
     return [] if last is None else [f"{last + i:03d}" for i in range(1, count + 1)]
 
 
-def get_lerntag_topics(col: Collection, count: int) -> dict[str, str]:
+def get_lerntag_topics(lerntage: list[tuple[str, str]], count: int) -> dict[str, str]:
     """Topic of every Lerntag and Kreuzen-Tag."""
-    topics = {number: topic.replace("_", " ") for number, topic in get_lerntag_list(col)}
-    topics.update((number, kreuzen_label(i)) for i, number in enumerate(get_kreuzen_tage(col, count), 1))
+    topics = {number: topic.replace("_", " ") for number, topic in lerntage}
+    topics.update((number, kreuzen_label(i)) for i, number in enumerate(get_kreuzen_tage(lerntage, count), 1))
     return topics
 
 
-def get_lerntag_order(col: Collection, lernplan_conf: dict) -> list[str]:
+def get_lerntag_order(lerntage: list[tuple[str, str]], lernplan_conf: dict) -> list[str]:
     """Saved Lerntag order without vanished tags; new Lerntage are appended in numeric order."""
-    existing = [number for number, _ in get_lerntag_list(col)] + get_kreuzen_tage(col, kreuzen_count(lernplan_conf))
+    existing = [number for number, _ in lerntage] + get_kreuzen_tage(lerntage, kreuzen_count(lernplan_conf))
     saved = [n for n in lernplan_conf.get("lerntag_order", []) if n in existing]
     return saved + [n for n in existing if n not in saved]
 

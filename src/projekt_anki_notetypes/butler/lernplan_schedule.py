@@ -3,6 +3,7 @@
 No `anki`/`aqt` imports, so it is easy to test.
 Based on "Ankizin-Lernplan Plus" by Lukas Schaffner.
 """
+from __future__ import annotations
 import datetime
 
 

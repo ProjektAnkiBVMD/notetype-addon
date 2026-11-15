@@ -2,6 +2,7 @@
 
 Based on "Ankizin-Lernplan Plus" by Lukas Schaffner.
 """
+from __future__ import annotations
 import datetime
 
 

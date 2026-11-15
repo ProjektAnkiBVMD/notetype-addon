@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import os
 
@@ -289,6 +291,7 @@ class LerntagDeckCreatorDialog(QDialog):
         return {"prefix": "Lerntag "}
 
 class LernplanManagerDialog(LerntagDeckCreatorDialog):
+    _refresh_pending = False
     _tiles: ProgressTiles | None = None  # the progress group is created after the Lerntag list, which already updates it
 
     def __init__(self, parent):
@@ -306,9 +309,11 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self._autocreate_due = lernplan_conf.get("autocreate_due", True)
         self._autocreate_previous = lernplan_conf.get("autocreate_previous", False)
         self._wochentage = lernplan_conf.get("wochentage", DEFAULT_WOCHENTAGE)
-        self._order = get_lerntag_order(mw.col, lernplan_conf)
-        self._kreuzen = get_kreuzen_tage(mw.col, kreuzen_count(lernplan_conf))
-        self._topics = get_lerntag_topics(mw.col, kreuzen_count(lernplan_conf))
+        self._lerntage = get_lerntag_list(mw.col)  # scans every tag, so only once
+        self._kreuzen_count = kreuzen_count(lernplan_conf)
+        self._order = get_lerntag_order(self._lerntage, lernplan_conf)
+        self._kreuzen = get_kreuzen_tage(self._lerntage, self._kreuzen_count)
+        self._topics = get_lerntag_topics(self._lerntage, self._kreuzen_count)
         self._past_days = lernplan_conf.get("past_days", [])
         self._extra_days = parse_dates(lernplan_conf.get("extra_days"))
         self._skip_days = parse_dates(lernplan_conf.get("skip_days"))
@@ -426,7 +431,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.lerntag_list.setDefaultDropAction(Qt.DropAction.MoveAction)
         # Qt drops item widgets when a row is moved, so recreate the missing ones afterwards
         for signal in (self.lerntag_list.model().rowsInserted, self.lerntag_list.model().rowsMoved):
-            signal.connect(lambda *_: QTimer.singleShot(0, self._refresh_lerntag_rows))
+            signal.connect(self._schedule_refresh)
         self._current = self._lerntag
         done = {n for n in self._order if is_past_day(self._past_days, int(n))}
         self._fill_lerntag_list(self._order, done)
@@ -461,7 +466,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.FieldsStayAtSizeHint)
         self._kreuzen_spin = QSpinBox()
         self._kreuzen_spin.setRange(0, 30)
-        self._kreuzen_spin.setValue(len(self._kreuzen))
+        self._kreuzen_spin.setValue(self._kreuzen_count)  # not len(): that is 0 if no Lerntag tags were found
         self._kreuzen_spin.setSuffix(" Tage")
         self._kreuzen_spin.setToolTip(
             "AMBOSS-Plan: 2 Wiederholungsexamen (6 Tage) + 3 Generalproben (9 Tage) = 15 Tage.<br>"
@@ -494,11 +499,11 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
     def _sync_kreuzen_rows(self, count: int) -> None:
         """Add or remove Kreuzen-Tage at the end of the list, keeping the rest of the order."""
         rows = self._lerntag_rows()
-        wanted = get_kreuzen_tage(mw.col, count)
+        wanted = get_kreuzen_tage(self._lerntage, count)
         numbers = [n for n, _ in rows if n not in self._kreuzen or n in wanted]
         numbers += [n for n in wanted if n not in numbers]
         self._kreuzen = wanted
-        self._topics = get_lerntag_topics(mw.col, count)
+        self._topics = get_lerntag_topics(self._lerntage, count)
         self._fill_lerntag_list(numbers, {n for n, done in rows if done})
 
     def _m2_selected(self) -> datetime.date | None:
@@ -561,8 +566,18 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
             self.lerntag_list.addItem(item)
         self._refresh_lerntag_rows()
 
+    def _schedule_refresh(self, *_) -> None:
+        """Rows are inserted one by one, so refresh once afterwards instead of once per row."""
+        if not self._refresh_pending:
+            self._refresh_pending = True
+            QTimer.singleShot(0, self._refresh_lerntag_rows)
+
     def _refresh_lerntag_rows(self) -> None:
         """Make sure every row has its checkbox and shows the current-day marker."""
+        self._refresh_pending = False
+        normal = self._fixed_font()
+        bold = QFont(normal)
+        bold.setBold(True)
         for row in range(self.lerntag_list.count()):
             item = self.lerntag_list.item(row)
             number = item.data(Qt.ItemDataRole.UserRole)
@@ -571,9 +586,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
                 row_widget = self._create_lerntag_row(number)
                 self.lerntag_list.setItemWidget(item, row_widget)
             is_current = number == self._current
-            font = self._fixed_font()
-            font.setBold(is_current)
-            row_widget.label.setFont(font)
+            row_widget.label.setFont(bold if is_current else normal)
             row_widget.label.setText(f"{'▶' if is_current else ' '} {number} - {self._topics[number]}")
             item.setSizeHint(row_widget.sizeHint())
         self._update_progress_view()
@@ -735,10 +748,9 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         self.save_config()
         self.accept()
 
-    def closeEvent(self, event):
+    def reject(self):  # Esc and the window's X (base closeEvent) both save
         self.save_config()
-        event.ignore()
-        self.reject()
+        super().reject()
 
     def _update_section(self, conf: dict, section: dict, settings: LerntagSettings, mark_today: bool) -> None:
         rows = self._lerntag_rows()
@@ -786,21 +798,11 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         return result
 
 
-def open_lernplan_manager(self):
-    # Check if Ankizin is installed
-    if not check_ankizin_installation():
-        return
-
-    dialog = LernplanManagerDialog(mw)
-    # dialog.setFixedSize(dialog.sizeHint())
-    dialog.exec()
+def open_lernplan_manager():
+    if check_ankizin_installation():
+        LernplanManagerDialog(mw).exec()
 
 
-def open_lerntag_deck_creator(self):
-    # Check if Ankizin is installed
-    if not check_ankizin_installation():
-        return
-
-    dialog = LerntagDeckCreatorDialog(mw)
-    # dialog.setFixedSize(dialog.sizeHint())
-    dialog.exec()
+def open_lerntag_deck_creator():
+    if check_ankizin_installation():
+        LerntagDeckCreatorDialog(mw).exec()

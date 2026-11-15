@@ -2,6 +2,7 @@
 
 Based on "Ankizin-Lernplan Plus" by Lukas Schaffner.
 """
+from __future__ import annotations
 import datetime
 import html
 
@@ -12,6 +13,7 @@ from ..constants import ADDON_DIR_NAME
 from .lernplan_decks import (
     effective_today,
     get_kreuzen_tage,
+    get_lerntag_list,
     get_lerntag_order,
     get_lerntag_topics,
     is_past_day,
@@ -110,11 +112,12 @@ def summary_lines(done: int, total: int, finish: datetime.date | None, m2: datet
 def deck_browser_progress_hk(deck_browser, content) -> None:
     try:
         conf = (mw.addonManager.getConfig(ADDON_DIR_NAME) or {}).get("lernplan", {})
-        order = get_lerntag_order(mw.col, conf)
+        lerntage = get_lerntag_list(mw.col)
+        order = get_lerntag_order(lerntage, conf)
         if not conf.get("autocreate") or not conf.get("lerntag") or not order:
             return
         count = kreuzen_count(conf)
-        topics = get_lerntag_topics(mw.col, count)
+        topics = get_lerntag_topics(lerntage, count)
         current = str(conf["lerntag"]).zfill(3)
         finished = {n for n in order if is_past_day(conf.get("past_days", []), int(n))}
 
@@ -145,7 +148,7 @@ def deck_browser_progress_hk(deck_browser, content) -> None:
             '<div style="background:rgba(128,128,128,.25);border-radius:6px;height:12px;margin:8px 0;overflow:hidden;">'
             f'<div style="width:{pct}%;background:{"#e53935" if behind else _DONE};height:100%;"></div></div>'
             f'<div style="opacity:.85;">{info}</div>'
-            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics, set(get_kreuzen_tage(mw.col, count)))}'
+            f'<div style="margin-top:8px;">{progress_grid_html(order, finished, current, topics, set(get_kreuzen_tage(lerntage, count)))}'
             f'<small>{GRID_LEGEND}</small></div></div>'
         )
     except Exception as e:
