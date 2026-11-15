@@ -55,7 +55,7 @@ class _HelperDialog(QDialog):
         raise NotImplementedError
 
     def confirm(self):
-        self.helper.set_delete_outdated_cards(self.delete_cb.isChecked())
+        self.helper.delete_outdated_cards = self.delete_cb.isChecked()
         self._save()
         self.accept()
 
@@ -83,8 +83,8 @@ class FirstSetupConfigDialog(_HelperDialog):
         )
 
     def _save(self):
-        self.helper.set_update_deck_config(self.deck_cb.isChecked())
-        self.helper.set_suspend_all_cards(self.suspend_all_cb.isChecked())
+        self.helper.update_deck_config = self.deck_cb.isChecked()
+        self.helper.suspend_all_cards = self.suspend_all_cb.isChecked()
 
 
 class UpdateConfigDialog(_HelperDialog):
@@ -98,4 +98,4 @@ class UpdateConfigDialog(_HelperDialog):
         self.suspend_new_cb = self._checkbox(layout, "Neue Karten aussetzen", self.helper.suspend_new_cards)
 
     def _save(self):
-        self.helper.set_suspend_new_cards(self.suspend_new_cb.isChecked())
+        self.helper.suspend_new_cards = self.suspend_new_cb.isChecked()

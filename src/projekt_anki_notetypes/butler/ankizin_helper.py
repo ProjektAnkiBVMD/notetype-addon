@@ -1,10 +1,8 @@
 from aqt import mw
 from aqt.qt import *
-from aqt.utils import showInfo
 import re
 from aqt.operations import CollectionOp
 from anki.collection import OpChanges
-from ..utils import create_backup
 
 from .utils import async_general_housekeeping, check_ankizin_installation
 from .gui import FirstSetupConfigDialog, UpdateConfigDialog
@@ -14,7 +12,7 @@ class AnkizinHelper:
 
     def __init__(self):
         self.DELETE_TAG_PATTERN = re.compile(
-            r"#Ankizin_v(?:\d+|Ankihub|AnkiCollab)::!DELETE(::(?:update|duplicate))?$"
+            r"^#Ankizin_v(?:\d+|Ankihub|AnkiCollab)::!DELETE(::(?:update|duplicate))?$"
         )
 
         self.delete_outdated_cards = True
@@ -22,49 +20,11 @@ class AnkizinHelper:
         self.suspend_all_cards = True
         self.suspend_new_cards = True
 
-    def set_delete_outdated_cards(self, state):
-        self.delete_outdated_cards = state
-
-    def set_update_deck_config(self, state):
-        self.update_deck_config = state
-
-    def set_suspend_all_cards(self, state):
-        self.suspend_all_cards = state
-
-    def set_suspend_new_cards(self, state):
-        self.suspend_new_cards = state
-
-    def find_ankizin_deck(self):
-        # Find Ankizin deck by checking where the majority of all cards that have the #Ankizin tag are located
-        collection = mw.col
-        deck_counts = {}
-
-        # Find all notes with #Ankizin tag
-        for card_id in collection.find_cards("tag:#Ankizin_v*"):
-            card = collection.get_card(card_id)
-            deck_id = card.did
-            deck_counts[deck_id] = deck_counts.get(deck_id, 0) + 1
-
-        # Find deck with most Ankizin cards
-        if deck_counts:
-            max_deck_id = max(deck_counts.items(), key=lambda x: x[1])[0]
-            return max_deck_id
-
-        return None
-
     def delete_marked_cards(self):
-        collection = mw.col
-        # Delete notes with specific tags
-        notes_to_delete = set()
-        for note_id in collection.find_notes(""):
-            note = collection.get_note(note_id)
-            for tag in note.tags:
-                if self.DELETE_TAG_PATTERN.match(tag):
-                    notes_to_delete.add(note_id)
-                    break
-
+        # tag:re: is matched per tag (case-insensitive, unanchored), so ^ and $ pin it down
+        notes_to_delete = mw.col.find_notes(f'"tag:re:{self.DELETE_TAG_PATTERN.pattern}"')
         print(f"Deleting {len(notes_to_delete)} notes")
-        collection.remove_notes(list(notes_to_delete))
+        mw.col.remove_notes(notes_to_delete)
 
     @staticmethod
     def general_housekeeping():
@@ -89,89 +49,59 @@ class AnkizinHelper:
             "fsrs": True,
         }
 
-        def set_config_new_version():
-            """Apply settings using set_config() method (newer Anki versions)"""
-            for key, value in config_settings.items():
-                print(f"Setting config: {key} = {value}")
-                mw.col.set_config(key, value)
-
-        def set_config_old_version():
-            """Apply settings using conf dictionary (older Anki versions)"""
-            for key, value in config_settings.items():
-                mw.col.conf[key] = value
-            mw.col.setMod()  # deprecated in newer versions
-
-        try:
-            set_config_new_version()
-        except (AttributeError, TypeError):
-            print("The kids scetchy")
-            set_config_old_version()
+        for key, value in config_settings.items():
+            mw.col.set_config(key, value)
 
         mw.col.set_browser_card_columns(config_settings["activeCols"])
 
     def optimize_settings(self):
-        print("hello")
-        try:
-            # Get the default configuration for the ankizin deck
-            did = mw.col.decks.id(
-                "Ankizin"
-            )  # only works for very default default deck idk mabye ill fix it later
+        self.setup_collection_config()
 
-            default_conf = mw.col.decks.config_dict_for_deck_id(did)
-            print("default conf")
-            print(default_conf)
+        # Ankizin gets a deck options preset of its own, so the user's other decks keep theirs.
+        # Cards in filtered decks count for the deck they came from (odid).
+        dids = mw.col.db.list(
+            "select distinct case when odid != 0 then odid else did end from cards "
+            "where nid in (select id from notes where tags like '% #Ankizin_v%')"
+        )
+        if not dids:
+            return
 
-            # Update collection configuration
-            self.setup_collection_config()
+        decks = mw.col.decks
+        preset = next((c for c in decks.all_config() if c["name"] == "Ankizin"), None) or decks.add_config("Ankizin")
 
-            print("collection settings updated")
+        # fmt: off
+        # New cards settings
+        preset["new"]["perDay"] = 50
 
-            # Update deck configurations
-            if default_conf:
-                # fmt: off
-                # New cards settings
-                default_conf["new"]["perDay"] = 50
+        # Review settings
+        preset["rev"]["perDay"] = 9999
 
-                # Review settings
-                default_conf["rev"]["perDay"] = 9999
+        # Learning steps
+        preset["new"]["delays"] = [15.0]  # 15 minutes
+        preset["lapse"]["delays"] = [15.0]  # 15 minutes for relearning
 
-                # Learning steps
-                default_conf["new"]["delays"] = [15.0]  # 15 minutes
-                default_conf["lapse"]["delays"] = [15.0]  # 15 minutes for relearning
+        # Leech settings
+        preset["lapse"]["leechFails"] = 15
+        preset["lapse"]["leechAction"] = 1  # 1 = tag only
 
-                # Leech settings
-                default_conf["lapse"]["leechFails"] = 15
-                default_conf["lapse"]["leechAction"] = 1  # 1 = tag only
+        # Display order settings
+        preset["new"]["order"] = 3  # DeckConfig_Config_NewCardGatherPriority.HIGHEST_POSITION
+        preset["newSortOrder"] = 1  # Sortierreihenfolge neuer Karten: Sammelreihenfolge (und Sammelreihenfolge ist typischerweise "Stapel")
+        preset["newGatherPriority"] = 2  # ascending
+        preset["reviewOrder"] = 4  # DeckConfig_Config_ReviewCardOrder.INTERVALS_DESCENDING
+        preset["newMix"] = 1  # Reihenfolge Neu/Wiederholung: Nach Wiederholungen anzeigen
 
-                # Display order settings
-                default_conf["new"]["order"] = 3  # DeckConfig_Config_NewCardGatherPriority.HIGHEST_POSITION
-                default_conf["newSortOrder"] = 1  # Sortierreihenfolge neuer Karten: Sammelreihenfolge (und Sammelreihenfolge ist typischerweise "Stapel")
-                default_conf["newGatherPriority"] = 2  # ascending
-                default_conf["reviewOrder"] = 4  # DeckConfig_Config_ReviewCardOrder.INTERVALS_DESCENDING
-                default_conf["newMix"] = 1  # Reihenfolge Neu/Wiederholung: Nach Wiederholungen anzeigen
+        # Sibling settings
+        preset["new"]["bury"] = True  # Bury new siblings
+        preset["rev"]["bury"] = True  # Bury review siblings
+        preset["buryInterdayLearning"] = True  # Bury interday learning cards
 
-                # Sibling settings
-                default_conf["new"]["bury"] = True  # Bury new siblings
-                default_conf["rev"]["bury"] = True  # Bury review siblings
-                default_conf["buryInterdayLearning"] = True  # Bury interday learning cards
-                # fmt: on
+        preset["rev"]["maxIvl"] = 180  # 180 days
+        # fmt: on
 
-                # für Daniel
-                default_conf["rev"]["maxIvl"] = 180  # 180 days
-                print("settings updated")
-                # Save the configuration
-                deckDict = mw.col.decks.get(did)
-                mw.col.decks.set_config_id_for_deck_dict(
-                    deckDict, default_conf["id"]
-                )
-                mw.col.decks.save(default_conf)
-            else:
-                showInfo(
-                    "Keine Deck-Einstellung gefunden. Schreib uns gerne auf Discord an."
-                )
-
-        except Exception as e:
-            print({str(e)})
+        decks.update_config(preset)
+        for did in dids:
+            decks.set_config_id_for_deck_dict(decks.get(did), preset["id"])
 
     def suspend_cards_from_deck(self, cids=[], all=False):
         # Get the deck object
@@ -217,6 +147,11 @@ class AnkizinHelper:
     def on_success(out: OpChanges) -> None:
         AnkizinHelper.general_housekeeping()  # always run this
 
+    @staticmethod
+    def _after_backup(fut, next_step):
+        fut.result()  # raises if the backup failed, so nothing is changed without one
+        next_step()
+
     def run_first_time_setup(self):
         # Check if Ankizin is installed
         if not check_ankizin_installation():
@@ -226,32 +161,31 @@ class AnkizinHelper:
         dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
             mw.taskman.with_progress(
-                create_backup,
-                on_done=lambda _: self.handle_first_time_options_op(),
+                mw.create_backup_now,
+                on_done=lambda fut: self._after_backup(fut, self.handle_first_time_options_op),
                 label="Erstelle Backup...",
                 immediate=True,
             )
 
     def find_new_cards_from_update(self):
         collection = mw.col
-        # Pattern to match both version numbers
-        version_pattern = re.compile(r"#Ankizin_v(\d+)::§NEW_CARDS::v(\d+)")
+        # the Ankizin source is a version number (old), Ankihub or AnkiCollab
+        version_pattern = re.compile(r"#Ankizin_v(\d+|Ankihub|AnkiCollab)::§NEW_CARDS::v(\d+)")
 
-        # Group tags by Ankizin version
+        # Group the NEW_CARDS versions by Ankizin source
         version_groups = {}
         for tag in collection.tags.all():
             if match := version_pattern.match(tag):
-                ankizin_ver, cards_ver = map(int, match.groups())
-                if ankizin_ver not in version_groups:
-                    version_groups[ankizin_ver] = []
-                version_groups[ankizin_ver].append(cards_ver)
+                version_groups.setdefault(match.group(1), []).append(int(match.group(2)))
 
         if not version_groups:
             return []
 
-        # Find latest Ankizin version
-        latest_ankizin = max(version_groups.keys())
-        # Find latest NEW_CARDS version within that Ankizin version
+        # Latest source: AnkiCollab, then Ankihub, then the highest version number
+        latest_ankizin = max(
+            version_groups, key=lambda v: (v == "AnkiCollab", v == "Ankihub", int(v) if v.isdigit() else 0)
+        )
+        # Find latest NEW_CARDS version within that source
         latest_cards = max(version_groups[latest_ankizin])
 
         target_tag = f"#Ankizin_v{latest_ankizin}::§NEW_CARDS::v{latest_cards}"
@@ -268,8 +202,8 @@ class AnkizinHelper:
         dialog.setFixedSize(dialog.sizeHint())
         if dialog.exec() == QDialog.DialogCode.Accepted:
             mw.taskman.with_progress(
-                create_backup,
-                on_done=lambda _: self.handle_update_options_op(),
+                mw.create_backup_now,
+                on_done=lambda fut: self._after_backup(fut, self.handle_update_options_op),
                 label="Erstelle Backup...",
                 immediate=True,
             )

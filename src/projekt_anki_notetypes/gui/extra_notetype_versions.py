@@ -7,7 +7,7 @@ from aqt import mw
 from aqt.utils import askUser, tooltip
 
 from ..notetype_setting_definitions import projekt_anki_notetype_names
-from ..utils import adjust_fields, create_backup
+from ..utils import adjust_fields
 
 
 def handle_extra_notetype_versions() -> None:
@@ -45,7 +45,7 @@ def handle_extra_notetype_versions() -> None:
         return
 
     mw.taskman.with_progress(
-        create_backup,
+        mw.create_backup_now,
         on_done=lambda future: convert_extra_notetypes(
             future, copy_mids_by_notetype_base_name
         ),

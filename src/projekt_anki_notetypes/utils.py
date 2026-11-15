@@ -2,8 +2,6 @@ import time
 from copy import deepcopy
 from typing import Dict, List
 
-from aqt import mw
-
 from .notetype_setting_definitions import projekt_anki_notetype_model
 
 try:
@@ -67,16 +65,3 @@ def adjust_fields(
     final_fields = new_model_fields + only_local_fields
 
     return final_fields
-
-
-def create_backup() -> None:
-    try:
-        mw.col.create_backup(
-            backup_folder=mw.pm.backupFolder(),
-            force=True,
-            wait_for_completion=True,
-        )
-    except AttributeError:  # < 2.1.50
-        mw.col.close(downgrade=False)
-        mw.backup()  # type: ignore
-        mw.col.reopen(after_full_sync=False)
