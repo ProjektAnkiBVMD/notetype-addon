@@ -3,27 +3,23 @@ import aqt
 import re
 
 from aqt import mw
-from aqt.operations import QueryOp, CollectionOp
-from anki.collection import EmptyCardsReport, OpChanges
+from aqt.operations import QueryOp
+from anki.collection import EmptyCardsReport
 from aqt.emptycards import EmptyCardsDialog
 from aqt.utils import showInfo, askUser, showWarning, tooltip
 from .lernplan_decks import DeckResult
 
 
-def on_success(out: OpChanges) -> None:
-    showInfo("Fertig! Viel Spaß mit Ankizin!")
-    aqt.mw.reset()
-
-
-def fix_integrity_inner() -> OpChanges:
-    aqt.mw.col.fix_integrity()
-    return OpChanges()
-
-
 def fix_integrity() -> None:
-    CollectionOp(parent=aqt.mw, op=lambda _: fix_integrity_inner()).success(
-        on_success
-    ).run_in_background()
+    def on_success(result: tuple[str, bool]) -> None:
+        message, ok = result
+        # same dialog as always; the findings are only added if the check found problems
+        showInfo("Fertig! Viel Spaß mit Ankizin!" + ("" if ok else f"\n\nDatenbank-Prüfung:\n{message}"))
+        aqt.mw.reset()
+
+    QueryOp(
+        parent=aqt.mw, op=lambda col: col.fix_integrity(), success=on_success
+    ).with_progress("Datenbank wird geprüft...").run_in_background()
 
 
 def async_general_housekeeping() -> None:
@@ -32,9 +28,7 @@ def async_general_housekeeping() -> None:
             # show the empty cards instead of deleting them silently
             EmptyCardsDialog(aqt.mw, report).show()
 
-        # Cheesy af, ich will das async machen aber erst nachdem sicher alle Karten gelöscht wurden. Also spawn ich hier noch ne op
-        print("Fixing collection integrity")
-        aqt.mw.progress.finish()  # finish bc collectionOp will spawn a new one
+        # run only after the cards are gone, so this spawns another op
         fix_integrity()
 
     def op(col) -> EmptyCardsReport:
@@ -79,8 +73,6 @@ def check_ankizin_installation():
     return has_ankizin
 
 
-# NOTE: This function is not used in the current codebase due to missing anyward compatibility
-# other than to display the version in the settings dialog
 def get_ankizin_versions() -> list:
     col = mw.col
     if col is None:
@@ -108,10 +100,7 @@ def get_ankizin_versions() -> list:
             return (1, 0)
         elif version == "Zankiphil":
             return (3, 0)
-        elif version.startswith("v") and version[1:].isdigit():
-            return (1, -int(version[1:]))  # negative for decreasing order
-        else:
-            return (4, version)
+        return (2, -int(version[1:]))  # numbers in decreasing order
     
     versions.sort(key=sort_key)
     return versions
