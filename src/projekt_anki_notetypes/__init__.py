@@ -136,6 +136,7 @@ def maybe_show_deck_update_notice():
         "<li><b>Fortschritt &amp; Prognose:</b> alle Lerntage als farbige Kacheln, voraussichtliches Plan-Ende und Puffer bis zum M2-Termin (M2 F27 oder M2 H27)</li>"
         "<li><b>Zusatz- und Pausentage</b> per Kalender; der Lernplan lässt sich als Kalender-Datei (.ics) exportieren</li>"
         "</ul>"
+        "<b>Außerdem:</b> Performance-Verbesserungen und stabilere Karten (Button <i>Aktualisiere Notiztypen</i>).<br><br>"
         "Fortschritt, Prognose, Kalender und .ics stammen aus <i>Ankizin-Lernplan Plus</i> von Lukas Schaffner.<br><br>"
         "Zur Erinnerung: Ankizin ist <a href='https://www.ankizin.de/wiki/umzug-ankihub-auf-ankicollab/'>zu AnkiCollab umgezogen</a>.<br><br>"
         "<small><i>Dieses Pop-Up kommt einmal pro Version, bis du auf 'Verstanden' klickst.</i></small>",
