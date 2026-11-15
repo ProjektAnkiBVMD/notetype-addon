@@ -1,4 +1,4 @@
-<!-- version e167e06 -->
+<!-- version c3db7fb -->
 <script>
   // ############## USER CONFIGURATION START ##############
   // ##############  HINT REVEAL SHORTCUTS  ##############
@@ -857,25 +857,17 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       else window.setTimeout(processSelective1b1, 0);
     };
 
-    window.onload = delayedProcessSelective1b1;
-    if (document.readyState === "complete") {
+    // Anki's reviewer runs onUpdateHook after it has inserted the card AND set the body class,
+    // once per card and without leftover observers. Without it (AnkiMobile, AnkiDroid, ...) run when loaded.
+    if (globalThis.onUpdateHook) {
+      onUpdateHook.push(delayedProcessSelective1b1);
+    }
+    else if (document.readyState === "complete") {
       delayedProcessSelective1b1();
     }
     else {
       document.addEventListener("DOMContentLoaded", delayedProcessSelective1b1);
     }
-
-    // Observe document.body class changes to trigger re-rendering.
-    // This is useful, because Anki doesn’t always start with an up-to-date class list:
-    // https://forums.ankiweb.net/t/card-card-classes-only-injected-separately-now/27387.
-    const observer = new MutationObserver(function (mutationsList, observer) {
-      for (let mutation of mutationsList) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          delayedProcessSelective1b1();
-        }
-      }
-    });
-    observer.observe(document.body, { attributes: true });
   }
   Persistence.setItem("clozeHints", clozeHints);
 </script>
