@@ -110,7 +110,7 @@ class LerntagDeckCreatorDialog(QDialog):
         main_layout.addWidget(logo_label)
 
     def _fixed_font(self) -> QFont:
-        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        font = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont)
         font.setPointSize(font.pointSize() + 2)
         return font
 
