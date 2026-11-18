@@ -118,14 +118,20 @@ def maybe_show_notetypes_update_notice():
         pass
 
 
-# NOTE: the text has to be updated manually each time ADDON_VERSION is bumped for a noteworthy release
+def _major_minor(version: str | None) -> str | None:
+    """'6.3.2' -> '6.3', so that fix releases (6.3.1, 6.3.2, ...) don't count as a new version."""
+    return ".".join(version.split(".")[:2]) if version else None
+
+
+# NOTE: the text has to be updated manually each time ADDON_VERSION gets a new major/minor version (v6.4, v7, ...);
+# fix releases (v6.3.2) don't show the notice again
 def maybe_show_deck_update_notice():
     # can happen when restoring data from backup
     if not mw.col:
         return
 
     conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
-    if ADDON_VERSION == conf.get("latest_notified_deck_version"):
+    if _major_minor(ADDON_VERSION) == _major_minor(conf.get("latest_notified_deck_version")):
         return
 
     update_dialog = askUserDialog(
