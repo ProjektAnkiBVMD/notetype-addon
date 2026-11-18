@@ -54,17 +54,9 @@ class LerntagDeckCreatorDialog(QDialog):
 
         self._load_config()
 
-        # the dialog can be taller than the screen, so the whole content scrolls
+        # the dialog can be taller than the screen, so the whole content scrolls;
+        # the scroll area exists before the content is built, because building it can already call _fit_to_content
         self._content = QWidget()
-        content_layout = QHBoxLayout(self._content)
-        self._setup_logo(content_layout)
-
-        right_layout = QVBoxLayout()
-        self._setup_explanation(right_layout)
-        self._setup_main_content(right_layout)
-        self._setup_action_buttons(right_layout)
-        content_layout.addLayout(right_layout)
-
         self._scroll_area = QScrollArea()
         self._scroll_area.setWidgetResizable(True)
         self._scroll_area.setFrameShape(QFrame.Shape.NoFrame)
@@ -72,6 +64,14 @@ class LerntagDeckCreatorDialog(QDialog):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(self._scroll_area)
+
+        content_layout = QHBoxLayout(self._content)
+        self._setup_logo(content_layout)
+        right_layout = QVBoxLayout()
+        self._setup_explanation(right_layout)
+        self._setup_main_content(right_layout)
+        self._setup_action_buttons(right_layout)
+        content_layout.addLayout(right_layout)
 
         self.setWindowIcon(QIcon("icons:ankizin.png"))
         self._fit_to_content()
