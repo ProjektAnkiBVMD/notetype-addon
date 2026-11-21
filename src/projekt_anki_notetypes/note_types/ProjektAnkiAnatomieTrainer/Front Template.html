@@ -1,4 +1,4 @@
-<!-- version c3db7fb -->
+<!-- version 85852c4 -->
 {{#Ursprung}}
 {{^UrsprungCloze1}}{{^UrsprungCloze2}}{{^UrsprungCloze3}}
 <!-- include cloze_anything -->
@@ -698,8 +698,6 @@ replace the arrows/dashes from the statement below with double curly brackets-->
   var oneByOneFieldEmpty = selectiveOneByOne ? "{{One by one}}" === "" : true;
   var clozeOneByOneEnabled = alwaysOneByOne ? true : !oneByOneFieldEmpty;
 
-  // avoid flickering. Must unset this in the back.
-  document.getElementById("qa").style.display = "none";
   var clozeHints = [];
 
   if (clozeOneByOneEnabled) {
@@ -852,21 +850,16 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       alreadyRendered = true;
     }
 
-    function delayedProcessSelective1b1() {
-      if (window.requestAnimationFrame) window.requestAnimationFrame(processSelective1b1); // less flickering
-      else window.setTimeout(processSelective1b1, 0);
-    };
-
     // Anki's reviewer runs onUpdateHook after it has inserted the card AND set the body class,
     // once per card and without leftover observers. Without it (AnkiMobile, AnkiDroid, ...) run when loaded.
     if (globalThis.onUpdateHook) {
-      onUpdateHook.push(delayedProcessSelective1b1);
+      onUpdateHook.push(processSelective1b1);
     }
     else if (document.readyState === "complete") {
-      delayedProcessSelective1b1();
+      processSelective1b1();
     }
     else {
-      document.addEventListener("DOMContentLoaded", delayedProcessSelective1b1);
+      document.addEventListener("DOMContentLoaded", processSelective1b1);
     }
   }
   Persistence.setItem("clozeHints", clozeHints);

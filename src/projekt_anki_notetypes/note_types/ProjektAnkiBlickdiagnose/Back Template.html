@@ -1,4 +1,4 @@
-<!-- version c3db7fb -->
+<!-- version 85852c4 -->
 <!-- empty div to make AnkiDroid happy -->
 <div></div>
 
@@ -663,6 +663,14 @@ replace the arrows/dashes from the statement below with double curly brackets-->
       makeImagesBlur();
     };
   }
+
+  // tap the image to toggle too; a still-blurred image only unblurs first (imageBlur.ejs)
+  {{#Path-Image (Overlay)}}
+  document.getElementById("bild").addEventListener("click", (e) => {
+    if (e.target.closest("img.blur")) return;
+    toggleOverlay();
+  });
+  {{/Path-Image (Overlay)}}
 </script>
 
 <script>
