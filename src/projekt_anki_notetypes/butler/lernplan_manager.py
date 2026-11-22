@@ -30,6 +30,7 @@ from .lernplan_schedule import (
     DEFAULT_WOCHENTAGE,
     M2_TERMINE,
     compute_schedule,
+    is_lernplan_day,
     parse_date,
     parse_dates,
 )
@@ -386,38 +387,44 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
         if any(day >= datetime.date.today() for day in self._extra_days | self._skip_days):
             toggle.setChecked(True)  # planned days are not hidden
 
+    def _is_lerntag(self, day: datetime.date) -> bool:
+        weekdays = [button.isChecked() for button in self.weekday_buttons]
+        return is_lernplan_day(day, weekdays, self._extra_days, self._skip_days)
+
     def _toggle_extra_day(self, qdate: QDate) -> None:
+        """Flip the day between Lerntag and free by storing only the difference to its weekday."""
         day = qdate.toPyDate()
-        if day in self._extra_days:
-            self._extra_days.discard(day)
-        elif day in self._skip_days:
-            self._skip_days.discard(day)
-        elif self.weekday_buttons[day.weekday()].isChecked():
-            self._skip_days.add(day)
-        else:
-            self._extra_days.add(day)
-        self._mark_extra_days()
+        make_lerntag = not self._is_lerntag(day)
+        self._extra_days.discard(day)
+        self._skip_days.discard(day)
+        if make_lerntag != self.weekday_buttons[day.weekday()].isChecked():
+            (self._extra_days if make_lerntag else self._skip_days).add(day)
         self._update_progress_view()
 
     def _mark_extra_days(self) -> None:
+        """Color every day that deviates from its weekday: green = extra Lerntag, gray = paused."""
         self._calendar.setDateTextFormat(QDate(), QTextCharFormat())  # reset all marks
-        palette = self._calendar.palette()  # skipped days follow the light/dark theme
-        for days, background, foreground, tip in (
-            (self._extra_days, QColor("#43a047"), QColor("#ffffff"), "Zusätzlicher Lerntag"),
-            (
-                self._skip_days,
-                palette.color(QPalette.ColorRole.Mid),
-                palette.color(QPalette.ColorRole.PlaceholderText),
-                "Ausgesetzt",
-            ),
-        ):
-            fmt = QTextCharFormat()
-            fmt.setBackground(background)
-            fmt.setForeground(foreground)
-            fmt.setFontStrikeOut(days is self._skip_days)
-            fmt.setToolTip(tip)
-            for day in days:
-                self._calendar.setDateTextFormat(QDate(day), fmt)
+        palette = self._calendar.palette()  # paused days follow the light/dark theme
+        extra = self._text_format(QColor("#43a047"), QColor("#ffffff"), "Zusätzlicher Lerntag")
+        paused = self._text_format(
+            palette.color(QPalette.ColorRole.Mid),
+            palette.color(QPalette.ColorRole.PlaceholderText),
+            "Ausgesetzt",
+            strike_out=True,
+        )
+        for day in self._extra_days | self._skip_days:
+            is_lerntag = self._is_lerntag(day)
+            if is_lerntag != self.weekday_buttons[day.weekday()].isChecked():
+                self._calendar.setDateTextFormat(QDate(day), extra if is_lerntag else paused)
+
+    @staticmethod
+    def _text_format(background: QColor, foreground: QColor, tip: str, strike_out: bool = False) -> QTextCharFormat:
+        fmt = QTextCharFormat()
+        fmt.setBackground(background)
+        fmt.setForeground(foreground)
+        fmt.setFontStrikeOut(strike_out)
+        fmt.setToolTip(tip)
+        return fmt
 
     def _setup_lerntag_list(self, outer_layout: QVBoxLayout) -> None:
         group = QGroupBox("Lerntage:")
@@ -543,6 +550,7 @@ class LernplanManagerDialog(LerntagDeckCreatorDialog):
     def _update_progress_view(self, *_) -> None:
         if self._tiles is None:
             return  # the list is filled before the progress group exists
+        self._mark_extra_days()
         rows = self._lerntag_rows()
         order = [number for number, _ in rows]
         finished = {number for number, done in rows if done}
