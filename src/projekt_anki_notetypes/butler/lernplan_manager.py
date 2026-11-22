@@ -134,6 +134,13 @@ class LerntagDeckCreatorDialog(QDialog):
         self.lerntag_combo.setCurrentIndex(max(self.lerntag_combo.findData(lerntag), 0))
         layout.addWidget(self.lerntag_combo)
 
+    @staticmethod
+    def _add_button(layout: QLayout, button: QAbstractButton, checked: bool, tooltip: str = "") -> None:
+        button.setChecked(checked)
+        if tooltip:
+            button.setToolTip(tooltip)
+        layout.addWidget(button)
+
     def _setup_extra_choices(
         self,
         layout: QLayout,
@@ -141,32 +148,35 @@ class LerntagDeckCreatorDialog(QDialog):
         create_subchapter_decks: bool,
         include_unfinished: bool | None = None,
     ) -> None:
-        extra_choices_group_box = QGroupBox("Auswahl:")
-        extra_choices_buttons_layout = QVBoxLayout()
-        extra_choices_buttons_layout.setContentsMargins(5, 5, 5, 5)
+        group_box = QGroupBox("Auswahl:")
+        box_layout = QVBoxLayout(group_box)
+        box_layout.setContentsMargins(5, 5, 5, 5)
 
         self.top100_button = QCheckBox("nur TOP-100 Themen")
-        self.top100_button.setChecked(top100)
-        self.top100_button.setToolTip("Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS.")
-        extra_choices_buttons_layout.addWidget(self.top100_button)
-
+        self._add_button(
+            box_layout,
+            self.top100_button,
+            top100,
+            "Beschränkt die Auswahl auf die wichtigsten 100 Themen aus AMBOSS.",
+        )
         self.create_subchapter_decks_button = QCheckBox("Separate Auswahlstapel für jedes Kapitel erstellen")
-        self.create_subchapter_decks_button.setChecked(create_subchapter_decks)
-        self.create_subchapter_decks_button.setToolTip("Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages.")
-        extra_choices_buttons_layout.addWidget(self.create_subchapter_decks_button)
-
+        self._add_button(
+            box_layout,
+            self.create_subchapter_decks_button,
+            create_subchapter_decks,
+            "Erstellt mehrere Unter-Stapel, einen pro Kapitel/Thema des Lerntages.",
+        )
         if include_unfinished is not None:  # only the Lernplan-Manager builds the due deck
             self.include_unfinished_cb = QCheckBox("Nicht geschaffte Karten vergangener Lerntage weiter einplanen")
-            self.include_unfinished_cb.setChecked(include_unfinished)
-            self.include_unfinished_cb.setToolTip(
+            self._add_button(
+                box_layout,
+                self.include_unfinished_cb,
+                include_unfinished,
                 "Neue Karten und Karten im Lernen, die du an ihrem Lerntag nicht geschafft hast, landen im Stapel "
                 "<code>!FÄLLIGE&nbsp;KARTEN&nbsp;VERGANGENER&nbsp;LERNTAGE</code>.<br>"
-                "Ohne diese Option enthält er nur fällige Karten und die übrigen fallen aus dem Lernplan."
+                "Ohne diese Option enthält er nur fällige Karten und die übrigen fallen aus dem Lernplan.",
             )
-            extra_choices_buttons_layout.addWidget(self.include_unfinished_cb)
-
-        extra_choices_group_box.setLayout(extra_choices_buttons_layout)
-        layout.addWidget(extra_choices_group_box)
+        layout.addWidget(group_box)
 
     def _setup_yield_group(
         self,
@@ -176,34 +186,21 @@ class LerntagDeckCreatorDialog(QDialog):
         normyield: bool,
         lowyield: bool,
     ) -> None:
-        yield_group_box = QGroupBox("Karten:")
-        yield_buttons_layout = QVBoxLayout()
-        yield_buttons_layout.setContentsMargins(5, 5, 5, 5)
-
-        self.highyield_stark_button = QRadioButton("nur HIGH-YIELD stark gelb")
-        self.highyield_stark_button.setChecked(highyield_stark and not highyield_leicht)
-        yield_buttons_layout.addWidget(self.highyield_stark_button)
-
-        self.highyield_all_button = QRadioButton("alle HIGH-YIELD Karten (stark + leicht gelb)")
-        self.highyield_all_button.setChecked(highyield_stark and highyield_leicht)
-        yield_buttons_layout.addWidget(self.highyield_all_button)
-
-        self.standard_button = QRadioButton("STANDARD Karten (high-yield und normal)")
-        self.standard_button.setChecked(normyield)
-        yield_buttons_layout.addWidget(self.standard_button)
-
-        self.lowyield_button = QRadioButton("ALLE Karten (high-yield, normal UND low-yield)")
-        self.lowyield_button.setChecked(lowyield)
-        yield_buttons_layout.addWidget(self.lowyield_button)
-
+        group_box = QGroupBox("Karten:")
+        box_layout = QVBoxLayout(group_box)
+        box_layout.setContentsMargins(5, 5, 5, 5)
         self.yield_button_group = QButtonGroup(self)
-        self.yield_button_group.addButton(self.highyield_stark_button)
-        self.yield_button_group.addButton(self.highyield_all_button)
-        self.yield_button_group.addButton(self.standard_button)
-        self.yield_button_group.addButton(self.lowyield_button)
-
-        yield_group_box.setLayout(yield_buttons_layout)
-        layout.addWidget(yield_group_box)
+        for attr, text, checked in (
+            ("highyield_stark_button", "nur HIGH-YIELD stark gelb",                      highyield_stark and not highyield_leicht),
+            ("highyield_all_button",   "alle HIGH-YIELD Karten (stark + leicht gelb)",   highyield_stark and highyield_leicht),
+            ("standard_button",        "STANDARD Karten (high-yield und normal)",        normyield),
+            ("lowyield_button",        "ALLE Karten (high-yield, normal UND low-yield)", lowyield),
+        ):
+            button = QRadioButton(text)
+            setattr(self, attr, button)
+            self._add_button(box_layout, button, checked)
+            self.yield_button_group.addButton(button)
+        layout.addWidget(group_box)
 
     def _setup_explanation(self, right_layout: QVBoxLayout) -> None:
         explanation_label = QLabel("Erstelle einen spezifischen Lerntag-Auswahlstapel <b>unabhängig</b> vom automatischen Lernplan-Manager.")
@@ -222,9 +219,12 @@ class LerntagDeckCreatorDialog(QDialog):
             self._lowyield,
         )
         self.mark_done_cb = QCheckBox("Lerntag als gelernt markieren (z. B. für eine Klausur vorgelernt)")
-        self.mark_done_cb.setChecked(True)
-        self.mark_done_cb.setToolTip("Der automatische Lernplan-Manager überspringt diesen Lerntag dann.")
-        right_layout.addWidget(self.mark_done_cb)
+        self._add_button(
+            right_layout,
+            self.mark_done_cb,
+            True,
+            "Der automatische Lernplan-Manager überspringt diesen Lerntag dann.",
+        )
 
     def _setup_action_buttons(self, right_layout: QVBoxLayout) -> None:
         box = QDialogButtonBox()
