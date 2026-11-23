@@ -60,6 +60,10 @@ def setup():
 
 def on_profile_did_open():
     copy_resources_into_media_folder()
+    from .onboarding.engine import detect_setup_state, get_setup_state
+
+    if get_setup_state().get("resume") or detect_setup_state()["scenario"] != "ready":
+        return
     maybe_show_notetypes_update_notice()
     maybe_show_deck_update_notice()
 

@@ -6,14 +6,13 @@ from anki.collection import OpChanges
 
 from .utils import async_general_housekeeping, check_ankizin_installation
 from .gui import FirstSetupConfigDialog, UpdateConfigDialog
+from ..onboarding import engine as _setup_engine
 
 
 class AnkizinHelper:
 
     def __init__(self):
-        self.DELETE_TAG_PATTERN = re.compile(
-            r"^#Ankizin_v(?:\d+|Ankihub|AnkiCollab)::!DELETE(::(?:update|duplicate))?$"
-        )
+        self.DELETE_TAG_PATTERN = _setup_engine.DELETE_TAG_REGEX
 
         self.delete_outdated_cards = True
         self.update_deck_config = False
@@ -21,87 +20,18 @@ class AnkizinHelper:
         self.suspend_new_cards = True
 
     def delete_marked_cards(self):
-        # tag:re: is matched per tag (case-insensitive, unanchored), so ^ and $ pin it down
-        notes_to_delete = mw.col.find_notes(f'"tag:re:{self.DELETE_TAG_PATTERN.pattern}"')
-        print(f"Deleting {len(notes_to_delete)} notes")
-        mw.col.remove_notes(notes_to_delete)
+        deleted, _ = _setup_engine.delete_marked_notes(mw.col, include_reviewed=True)
+        print(f"Deleting {deleted} notes")
 
     @staticmethod
     def general_housekeeping():
         async_general_housekeeping()
 
     def setup_collection_config(self):
-        config_settings = {  # https://github.com/ankitects/anki/blob/main/rslib/src/config/bool.rs
-            "activeCols": [
-                "noteFld",
-                "deck",
-                "noteCrt",
-                "template",
-                "cardDue",
-                "noteMod",
-            ],
-            "sortType": "noteCrt",
-            "sortBackwards": False,
-            "noteSortType": "noteCrt",
-            "browserNoteSortBackwards": False,
-            "newSpread": 1,  # reviews first
-            "applyAllParentLimits": True,
-            "fsrs": True,
-        }
-
-        for key, value in config_settings.items():
-            mw.col.set_config(key, value)
-
-        mw.col.set_browser_card_columns(config_settings["activeCols"])
+        _setup_engine.apply_recommended_ankizin_settings(mw.col, new_per_day=50, max_ivl=3600)
 
     def optimize_settings(self):
-        self.setup_collection_config()
-
-        # Ankizin gets a deck options preset of its own, so the user's other decks keep theirs.
-        # Cards in filtered decks count for the deck they came from (odid).
-        dids = mw.col.db.list(
-            "select distinct case when odid != 0 then odid else did end from cards "
-            "where nid in (select id from notes where tags like '% #Ankizin_v%')"
-        )
-        if not dids:
-            return
-
-        decks = mw.col.decks
-        preset = next((c for c in decks.all_config() if c["name"] == "Ankizin"), None) or decks.add_config("Ankizin")
-
-        # fmt: off
-        # New cards settings
-        preset["new"]["perDay"] = 50
-
-        # Review settings
-        preset["rev"]["perDay"] = 9999
-
-        # Learning steps
-        preset["new"]["delays"] = [15.0]  # 15 minutes
-        preset["lapse"]["delays"] = [15.0]  # 15 minutes for relearning
-
-        # Leech settings
-        preset["lapse"]["leechFails"] = 15
-        preset["lapse"]["leechAction"] = 1  # 1 = tag only
-
-        # Display order settings
-        preset["new"]["order"] = 3  # DeckConfig_Config_NewCardGatherPriority.HIGHEST_POSITION
-        preset["newSortOrder"] = 1  # Sortierreihenfolge neuer Karten: Sammelreihenfolge (und Sammelreihenfolge ist typischerweise "Stapel")
-        preset["newGatherPriority"] = 2  # ascending
-        preset["reviewOrder"] = 4  # DeckConfig_Config_ReviewCardOrder.INTERVALS_DESCENDING
-        preset["newMix"] = 1  # Reihenfolge Neu/Wiederholung: Nach Wiederholungen anzeigen
-
-        # Sibling settings
-        preset["new"]["bury"] = True  # Bury new siblings
-        preset["rev"]["bury"] = True  # Bury review siblings
-        preset["buryInterdayLearning"] = True  # Bury interday learning cards
-
-        preset["rev"]["maxIvl"] = 180  # 180 days
-        # fmt: on
-
-        decks.update_config(preset)
-        for did in dids:
-            decks.set_config_id_for_deck_dict(decks.get(did), preset["id"])
+        _setup_engine.apply_recommended_ankizin_settings(mw.col, new_per_day=50, max_ivl=3600)
 
     def suspend_cards_from_deck(self, cids=[], all=False):
         # Get the deck object

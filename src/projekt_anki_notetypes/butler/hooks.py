@@ -7,10 +7,15 @@ from aqt import gui_hooks, mw
 from aqt.browser import SearchContext
 from aqt.errors import show_exception
 from aqt.operations import CollectionOp
+from aqt.qt import QTimer
 from aqt.reviewer import RefreshNeeded
 from aqt.utils import tooltip
 
 from ..constants import ADDON_DIR_NAME
+from ..home.dashboard import deck_browser_ankizin_hk, on_webview_js_message
+from ..onboarding.maintenance import run_startup_maintenance
+from ..onboarding.wizard import maybe_prompt_onboarding_on_startup
+from ..study_hub.smart_decks import SmartMaintenanceResult, maintain_smart_decks
 from .browser import filtered_deck_hk
 from .lernplan_decks import (
     DeckResult,
@@ -275,14 +280,82 @@ def browser_search_hk(context: SearchContext):  # type: ignore
         context.search = search_term
 
 
+def _run_smart_deck_maintenance(then):
+    """Rebuild daily Smart Decks once per day and auto-clean finished one-shot Smart Decks."""
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME)
+    if not conf or not conf.get("smart_decks"):
+        return then()
+
+    last_rebuild = conf.get("last_rebuild", None)
+    should_rebuild_daily = True
+    if last_rebuild is not None:
+        try:
+            if datetime.datetime.fromisoformat(last_rebuild).date() >= effective_today(mw.col):
+                should_rebuild_daily = False
+        except ValueError:
+            pass
+    rebuild_enabled = bool(get_rebuild_config().get("autoRebuildDecksOnStartup", True))
+    rebuild_daily = should_rebuild_daily and rebuild_enabled
+
+    def op(col):
+        res = maintain_smart_decks(col, conf, rebuild_daily=rebuild_daily)
+        return res
+
+    def done(res: SmartMaintenanceResult) -> None:
+        if res.changed_conf:
+            mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        if res.auto_cleaned:
+            tooltip(
+                "Smart-Stapel fertig gelernt & aufgeräumt: " + ", ".join(res.auto_cleaned),
+                parent=mw,
+                period=4500,
+            )
+        then()
+
+    CollectionOp(mw, op).success(done).failure(_fail).run_in_background()
+
+
+def _on_state_did_change(new_state: str, old_state: str) -> None:
+    """When returning from a study session to the Deck Browser, auto-clean empty one-shot Smart Decks."""
+    if new_state != "deckBrowser" or old_state not in ("review", "overview"):
+        return
+    if not mw or not getattr(mw, "col", None):
+        return
+    conf = mw.addonManager.getConfig(ADDON_DIR_NAME) or {}
+    smart_conf = conf.get("smart_decks") or {}
+    if not any((meta or {}).get("lifecycle") == "auto_clean" for meta in smart_conf.values()):
+        return
+
+    def op(col):
+        return maintain_smart_decks(col, conf, rebuild_daily=False)
+
+    def done(res: SmartMaintenanceResult) -> None:
+        if res.changed_conf:
+            mw.addonManager.writeConfig(ADDON_DIR_NAME, conf)
+        if res.auto_cleaned:
+            tooltip(
+                "Smart-Stapel fertig gelernt & aufgeräumt: " + ", ".join(res.auto_cleaned),
+                parent=mw,
+                period=4500,
+            )
+            if mw.state == "deckBrowser":
+                mw.deckBrowser.refresh()
+
+    CollectionOp(mw, op).success(done).run_in_background()
+
+
 def reload_data_hk():
     global _running
     if _running:  # called from sync, timeout and day change; the running chain covers today
         return
     _running = True
     mw.progress.start(label="Ankizin-Stapel werden aktualisiert...")
-    lernplan_auto_create(
-        lambda: lernplan_due_deck_auto_create(lambda: auto_rebuild_filtered_decks(_finish))
+    run_startup_maintenance(
+        lambda: lernplan_auto_create(
+            lambda: lernplan_due_deck_auto_create(
+                lambda: _run_smart_deck_maintenance(lambda: auto_rebuild_filtered_decks(_finish))
+            )
+        )
     )
 
 
@@ -330,6 +403,8 @@ def profile_loaded_hk():
             )
 
         refresh_reviewer_on_day_rollover_change()
+
+    QTimer.singleShot(1800, maybe_prompt_onboarding_on_startup)
 
 
 SHOW_IO_FIELD_JS = """
@@ -383,7 +458,11 @@ def hooks_init():
     gui_hooks.profile_did_open.append(profile_loaded_hk)
     gui_hooks.browser_sidebar_will_show_context_menu.append(filtered_deck_hk)
     gui_hooks.browser_will_search.append(browser_search_hk)
+    gui_hooks.deck_browser_will_render_content.append(deck_browser_ankizin_hk)
     gui_hooks.deck_browser_will_render_content.append(deck_browser_progress_hk)
+    gui_hooks.webview_did_receive_js_message.append(on_webview_js_message)
+    if hasattr(gui_hooks, "state_did_change"):
+        gui_hooks.state_did_change.append(_on_state_did_change)
     # for Anki 25.06 and later, we can use the new hook
     if hasattr(gui_hooks, "day_did_change"):
         gui_hooks.day_did_change.append(reload_data_hk)

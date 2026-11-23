@@ -1,4 +1,15 @@
 {
     "latest_notified_note_type_version": "never_notified_yet",
-    "latest_notified_deck_version": "never_notified_yet"
+    "latest_notified_deck_version": "never_notified_yet",
+    "autoRebuildDecksOnStartup": true,
+    "autoRebuildOnlyAnkizinDecks": false,
+    "auto_delete_marked_cards": "unlearned",
+    "auto_sync_ankicollab_on_startup": true,
+    "show_home_quickbar": true,
+    "smart_decks": {},
+    "study_hub": {
+        "last_category": "amboss",
+        "last_yield": "high_yield",
+        "last_mode": "unsuspend"
+    }
 }

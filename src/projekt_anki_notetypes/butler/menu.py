@@ -11,24 +11,60 @@ from .ankizin_helper import AnkizinHelper
 from .lernplan_manager import open_lernplan_manager, open_lerntag_deck_creator
 from .utils import get_ankizin_versions
 
+from ..compat import set_action_no_role
 from ..constants import ADDON_DIR_NAME, ADDON_VERSION
+from ..gui.menu import get_notetypes_config_callback
 from ..gui.projekt_anki_menu import get_ankizin_menu
 from ..gui.config_window import note_type_version
 from ..notetype_setting_definitions import projekt_anki_notetype_models
+from ..onboarding.maintenance import open_maintenance_dialog
+from ..onboarding.wizard import open_setup_wizard
+from ..study_hub.dialog import open_study_hub
 
 ankizin_helper = None
 versions_action = None  # filled in after the profile is open
+
+
+def add_study_hub_action(menu):
+    action = QAction("✨ Ankizin Lern-Zentrale", mw)
+    action.setShortcut(QKeySequence("Ctrl+Alt+A"))
+    set_action_no_role(action)
+    action.triggered.connect(lambda: open_study_hub())
+    menu.addAction(action)
+
+
+def add_setup_wizard_action(menu):
+    action = QAction("🚀 Einrichtungs-Assistent", mw)
+    set_action_no_role(action)
+    action.triggered.connect(lambda: open_setup_wizard(force=True))
+    menu.addAction(action)
+
+
+def add_maintenance_action(menu):
+    action = QAction("🧹 Wartung & Einstellungen", mw)
+    set_action_no_role(action)
+    action.triggered.connect(lambda: open_maintenance_dialog())
+    menu.addAction(action)
+
+
+def add_notetypes_config_action(menu):
+    cb = get_notetypes_config_callback()
+    if cb is not None:
+        action = QAction("🗃️ Ankizin Notiztypen-Konfigurator", mw)
+        set_action_no_role(action)
+        action.triggered.connect(lambda: cb())
+        menu.addAction(action)
 
 
 def init_ankizin_helper(menu):
     global ankizin_helper
     ankizin_helper = AnkizinHelper()
 
-    # Add menu item
-    first_setup = QAction("⏩️ Ankizin erstmalig installiert?", mw)
+    # Legacy setup helpers preserved under Hilfe + Mehr
+    first_setup = QAction("⏩️ Ankizin erstmalig installiert? (Legacy)", mw)
     first_setup.triggered.connect(ankizin_helper.run_first_time_setup)
 
-    update_setup = QAction("🔄 Ankizin-Update installiert?", mw)
+    update_setup = QAction("🔄 Ankizin-Update installiert? (Legacy)", mw)
     update_setup.triggered.connect(ankizin_helper.run_ankizin_update_setup)
 
     menu.addAction(first_setup)
@@ -192,6 +228,8 @@ def init_version_info(menu):
 
     # Add copy button at the end
     debug_menu.addSeparator()
+    init_ankizin_helper(debug_menu)
+    debug_menu.addSeparator()
     copy_action = QAction("📋 Konfiguration kopieren", mw)
     qconnect(copy_action.triggered, copy_config_to_clipboard)
     debug_menu.addAction(copy_action)
@@ -205,11 +243,14 @@ def update_version_info():
 
 def menu_init():
     menu = get_ankizin_menu()
+    add_study_hub_action(menu)
+    add_setup_wizard_action(menu)
     menu.addSeparator()
     add_lernplan_manager(menu)
     add_lerntag_deck_creator(menu)
     menu.addSeparator()
-    init_ankizin_helper(menu)
+    add_maintenance_action(menu)
+    add_notetypes_config_action(menu)
     init_version_info(menu)
 
     # Setup preferences hook
