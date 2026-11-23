@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 
 from anki.collection import Collection, OpChanges
 from anki.decks import FilteredDeckConfig
-from anki.errors import AnkiError
+from anki.errors import AnkiException
 
 from .lernplan_schedule import KREUZEN_TAGE, kreuzen_label
 
@@ -275,7 +275,7 @@ def _is_managed(name: str) -> bool:
     )
 
 
-def remove_managed_decks(col: Collection, keep: set[str] = frozenset()) -> None:
+def remove_managed_decks(col: Collection, target: int, keep: set[str] = frozenset()) -> None:
     """Remove our filtered decks (except those named in `keep`), then the empty normal parents."""
     decks = [d for d in col.decks.all_names_and_ids() if _is_managed(d.name)]
     filtered = [d.id for d in decks if col.decks.is_filtered(d.id)]
@@ -284,7 +284,7 @@ def remove_managed_decks(col: Collection, keep: set[str] = frozenset()) -> None:
     # Removing a normal deck DELETES its cards, so only remove provably empty parents.
     # Deepest first, so a parent is checked after its children are gone.
     parents = [d for d in decks if d.id not in filtered]
-    for d in sorted(parents, key=lambda d: d.name.count("::"), reverse=True):
+    for d in merged_every_few(col, target, sorted(parents, key=lambda d: d.name.count("::"), reverse=True)):
         if not col.decks.children(d.id) and col.decks.card_count(d.id, include_subdecks=False) == 0:
             col.decks.remove([d.id])
 
@@ -294,7 +294,7 @@ def _apply_spec(col: Collection, name: str, search: str) -> bool:
     did = col.decks.id_for_name(name)
     if did:
         if not col.decks.is_filtered(did):
-            raise AnkiError("Es existiert bereits ein normaler Stapel mit diesem Namen.")
+            raise AnkiException("Es existiert bereits ein normaler Stapel mit diesem Namen.")
     # same implicit exclusions as Anki's filtered deck builder
     if not col.find_cards(f"({search}) -is:suspended -is:buried -deck:filtered"):
         return False
@@ -312,16 +312,28 @@ def _apply_spec(col: Collection, name: str, search: str) -> bool:
     return True
 
 
+def merged_every_few(col: Collection, target: int, items):
+    """Yield `items`, merging the undo steps every 10 of them.
+
+    Anki keeps only 30 undo steps and every deck is one or two. Without merging in between, `target`
+    drops out and the final merge fails ("target undo op not found").
+    """
+    for n, item in enumerate(items, 1):
+        if n % 10 == 0:
+            col.merge_undo_entries(target)
+        yield item
+
+
 def create_filtered_decks(col: Collection, specs: list[tuple], cleanup: bool = False) -> DeckResult:
     """Create (or update) filtered decks from (name, search, unsuspend) as ONE undoable step."""
     target = col.add_custom_undo_entry("Auswahlstapel erstellen")
     result = DeckResult()
     if cleanup:
-        remove_managed_decks(col, keep={name for name, _, _ in specs})
+        remove_managed_decks(col, target, keep={name for name, _, _ in specs})
 
     # Decks that are updated in place keep their ids (and deck options). Empty them all first,
     # as the cards they hold would otherwise be unavailable to the decks built before them.
-    for name, _, _ in specs:
+    for name, _, _ in merged_every_few(col, target, specs):
         did = col.decks.id_for_name(name)
         if did and col.decks.is_filtered(did):
             col.sched.empty_filtered_deck(did)
@@ -330,11 +342,11 @@ def create_filtered_decks(col: Collection, specs: list[tuple], cleanup: bool = F
     if cids:
         col.sched.unsuspend_cards(list(cids))  # suspended cards can't enter a filtered deck
 
-    for name, search, _ in specs:
+    for name, search, _ in merged_every_few(col, target, specs):
         try:
             if not _apply_spec(col, name, search):
                 result.skipped.append(name)
-        except AnkiError as e:
+        except AnkiException as e:
             result.failed.append((name, str(e)))
 
     result.changes = col.merge_undo_entries(target)

@@ -1,6 +1,6 @@
 import datetime
 
-from anki.errors import AnkiError
+from anki.errors import AnkiException
 from anki.scheduler import FilteredDeckForUpdate
 from anki.utils import int_time
 from aqt import gui_hooks, mw
@@ -21,6 +21,7 @@ from .lernplan_decks import (
     get_lerntag_order,
     get_lerntag_topics,
     kreuzen_count,
+    merged_every_few,
     next_lerntag,
     rebuild_lernplan_decks,
     update_past_days,
@@ -186,7 +187,7 @@ def rebuild_filtered_decks(col, enabled: bool, only_ankizin: bool) -> DeckResult
     """Worker thread: rebuild the filtered decks as ONE undoable step (collection calls only)."""
     target = col.add_custom_undo_entry("Auswahlstapel neu aufbauen")
     result = DeckResult()
-    for deck in col.decks.all_names_and_ids():
+    for deck in merged_every_few(col, target, col.decks.all_names_and_ids()):
         if not col.decks.is_filtered(deck.id):
             continue
         try:
@@ -203,7 +204,7 @@ def rebuild_filtered_decks(col, enabled: bool, only_ankizin: bool) -> DeckResult
                     search.search = f"({search.search}) (is:new or is:due)"
                     fdeck.allow_empty = True  # get_or_create_filtered_deck always returns False here
                     col.sched.add_or_update_filtered_deck(fdeck)
-        except AnkiError as e:  # one broken search must not stop the other decks
+        except AnkiException as e:  # one broken search must not stop the other decks
             result.failed.append((deck.name, str(e)))
     result.changes = col.merge_undo_entries(target)
     return result
