@@ -11,7 +11,7 @@ import html as _html
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Iterable, Optional
 
 from anki.collection import Collection
 
@@ -37,6 +37,11 @@ FLAG_MERKE = 2
 FLAG_AERZTLICH = 4
 FLAG_ZAHNI = 8
 
+STAGE_NEW = 0
+STAGE_SEEN = 1
+STAGE_MATURE = 2
+MATURE_IVL = 21
+
 CATEGORIES: list[tuple[str, str, str]] = [
     ("amboss", "📚 AMBOSS", "Kapitel & Artikel aus der AMBOSS-Klinik-Bibliothek"),
     ("lernplan", "🎯 100-Tage-Plan", "M2 100-Tage-Lernplan Tag für Tag"),
@@ -47,6 +52,21 @@ CATEGORIES: list[tuple[str, str, str]] = [
 ]
 
 _ALLOWED_CATEGORIES = {k for k, _, _ in CATEGORIES}
+_CATEGORY_PRIORITY: dict[str, int] = {k: i for i, (k, _, _) in enumerate(CATEGORIES)}
+
+
+def _is_cross_cutting(node: TopicNode) -> int:
+    """Return 1 for cross-cutting index branches like '(fächerübergreifend) Behandlungsanlässe'."""
+    crumb = node.breadcrumb.lower()
+    return 1 if ("(fächerübergreifend)" in crumb or "behandlungsanl" in crumb) else 0
+
+
+def _card_stage(ctype: int, ivl: int) -> int:
+    if ctype == 0:
+        return STAGE_NEW
+    if ctype == 2 and ivl >= MATURE_IVL:
+        return STAGE_MATURE
+    return STAGE_SEEN
 
 _ROOT_RE = re.compile(r"^#(?:Ankizin_[^:]+|Zankiphil)::(.+)$", re.IGNORECASE)
 _LERNTAG_RE = re.compile(r"^M2_Lerntag_(\d{1,3})_(.+)$", re.IGNORECASE)
@@ -205,6 +225,22 @@ class TopicStats:
     leicht: int = 0
     standard: int = 0
     low: int = 0
+    new_count: int = 0
+    seen_count: int = 0
+    mature_count: int = 0
+    suspended_new: int = 0
+
+    @property
+    def studied(self) -> int:
+        return self.seen_count + self.mature_count
+
+
+@dataclass(frozen=True)
+class NestedSearchResult:
+    visible_keys: frozenset[str] = field(default_factory=frozenset)
+    expand_keys: frozenset[str] = field(default_factory=frozenset)
+    hit_keys: frozenset[str] = field(default_factory=frozenset)
+    aliases: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -215,11 +251,13 @@ class TopicNode:
     display_name: str
     breadcrumb: str
     category_key: str
+    parent_key: Optional[str] = None
     all_tags: list[str] = field(default_factory=list)
     children: list["TopicNode"] = field(default_factory=list)
-    # (yield_bit, flags_mask, is_suspended) -> unique card count
-    buckets: dict[tuple[int, int, bool], int] = field(default_factory=dict)
+    # (yield_bit, flags_mask, is_suspended, stage) -> unique card count
+    buckets: dict[tuple, int] = field(default_factory=dict)
     card_ids: frozenset[int] = field(default_factory=frozenset)
+    card_sig: tuple[int, int] = (0, 0)
 
     def stats(
         self,
@@ -229,7 +267,13 @@ class TopicNode:
     ) -> TopicStats:
         mask = YIELD_PRESETS.get(yield_preset, YIELD_ALL)
         total = active = suspended = stark = leicht = standard = low = 0
-        for (ybit, fmask, is_susp), cnt in self.buckets.items():
+        new_count = seen_count = mature_count = suspended_new = 0
+        for bkey, cnt in self.buckets.items():
+            if len(bkey) == 4:
+                ybit, fmask, is_susp, stage = bkey
+            else:
+                ybit, fmask, is_susp = bkey
+                stage = STAGE_NEW
             if exclude_zahni and (fmask & FLAG_ZAHNI):
                 continue
             if top100_only and not (fmask & FLAG_TOP100):
@@ -239,8 +283,16 @@ class TopicNode:
             total += cnt
             if is_susp:
                 suspended += cnt
+                if stage == STAGE_NEW:
+                    suspended_new += cnt
             else:
                 active += cnt
+            if stage == STAGE_NEW:
+                new_count += cnt
+            elif stage == STAGE_MATURE:
+                mature_count += cnt
+            else:
+                seen_count += cnt
             if ybit == YIELD_STARK:
                 stark += cnt
             elif ybit == YIELD_LEICHT:
@@ -257,6 +309,10 @@ class TopicNode:
             leicht=leicht,
             standard=standard,
             low=low,
+            new_count=new_count,
+            seen_count=seen_count,
+            mature_count=mature_count,
+            suspended_new=suspended_new,
         )
 
 
@@ -265,6 +321,7 @@ def _accumulate_bucket_into_presets(
     ybit: int,
     fmask: int,
     is_susp: bool,
+    stage: int,
     cnt: int,
     top100_only: bool,
     exclude_zahni: bool,
@@ -279,6 +336,8 @@ def _accumulate_bucket_into_presets(
             arr[0] += cnt
             if is_susp:
                 arr[2] += cnt
+                if stage == STAGE_NEW:
+                    arr[10] += cnt
             else:
                 arr[1] += cnt
             if ybit == YIELD_STARK:
@@ -289,6 +348,12 @@ def _accumulate_bucket_into_presets(
                 arr[5] += cnt
             elif ybit == YIELD_LOW:
                 arr[6] += cnt
+            if stage == STAGE_NEW:
+                arr[7] += cnt
+            elif stage == STAGE_MATURE:
+                arr[9] += cnt
+            else:
+                arr[8] += cnt
 
 
 class AnkizinTagIndex:
@@ -298,11 +363,12 @@ class AnkizinTagIndex:
         self,
         roots: dict[str, list[TopicNode]],
         all_nodes: list[TopicNode],
-        collection_buckets: dict[tuple[int, int, bool], int],
-        card_meta: Optional[dict[int, tuple[int, int, bool]]] = None,
+        collection_buckets: dict[tuple, int],
+        card_meta: Optional[dict[int, tuple]] = None,
     ) -> None:
         self.roots = roots
         self.all_nodes = all_nodes
+        self.by_key: dict[str, TopicNode] = {n.key: n for n in all_nodes}
         self.collection_buckets = collection_buckets
         self.card_meta = card_meta or {}
 
@@ -328,12 +394,17 @@ class AnkizinTagIndex:
             union_cids.update(n.card_ids)
 
         total = active = suspended = stark = leicht = standard = low = 0
+        new_count = seen_count = mature_count = suspended_new = 0
         meta_map = self.card_meta
         for cid in union_cids:
             meta = meta_map.get(cid)
             if meta is None:
                 continue
-            ybit, fmask, is_susp = meta
+            if len(meta) == 4:
+                ybit, fmask, is_susp, stage = meta
+            else:
+                ybit, fmask, is_susp = meta
+                stage = STAGE_NEW
             if exclude_zahni and (fmask & FLAG_ZAHNI):
                 continue
             if top100_only and not (fmask & FLAG_TOP100):
@@ -343,8 +414,16 @@ class AnkizinTagIndex:
             total += 1
             if is_susp:
                 suspended += 1
+                if stage == STAGE_NEW:
+                    suspended_new += 1
             else:
                 active += 1
+            if stage == STAGE_NEW:
+                new_count += 1
+            elif stage == STAGE_MATURE:
+                mature_count += 1
+            else:
+                seen_count += 1
             if ybit == YIELD_STARK:
                 stark += 1
             elif ybit == YIELD_LEICHT:
@@ -361,6 +440,10 @@ class AnkizinTagIndex:
             leicht=leicht,
             standard=standard,
             low=low,
+            new_count=new_count,
+            seen_count=seen_count,
+            mature_count=mature_count,
+            suspended_new=suspended_new,
         )
 
     def yield_breakdown(
@@ -370,13 +453,18 @@ class AnkizinTagIndex:
         exclude_zahni: bool = True,
     ) -> dict[str, TopicStats]:
         """Compute TopicStats for every yield preset in one fast RAM pass."""
-        totals = {k: [0, 0, 0, 0, 0, 0, 0] for k in YIELD_PRESETS}
+        totals = {k: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] for k in YIELD_PRESETS}
         if not nodes:
             return {k: TopicStats() for k in YIELD_PRESETS}
 
         if len(nodes) == 1:
-            for (ybit, fmask, is_susp), cnt in nodes[0].buckets.items():
-                _accumulate_bucket_into_presets(totals, ybit, fmask, is_susp, cnt, top100_only, exclude_zahni)
+            for bkey, cnt in nodes[0].buckets.items():
+                if len(bkey) == 4:
+                    ybit, fmask, is_susp, stage = bkey
+                else:
+                    ybit, fmask, is_susp = bkey
+                    stage = STAGE_NEW
+                _accumulate_bucket_into_presets(totals, ybit, fmask, is_susp, stage, cnt, top100_only, exclude_zahni)
         else:
             union_cids: set[int] = set()
             for n in nodes:
@@ -385,8 +473,13 @@ class AnkizinTagIndex:
             for cid in union_cids:
                 meta = meta_map.get(cid)
                 if meta is not None:
+                    if len(meta) == 4:
+                        ybit, fmask, is_susp, stage = meta
+                    else:
+                        ybit, fmask, is_susp = meta
+                        stage = STAGE_NEW
                     _accumulate_bucket_into_presets(
-                        totals, meta[0], meta[1], meta[2], 1, top100_only, exclude_zahni
+                        totals, ybit, fmask, is_susp, stage, 1, top100_only, exclude_zahni
                     )
         return {k: TopicStats(*v) for k, v in totals.items()}
 
@@ -407,30 +500,135 @@ class AnkizinTagIndex:
         )
         return dummy.stats(yield_preset=yield_preset, top100_only=top100_only, exclude_zahni=exclude_zahni)
 
-    def search_tree(
+    def filtered_card_ids(
         self,
-        query: str,
-        category_key: Optional[str] = None,
+        nodes: list[TopicNode],
         yield_preset: str = "all",
         top100_only: bool = False,
-        exclude_zahni: bool = True,
-        limit: int = 60,
-    ) -> list[TopicNode]:
-        """Hierarchical top-down search: stops descending once all query tokens match
-        so rare multi-subtopic articles (e.g. Pneumonie -> Diagnostik/Therapie) stay nested
-        instead of flooding results with duplicate flat rows."""
+        exclude_zahni: bool = False,
+        only_suspended: bool = False,
+        only_active: bool = False,
+    ) -> list[int]:
+        """Resolve exact matching card IDs directly from RAM in <1ms (zero Anki search)."""
+        if not nodes:
+            return []
+        mask = YIELD_PRESETS.get(yield_preset, YIELD_ALL)
+        union_cids: set[int] = set()
+        for n in nodes:
+            union_cids.update(n.card_ids)
+
+        meta_map = self.card_meta
+        out: list[int] = []
+        for cid in union_cids:
+            meta = meta_map.get(cid)
+            if meta is None:
+                continue
+            ybit, fmask, is_susp = meta[0], meta[1], meta[2]
+            if exclude_zahni and (fmask & FLAG_ZAHNI):
+                continue
+            if top100_only and not (fmask & FLAG_TOP100):
+                continue
+            if not (ybit & mask):
+                continue
+            if only_suspended and not is_susp:
+                continue
+            if only_active and is_susp:
+                continue
+            out.append(cid)
+        out.sort()
+        return out
+
+    def _filtered_node_card_set(
+        self,
+        node: TopicNode,
+        yield_preset: str,
+        top100_only: bool,
+        exclude_zahni: bool,
+    ) -> frozenset[int]:
+        """O(1) fast path for unfiltered sets (Python caches frozenset hash in C)."""
+        if yield_preset == "all" and not top100_only and not exclude_zahni:
+            return node.card_ids
+        mask = YIELD_PRESETS.get(yield_preset, YIELD_ALL)
+        meta_map = self.card_meta
+        out = []
+        for cid in node.card_ids:
+            meta = meta_map.get(cid)
+            if meta is None:
+                continue
+            ybit, fmask = meta[0], meta[1]
+            if exclude_zahni and (fmask & FLAG_ZAHNI):
+                continue
+            if top100_only and not (fmask & FLAG_TOP100):
+                continue
+            if not (ybit & mask):
+                continue
+            out.append(cid)
+        return frozenset(out)
+
+    def converge_nodes(
+        self,
+        nodes: Iterable[TopicNode],
+        yield_preset: str = "all",
+        top100_only: bool = False,
+        exclude_zahni: bool = False,
+        include_category_in_alias: bool = False,
+    ) -> tuple[list[TopicNode], dict[str, list[str]]]:
+        """Collapse nodes resolving to identical card sets into 1 canonical hit in O(1) amortized."""
+        ordered = sorted(
+            nodes,
+            key=lambda n: (
+                _CATEGORY_PRIORITY.get(n.category_key, 99),
+                _is_cross_cutting(n),
+                0 if n.children else 1,
+                n.breadcrumb.count("›"),
+                _natural_sort_key(n.raw_segment),
+                n.key,
+            ),
+        )
+        cat_labels = {k: (lbl.split(" ", 1)[1] if " " in lbl else lbl) for k, lbl, _ in CATEGORIES}
+        seen_by_sig: dict[tuple[int, int], list[tuple[frozenset[int], TopicNode]]] = {}
+        winners: list[TopicNode] = []
+        aliases: dict[str, list[str]] = {}
+
+        for node in ordered:
+            fcids = self._filtered_node_card_set(node, yield_preset, top100_only, exclude_zahni)
+            if not fcids:
+                continue
+            sig = (len(fcids), hash(fcids))
+            bucket = seen_by_sig.get(sig)
+            winner: Optional[TopicNode] = None
+            if bucket:
+                for existing_cids, existing_node in bucket:
+                    if existing_cids == fcids:
+                        winner = existing_node
+                        break
+            if winner is not None:
+                alias_path = node.breadcrumb
+                if include_category_in_alias:
+                    cat_name = cat_labels.get(node.category_key, node.category_key)
+                    alias_path = f"{cat_name}: {alias_path}"
+                aliases.setdefault(winner.key, []).append(alias_path)
+            else:
+                seen_by_sig.setdefault(sig, []).append((fcids, node))
+                winners.append(node)
+
+        return winners, aliases
+
+    def filter_tree_nested(
+        self,
+        query: str,
+        category_key: str,
+        yield_preset: str = "all",
+        top100_only: bool = False,
+        exclude_zahni: bool = False,
+    ) -> NestedSearchResult:
+        """Keep real category hierarchy intact during search while converging duplicate hits."""
         tokens = [_norm_search_text(t) for t in query.strip().split() if t.strip()]
         if not tokens:
-            return []
+            return NestedSearchResult()
         token_set = set(tokens)
-        norm_query = " ".join(tokens)
 
-        if category_key:
-            root_lists = [self.roots.get(category_key, [])]
-        else:
-            root_lists = [self.roots.get(cat, []) for cat, _, _ in CATEGORIES]
-
-        collected: list[tuple[TopicNode, int]] = []
+        raw_hits: list[TopicNode] = []
 
         def _walk(node: TopicNode, ancestor_tokens: set[str]) -> None:
             st = node.stats(yield_preset=yield_preset, top100_only=top100_only, exclude_zahni=exclude_zahni)
@@ -440,7 +638,86 @@ class AnkizinTagIndex:
             here_tokens = {t for t in token_set if t in name_norm}
             cum_tokens = ancestor_tokens | here_tokens
             if cum_tokens >= token_set:
-                collected.append((node, st.total))
+                raw_hits.append(node)
+                return
+            for ch in node.children:
+                _walk(ch, cum_tokens)
+
+        for root in self.roots.get(category_key, []):
+            _walk(root, set())
+
+        winners, aliases = self.converge_nodes(
+            raw_hits,
+            yield_preset=yield_preset,
+            top100_only=top100_only,
+            exclude_zahni=exclude_zahni,
+            include_category_in_alias=False,
+        )
+
+        visible: set[str] = set()
+        expand: set[str] = set()
+        hit_keys: set[str] = set()
+
+        def _add_descendants(node: TopicNode) -> None:
+            for ch in node.children:
+                st = ch.stats(yield_preset=yield_preset, top100_only=top100_only, exclude_zahni=exclude_zahni)
+                if st.total == 0:
+                    continue
+                visible.add(ch.key)
+                _add_descendants(ch)
+
+        for w in winners:
+            hit_keys.add(w.key)
+            visible.add(w.key)
+            _add_descendants(w)
+            pkey = w.parent_key
+            while pkey:
+                visible.add(pkey)
+                expand.add(pkey)
+                pnode = self.by_key.get(pkey)
+                pkey = pnode.parent_key if pnode else None
+
+        return NestedSearchResult(
+            visible_keys=frozenset(visible),
+            expand_keys=frozenset(expand),
+            hit_keys=frozenset(hit_keys),
+            aliases=aliases,
+        )
+
+    def search_tree_converged(
+        self,
+        query: str,
+        category_key: Optional[str] = None,
+        yield_preset: str = "all",
+        top100_only: bool = False,
+        exclude_zahni: bool = True,
+        limit: int = 60,
+    ) -> tuple[list[TopicNode], dict[str, list[str]]]:
+        """Hierarchical search with O(1) exact card-set convergence across paths/categories."""
+        tokens = [_norm_search_text(t) for t in query.strip().split() if t.strip()]
+        if not tokens:
+            return [], {}
+        token_set = set(tokens)
+        norm_query = " ".join(tokens)
+
+        if category_key:
+            root_lists = [self.roots.get(category_key, [])]
+        else:
+            root_lists = [self.roots.get(cat, []) for cat, _, _ in CATEGORIES]
+
+        raw_hits: list[TopicNode] = []
+        totals_by_key: dict[str, int] = {}
+
+        def _walk(node: TopicNode, ancestor_tokens: set[str]) -> None:
+            st = node.stats(yield_preset=yield_preset, top100_only=top100_only, exclude_zahni=exclude_zahni)
+            if st.total == 0:
+                return
+            name_norm = _norm_search_text(node.display_name)
+            here_tokens = {t for t in token_set if t in name_norm}
+            cum_tokens = ancestor_tokens | here_tokens
+            if cum_tokens >= token_set:
+                raw_hits.append(node)
+                totals_by_key[node.key] = st.total
                 return
             for ch in node.children:
                 _walk(ch, cum_tokens)
@@ -449,8 +726,17 @@ class AnkizinTagIndex:
             for root in rlist:
                 _walk(root, set())
 
-        def _rank_key(item: tuple[TopicNode, int]) -> tuple:
-            node, total = item
+        winners, aliases = self.converge_nodes(
+            raw_hits,
+            yield_preset=yield_preset,
+            top100_only=top100_only,
+            exclude_zahni=exclude_zahni,
+            include_category_in_alias=(category_key is None),
+        )
+
+        def _rank_key(node: TopicNode) -> tuple:
+            conv_count = len(aliases.get(node.key, ()))
+            total = totals_by_key.get(node.key, 0)
             name_norm = _norm_search_text(node.display_name)
             if name_norm == norm_query:
                 tier = 0
@@ -460,10 +746,40 @@ class AnkizinTagIndex:
                 tier = 2
             else:
                 tier = 3
-            return (tier, node.breadcrumb.count("›"), -total, _natural_sort_key(node.raw_segment))
+            return (
+                -conv_count,
+                -total,
+                tier,
+                _CATEGORY_PRIORITY.get(node.category_key, 99),
+                _is_cross_cutting(node),
+                node.breadcrumb.count("›"),
+                _natural_sort_key(node.raw_segment),
+            )
 
-        collected.sort(key=_rank_key)
-        return [node for node, _ in collected[:limit]]
+        winners.sort(key=_rank_key)
+        top = winners[:limit]
+        top_keys = {n.key for n in top}
+        return top, {k: v for k, v in aliases.items() if k in top_keys}
+
+    def search_tree(
+        self,
+        query: str,
+        category_key: Optional[str] = None,
+        yield_preset: str = "all",
+        top100_only: bool = False,
+        exclude_zahni: bool = True,
+        limit: int = 60,
+    ) -> list[TopicNode]:
+        """Hierarchical top-down search with O(1) duplicate card-set convergence."""
+        winners, _ = self.search_tree_converged(
+            query=query,
+            category_key=category_key,
+            yield_preset=yield_preset,
+            top100_only=top100_only,
+            exclude_zahni=exclude_zahni,
+            limit=limit,
+        )
+        return winners
 
     def search(
         self,
@@ -490,7 +806,7 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
         return AnkizinTagIndex({}, [], {})
 
     rows = col.db.all(
-        "SELECT c.id, c.queue, n.id, n.tags "
+        "SELECT c.id, c.queue, c.type, c.ivl, n.id, n.tags "
         "FROM cards c JOIN notes n ON n.id = c.nid "
         "WHERE n.tags LIKE '%#Ankizin%' OR n.tags LIKE '%#Zankiphil%'"
     )
@@ -500,11 +816,11 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
     note_resolved_cache: dict[int, tuple[int, int, tuple[tuple[str, tuple[str, ...]], ...]]] = {}
     # node_key -> TopicNode (without finalized buckets yet)
     nodes_by_key: dict[tuple[str, tuple[str, ...]], TopicNode] = {}
-    node_card_info: dict[tuple[str, tuple[str, ...]], dict[int, tuple[int, int, bool]]] = defaultdict(dict)
-    collection_cards: dict[int, tuple[int, int, bool]] = {}
+    node_card_info: dict[tuple[str, tuple[str, ...]], dict[int, tuple]] = defaultdict(dict)
+    collection_cards: dict[int, tuple] = {}
     root_keys: dict[str, set[tuple[str, ...]]] = defaultdict(set)
 
-    for cid, queue, nid, raw_tags in rows:
+    for cid, queue, ctype, ivl, nid, raw_tags in rows:
         resolved = note_resolved_cache.get(nid)
         if resolved is None:
             tags = [t for t in (raw_tags or "").split() if t]
@@ -539,6 +855,7 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
                             node_full_tag = root_prefix + "::".join(tag_parts)
                             if nkey not in nodes_by_key:
                                 labels = [format_topic_label(p) for p in path_tuple]
+                                parent_node = nodes_by_key[(cat_key, norm_tuple[:-1])] if depth > 1 else None
                                 node = TopicNode(
                                     key=f"{cat_key}::{'::'.join(norm_tuple)}",
                                     full_tag=node_full_tag,
@@ -546,13 +863,13 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
                                     display_name=labels[-1],
                                     breadcrumb=" › ".join(labels),
                                     category_key=cat_key,
+                                    parent_key=parent_node.key if parent_node else None,
                                     all_tags=[node_full_tag],
                                 )
                                 nodes_by_key[nkey] = node
-                                if depth == 1:
+                                if parent_node is None:
                                     root_keys[cat_key].add(norm_tuple)
                                 else:
-                                    parent_node = nodes_by_key[(cat_key, norm_tuple[:-1])]
                                     parent_node.children.append(node)
                             else:
                                 existing = nodes_by_key[nkey]
@@ -574,20 +891,22 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
         if not unique_nkeys and ybit == 0:
             continue
 
-        card_meta = (ybit, fmask, queue == -1)
+        card_meta = (ybit, fmask, queue == -1, _card_stage(ctype, ivl))
         collection_cards[cid] = card_meta
         for nkey in unique_nkeys:
             node_card_info[nkey][cid] = card_meta
 
-    # Finalize bucket counters and immutable card id sets
+    # Finalize bucket counters, signatures, and immutable card id sets
     all_nodes: list[TopicNode] = []
     for nkey, node in nodes_by_key.items():
-        buckets: dict[tuple[int, int, bool], int] = defaultdict(int)
+        buckets: dict[tuple, int] = defaultdict(int)
         cids_map = node_card_info[nkey]
         for meta in cids_map.values():
             buckets[meta] += 1
         node.buckets = dict(buckets)
-        node.card_ids = frozenset(cids_map.keys())
+        cids_frozen = frozenset(cids_map.keys())
+        node.card_ids = cids_frozen
+        node.card_sig = (len(cids_frozen), hash(cids_frozen))
         node.children.sort(key=lambda ch: _natural_sort_key(ch.raw_segment))
         all_nodes.append(node)
 
@@ -597,7 +916,7 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
         cat_roots.sort(key=lambda ch: _natural_sort_key(ch.raw_segment))
         roots[cat_key] = cat_roots
 
-    col_buckets: dict[tuple[int, int, bool], int] = defaultdict(int)
+    col_buckets: dict[tuple, int] = defaultdict(int)
     for meta in collection_cards.values():
         col_buckets[meta] += 1
 
@@ -607,6 +926,92 @@ def build_tag_index(col: Optional[Collection]) -> AnkizinTagIndex:
         collection_buckets=dict(col_buckets),
         card_meta=collection_cards,
     )
+
+
+def refresh_card_states(col: Optional[Collection], index: AnkizinTagIndex) -> AnkizinTagIndex:
+    """Fast post-action refresh: update queue/stage counters in ~20ms without re-parsing note tags."""
+    if col is None or not index.card_meta:
+        return index
+
+    old_meta = index.card_meta
+    new_meta: dict[int, tuple] = dict(old_meta)
+    for cid, queue, ctype, ivl in col.db.all("SELECT id, queue, type, ivl FROM cards"):
+        prev = old_meta.get(cid)
+        if prev is not None:
+            new_meta[cid] = (prev[0], prev[1], queue == -1, _card_stage(ctype, ivl))
+
+    for node in index.all_nodes:
+        buckets: dict[tuple, int] = defaultdict(int)
+        for cid in node.card_ids:
+            m = new_meta.get(cid)
+            if m is not None:
+                buckets[m] += 1
+        node.buckets = dict(buckets)
+
+    col_buckets: dict[tuple, int] = defaultdict(int)
+    for m in new_meta.values():
+        col_buckets[m] += 1
+
+    return AnkizinTagIndex(
+        roots=index.roots,
+        all_nodes=index.all_nodes,
+        collection_buckets=dict(col_buckets),
+        card_meta=new_meta,
+    )
+
+
+def find_stragglers(
+    index: AnkizinTagIndex,
+    category_key: str,
+    yield_preset: str = "all",
+    top100_only: bool = False,
+    exclude_zahni: bool = False,
+    active_threshold: float = 0.90,
+) -> tuple[int, list[int]]:
+    """Detect newly added suspended new cards inside already-active topics (`>= 90%` active).
+
+    Checks deepest active level only so intentionally paused child subtopics are left untouched.
+    """
+    mask = YIELD_PRESETS.get(yield_preset, YIELD_ALL)
+    meta_map = index.card_meta
+    topics = 0
+    found: set[int] = set()
+
+    def _walk(node: TopicNode) -> None:
+        nonlocal topics
+        st = node.stats(yield_preset=yield_preset, top100_only=top100_only, exclude_zahni=exclude_zahni)
+        if st.total > 0 and st.active >= active_threshold * st.total and st.suspended_new > 0:
+            child_cids: set[int] = set()
+            for ch in node.children:
+                child_cids.update(ch.card_ids)
+            node_hits: list[int] = []
+            for cid in node.card_ids:
+                if cid in child_cids:
+                    continue
+                meta = meta_map.get(cid)
+                if meta is None:
+                    continue
+                ybit, fmask, is_susp = meta[0], meta[1], meta[2]
+                stage = meta[3] if len(meta) == 4 else STAGE_NEW
+                if not is_susp or stage != STAGE_NEW:
+                    continue
+                if exclude_zahni and (fmask & FLAG_ZAHNI):
+                    continue
+                if top100_only and not (fmask & FLAG_TOP100):
+                    continue
+                if not (ybit & mask):
+                    continue
+                node_hits.append(cid)
+            if node_hits:
+                topics += 1
+                found.update(node_hits)
+        for ch in node.children:
+            _walk(ch)
+
+    for root in index.roots.get(category_key, []):
+        _walk(root)
+
+    return topics, sorted(found)
 
 
 # ── Search Query Builder ─────────────────────────────────────────────────────

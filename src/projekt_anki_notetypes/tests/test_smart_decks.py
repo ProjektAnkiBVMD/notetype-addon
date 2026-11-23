@@ -5,12 +5,15 @@ from ankizin.study_hub.smart_decks import (
     DailyNewLimitInfo,
     create_smart_filtered_deck,
     dissolve_smart_deck,
+    estimate_study_days,
     format_daily_limit_notice,
     get_daily_new_limit_info,
     keep_only_high_yield,
     list_smart_decks,
     maintain_smart_decks,
+    suspend_card_ids,
     suspend_matching_cards,
+    unsuspend_card_ids,
     unsuspend_matching_cards,
     unsuspend_matching_cards_detailed,
 )
@@ -169,3 +172,23 @@ def test_daily_new_limit_info_and_notice(tmp_col):
 
     # Notice suppressed when within daily limit
     assert format_daily_limit_notice(10, DailyNewLimitInfo(40, 10, "Ankizin")) == ""
+    assert estimate_study_days(100, 40) == 3
+    assert estimate_study_days(100, 9999) is None
+
+
+def test_direct_card_id_unsuspend_and_suspend(tmp_col, monkeypatch):
+    did = tmp_col.decks.add_normal_deck_with_name("Ankizin").id
+    _, c1 = add_ankizin_note(tmp_col, did, ["#Ankizin_vAnkiCollab::A"], suspended=True)
+    _, c2 = add_ankizin_note(tmp_col, did, ["#Ankizin_vAnkiCollab::B"], suspended=False)
+
+    def forbid_find_cards(*_a, **_kw):
+        raise AssertionError("direct ID toggle must never call col.find_cards!")
+
+    monkeypatch.setattr(tmp_col, "find_cards", forbid_find_cards)
+    activated, _ = unsuspend_card_ids(tmp_col, c1 + c2)
+    assert activated == c1
+    assert tmp_col.get_card(c1[0]).queue != -1
+
+    paused, _ = suspend_card_ids(tmp_col, c1 + c2)
+    assert sorted(paused) == sorted(c1 + c2)
+    assert all(tmp_col.get_card(cid).queue == -1 for cid in c1 + c2)

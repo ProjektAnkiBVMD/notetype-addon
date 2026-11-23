@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime
 import html as _html
+import math
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Optional, Sequence
@@ -33,6 +34,7 @@ from .tag_index import _LEICHT_PATTERNS, _STARK_PATTERNS, _or_tags
 SMART_DECK_PREFIX = "📌 Ankizin: "
 FILTERED_LIMIT = 99999
 ORDER_ADDED = 5
+LARGE_BATCH_CONFIRM_THRESHOLD = 500
 
 
 @dataclass
@@ -74,6 +76,56 @@ class DailyNewLimitInfo:
 
 
 # ── Mode A: Direct Unsuspend / Suspend / Post-Exam Trim ──────────────────────
+
+def _filter_cids_by_queue(col: Collection, cids: Sequence[int], suspended_only: bool) -> list[int]:
+    """Return subset of `cids` whose current queue is suspended (`-1`) or active (`!= -1`)."""
+    unique = sorted({int(c) for c in cids if c})
+    if not unique:
+        return []
+    op_sql = "queue = -1" if suspended_only else "queue != -1"
+    matched: list[int] = []
+    chunk_size = 500
+    for i in range(0, len(unique), chunk_size):
+        chunk = unique[i : i + chunk_size]
+        id_sql = ",".join(str(cid) for cid in chunk)
+        matched.extend(int(r) for r in col.db.list(f"SELECT id FROM cards WHERE {op_sql} AND id IN ({id_sql})"))
+    return matched
+
+
+def unsuspend_card_ids(
+    col: Collection,
+    cids: Sequence[int],
+    label: str = "Ankizin-Karten freischalten",
+) -> tuple[list[int], OpChanges]:
+    """Unsuspend pre-indexed suspended card IDs directly in ONE undo step (zero find_cards)."""
+    actual = _filter_cids_by_queue(col, cids, suspended_only=True)
+    if not actual:
+        return [], OpChanges()
+    target = begin_undo_entry(col, label)
+    col.sched.unsuspend_cards(actual)
+    return actual, finish_undo_entry(col, target, card=True, study_queues=True)
+
+
+def suspend_card_ids(
+    col: Collection,
+    cids: Sequence[int],
+    label: str = "Ankizin-Karten pausieren",
+) -> tuple[list[int], OpChanges]:
+    """Suspend pre-indexed active card IDs directly in ONE undo step (zero find_cards)."""
+    actual = _filter_cids_by_queue(col, cids, suspended_only=False)
+    if not actual:
+        return [], OpChanges()
+    target = begin_undo_entry(col, label)
+    col.sched.suspend_cards(actual)
+    return actual, finish_undo_entry(col, target, card=True, study_queues=True)
+
+
+def estimate_study_days(new_cards: int, daily_limit: int) -> Optional[int]:
+    """Ceiling estimate of study days for `new_cards` at `daily_limit` new cards/day."""
+    if new_cards <= 0 or daily_limit <= 0 or daily_limit >= 9999:
+        return None
+    return math.ceil(new_cards / daily_limit)
+
 
 def unsuspend_matching_cards_detailed(col: Collection, search: str) -> tuple[list[int], OpChanges]:
     """Unsuspend all suspended cards matching `search` in ONE undo step and return their IDs."""

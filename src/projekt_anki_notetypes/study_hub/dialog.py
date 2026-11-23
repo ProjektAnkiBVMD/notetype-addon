@@ -11,6 +11,7 @@ on a background `QueryOp` thread, and performs all card actions without freezing
 from __future__ import annotations
 
 import html as _html
+from collections import Counter
 from typing import Optional
 
 from aqt import mw
@@ -24,6 +25,7 @@ from aqt.qt import (
     QFrame,
     QHBoxLayout,
     QHeaderView,
+    QKeySequence,
     QLabel,
     QLineEdit,
     QModelIndex,
@@ -37,6 +39,7 @@ from aqt.qt import (
     QRect,
     QRectF,
     QScrollArea,
+    QShortcut,
     QStackedWidget,
     QStyle,
     QStyleOptionViewItem,
@@ -69,8 +72,12 @@ from .tag_index import (
     CATEGORIES,
     AnkizinTagIndex,
     TopicNode,
+    TopicStats,
+    _natural_sort_key,
     build_tag_index,
     build_topic_search,
+    find_stragglers,
+    refresh_card_states,
 )
 
 _study_hub_dialog: Optional["AnkizinStudyHubDialog"] = None
@@ -98,6 +105,9 @@ _STEP_TITLES: list[str] = [
     "② Wichtigkeit (Yield)",
     "③ Freischalten & lernen",
 ]
+
+# Step 1 tree counts always reflect Normal + High + Highest Yield (never shifting with Step 2).
+_TREE_COUNT_YIELD = "standard"
 
 
 def _get_conf() -> dict:
@@ -236,6 +246,7 @@ class AnkizinStudyHubDialog(QDialog):
         self._active_category: str = hub_conf.get("last_category", "amboss")
         self._yield_preset: str = hub_conf.get("last_yield", "high_yield")
         self._mode: str = hub_conf.get("last_mode", "unsuspend")
+        self._sort_mode: str = hub_conf.get("last_sort", "alpha")
         self._top100_only: bool = False
 
         self._cat_buttons: dict[str, QPushButton] = {}
@@ -245,6 +256,12 @@ class AnkizinStudyHubDialog(QDialog):
         self._populating_tree = False
         self._showing_smart_page = False
         self._search_all_categories = False
+        self._expanded_by_cat: dict[str, set[str]] = {}
+        self._tree_items_by_key: dict[str, QTreeWidgetItem] = {}
+        self._tree_is_cross_search: bool = False
+        self._built_tree_sig: Optional[tuple] = None
+        self._active_aliases: dict[str, list[str]] = {}
+        self._straggler_cids: list[int] = []
 
         self._search_timer = QTimer(self)
         self._search_timer.setSingleShot(True)
@@ -252,6 +269,7 @@ class AnkizinStudyHubDialog(QDialog):
         self._search_timer.timeout.connect(self._populate_topic_tree)
 
         self._build_ui()
+        self._install_shortcuts()
         self._main_stack.setCurrentIndex(0)
         disable_auto_default(self, self._primary_btn)
         self._start_initial_load(sync_load=sync_load)
@@ -443,6 +461,23 @@ class AnkizinStudyHubDialog(QDialog):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(10)
 
+        # Nachzügler banner: shown only when active (>=90%) topics received new suspended cards
+        self._straggler_banner, sb_lay = make_card("ankizin_card_accent", padding=(12, 9, 12, 9))
+        sb_row = QHBoxLayout()
+        sb_row.setSpacing(10)
+        self._straggler_lbl = QLabel()
+        self._straggler_lbl.setWordWrap(True)
+        self._straggler_lbl.setStyleSheet("font-size: 12px;")
+        sb_row.addWidget(self._straggler_lbl, 1)
+        self._straggler_btn = QPushButton("Nachzügler freischalten")
+        self._straggler_btn.setAutoDefault(False)
+        self._straggler_btn.setFocusPolicy(Qt.FocusPolicy.TabFocus)
+        self._straggler_btn.clicked.connect(self._activate_stragglers)
+        sb_row.addWidget(self._straggler_btn, 0, Qt.AlignmentFlag.AlignVCenter)
+        sb_lay.addLayout(sb_row)
+        self._straggler_banner.setVisible(False)
+        lay.addWidget(self._straggler_banner)
+
         topic_card, card_lay = make_card("ankizin_card", padding=(14, 12, 14, 12))
         card_lay.setSpacing(8)
 
@@ -459,7 +494,7 @@ class AnkizinStudyHubDialog(QDialog):
         self._search_input.textChanged.connect(self._on_search_text_changed)
         card_lay.addWidget(self._search_input)
 
-        # Compact filter & clear row
+        # Compact filter, sort & clear row
         filter_row = QHBoxLayout()
         filter_row.setContentsMargins(0, 0, 0, 0)
         filter_row.setSpacing(8)
@@ -469,6 +504,20 @@ class AnkizinStudyHubDialog(QDialog):
         self._top100_cb.toggled.connect(self._on_top100_toggled)
         filter_row.addWidget(self._top100_cb)
         filter_row.addStretch()
+
+        sort_lbl = QLabel("Sortierung:")
+        sort_lbl.setStyleSheet("font-size: 12px; color: palette(placeholderText);")
+        self._sort_combo = QComboBox()
+        self._sort_combo.addItem("Alphabetisch", "alpha")
+        self._sort_combo.addItem("Nach Größe", "size")
+        self._sort_combo.addItem("Nach Lernstand", "progress")
+        s_idx = self._sort_combo.findData(self._sort_mode)
+        if s_idx >= 0:
+            self._sort_combo.setCurrentIndex(s_idx)
+        self._sort_combo.currentIndexChanged.connect(self._on_sort_changed)
+        filter_row.addWidget(sort_lbl)
+        filter_row.addWidget(self._sort_combo)
+
         self._clear_sel_btn = QPushButton("Auswahl aufheben")
         self._clear_sel_btn.setObjectName("ghost")
         self._clear_sel_btn.setAutoDefault(False)
@@ -524,6 +573,8 @@ class AnkizinStudyHubDialog(QDialog):
         self._tree.itemChanged.connect(self._on_tree_item_changed)
         self._tree.currentItemChanged.connect(self._on_tree_current_changed)
         self._tree.itemDoubleClicked.connect(self._on_tree_item_double_clicked)
+        self._tree.itemExpanded.connect(lambda it: self._on_tree_expand_toggled(it, True))
+        self._tree.itemCollapsed.connect(lambda it: self._on_tree_expand_toggled(it, False))
         card_lay.addWidget(self._tree, 1)
 
         lay.addWidget(topic_card, 1)
@@ -578,9 +629,13 @@ class AnkizinStudyHubDialog(QDialog):
         self._sel_stats_lbl = QLabel()
         self._sel_stats_lbl.setWordWrap(True)
         self._sel_stats_lbl.setStyleSheet("font-size: 12px;")
+        self._sel_stages_lbl = QLabel()
+        self._sel_stages_lbl.setWordWrap(True)
+        self._sel_stages_lbl.setStyleSheet("font-size: 12px; color: palette(placeholderText);")
         sel_lay.addWidget(self._sel_crumb)
         sel_lay.addWidget(self._sel_bar)
         sel_lay.addWidget(self._sel_stats_lbl)
+        sel_lay.addWidget(self._sel_stages_lbl)
         content_lay.addWidget(sel_card)
 
         prompt_lbl = QLabel("<b>Wie ausführlich möchtest du dieses Thema lernen?</b>")
@@ -967,6 +1022,7 @@ class AnkizinStudyHubDialog(QDialog):
         self._update_lernplan_bar()
         self._top100_cb.setVisible(key != "top100")
         self._populate_topic_tree()
+        self._update_straggler_banner()
         self._refresh_step_views()
 
     def _on_search_text_changed(self, _text: str) -> None:
@@ -1039,6 +1095,7 @@ class AnkizinStudyHubDialog(QDialog):
         hub["last_category"] = self._active_category
         hub["last_yield"] = self._yield_preset
         hub["last_mode"] = self._mode
+        hub["last_sort"] = self._sort_mode
         _save_conf(conf)
 
     def _on_yield_toggled(self, preset: str, checked: bool) -> None:
@@ -1046,13 +1103,23 @@ class AnkizinStudyHubDialog(QDialog):
             return
         self._yield_preset = preset
         self._save_hub_prefs()
-        self._update_tree_counts_in_place()
         self._refresh_step_views()
 
     def _on_top100_toggled(self, checked: bool) -> None:
         self._top100_only = checked
+        self._built_tree_sig = None
         self._populate_topic_tree()
+        self._update_straggler_banner()
         self._refresh_step_views()
+
+    def _on_sort_changed(self) -> None:
+        mode = self._sort_combo.currentData() or "alpha"
+        if self._sort_mode == mode:
+            return
+        self._sort_mode = mode
+        self._built_tree_sig = None
+        self._save_hub_prefs()
+        self._populate_topic_tree()
 
     def _on_mode_toggled(self, mode: str, checked: bool) -> None:
         if not checked:
@@ -1062,106 +1129,282 @@ class AnkizinStudyHubDialog(QDialog):
         self._save_hub_prefs()
         self._refresh_step_views()
 
-    # ── Topic Tree (Zero-Freeze RAM updates) ─────────────────────────────────
+    # ── Keyboard Shortcuts ───────────────────────────────────────────────────
 
-    def _populate_topic_tree(self) -> None:
-        if not self._index.available_categories():
+    def _install_shortcuts(self) -> None:
+        find_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Find), self)
+        find_sc.activated.connect(self._shortcut_find)
+        esc_sc = QShortcut(QKeySequence("Escape"), self)
+        esc_sc.activated.connect(self._shortcut_escape)
+        undo_sc = QShortcut(QKeySequence(QKeySequence.StandardKey.Undo), self)
+        undo_sc.activated.connect(self._shortcut_undo)
+
+    def _shortcut_find(self) -> None:
+        if not self._is_loaded:
+            return
+        if self._showing_smart_page:
+            self._toggle_smart_page()
+        self._go_to_step(0)
+        self._search_input.setFocus()
+        self._search_input.selectAll()
+
+    def _shortcut_escape(self) -> None:
+        if self._showing_smart_page:
+            self._toggle_smart_page()
+        elif self._main_stack.currentIndex() == 2 and self._current_step == 0 and self._search_input.text():
+            self._search_input.clear()
+        elif self._main_stack.currentIndex() == 2 and self._current_step > 0:
+            self._go_to_step(self._current_step - 1)
+        else:
+            self.reject()
+
+    def _shortcut_undo(self) -> None:
+        if not self._is_loaded or mw is None or not hasattr(mw, "onUndo"):
+            return
+        mw.onUndo()
+        col = mw.col if mw else None
+        if col is None:
+            return
+        current_idx = self._index
+        if hasattr(getattr(mw, "taskman", None), "run_in_background"):
+            QueryOp(
+                parent=self,
+                op=lambda c: (
+                    refresh_card_states(c, current_idx),
+                    smart_decks.get_daily_new_limit_info(c),
+                ),
+                success=lambda out: self._apply_rebuilt_index(out[0], out[1]),
+            ).run_in_background()
+        else:
+            self._apply_rebuilt_index(
+                refresh_card_states(col, current_idx),
+                smart_decks.get_daily_new_limit_info(col),
+            )
+
+    # ── Topic Tree (Article-Level Search + O(1) Convergence + Zero Freeze) ───
+
+    def _sort_nodes(self, nodes: list[TopicNode], top100_only: bool) -> list[TopicNode]:
+        if self._sort_mode == "alpha":
+            return sorted(nodes, key=lambda n: _natural_sort_key(n.raw_segment))
+        mode = self._sort_mode
+
+        def _key(n: TopicNode) -> tuple:
+            st = n.stats(_TREE_COUNT_YIELD, top100_only, False)
+            if mode == "progress":
+                pct = (st.studied / st.total) if st.total else 0.0
+                return (-pct, -st.total, _natural_sort_key(n.raw_segment))
+            return (-st.total, _natural_sort_key(n.raw_segment))
+
+        return sorted(nodes, key=_key)
+
+    @staticmethod
+    def _format_item_count(st: TopicStats) -> str:
+        if st.total == 0:
+            return "0"
+        if st.active == st.total:
+            return f"✓ {st.active}/{st.total}"
+        if st.active > 0:
+            return f"{st.active}/{st.total}"
+        return f"{st.total}"
+
+    @staticmethod
+    def _format_item_tooltip(node: TopicNode, st: TopicStats, aliases: Optional[list[str]] = None) -> str:
+        lines = [
+            node.breadcrumb,
+            f"Aktiv: {st.active} · Pausiert: {st.suspended} (Normal + High Yield: {st.total})",
+            f"Lernstand: {st.new_count} neu · {st.seen_count} gesehen · {st.mature_count} gefestigt",
+        ]
+        if aliases:
+            lines.append("")
+            lines.append("Identischer Inhalt auch unter:")
+            for ap in aliases[:6]:
+                lines.append(f"  • {ap}")
+            if len(aliases) > 6:
+                lines.append(f"  … (+{len(aliases) - 6} weitere)")
+        return "\n".join(lines)
+
+    def _on_tree_expand_toggled(self, item: QTreeWidgetItem, expanded: bool) -> None:
+        if self._populating_tree or self._tree_is_cross_search:
+            return
+        if hasattr(self, "_search_input") and self._search_input.text().strip():
+            return
+        key = item.data(0, Qt.ItemDataRole.UserRole)
+        if not key:
+            return
+        cat_set = self._expanded_by_cat.setdefault(self._active_category, set())
+        if expanded:
+            cat_set.add(key)
+        else:
+            cat_set.discard(key)
+
+    def _ensure_category_tree_built(self) -> None:
+        top100_only = self._effective_top100()
+        sig = (self._active_category, top100_only, self._sort_mode)
+        if not self._tree_is_cross_search and self._built_tree_sig == sig:
             return
 
+        self._populating_tree = True
+        self._tree.setUpdatesEnabled(False)
+        self._tree.blockSignals(True)
+        self._tree.clear()
+        self._tree_items_by_key.clear()
+        self._tree_is_cross_search = False
+
+        roots = self._sort_nodes(self._index.roots.get(self._active_category, []), top100_only)
+        for node in roots:
+            if item := self._build_subtree(node, top100_only=top100_only, force_yield="all"):
+                self._tree.addTopLevelItem(item)
+
+        expanded_set = self._expanded_by_cat.get(self._active_category, set())
+        for key, item in self._tree_items_by_key.items():
+            if key in expanded_set:
+                item.setExpanded(True)
+
+        self._update_root_decoration()
+        self._built_tree_sig = sig
+        self._tree.blockSignals(False)
+        self._tree.setUpdatesEnabled(True)
+        self._populating_tree = False
+
+    def _build_article_search_tree(self, query: str, scope_cat: Optional[str]) -> None:
+        """Render converged article-level hits cleanly and highlight/select top match #1."""
         top100_only = self._effective_top100()
         self._populating_tree = True
         self._tree.setUpdatesEnabled(False)
         self._tree.blockSignals(True)
         self._tree.clear()
+        self._tree_items_by_key.clear()
+        self._tree_is_cross_search = True
+        self._built_tree_sig = None
 
-        query = self._search_input.text().strip() if hasattr(self, "_search_input") else ""
-        if query:
-            scope_cat = None if self._search_all_categories else self._active_category
-            hits = self._index.search_tree(
+        winners, aliases = self._index.search_tree_converged(
+            query,
+            category_key=scope_cat,
+            yield_preset=_TREE_COUNT_YIELD,
+            top100_only=top100_only,
+            exclude_zahni=False,
+            limit=60,
+        )
+        self._active_aliases = dict(aliases)
+        cat_names = {k: lbl.split(" ", 1)[1] if " " in lbl else lbl for k, lbl, _ in CATEGORIES}
+
+        if scope_cat is not None and not winners:
+            all_hits, _ = self._index.search_tree_converged(
                 query,
-                category_key=scope_cat,
-                yield_preset=self._yield_preset,
+                category_key=None,
+                yield_preset=_TREE_COUNT_YIELD,
                 top100_only=top100_only,
                 exclude_zahni=False,
                 limit=60,
             )
-            cat_names = {k: lbl.split(" ", 1)[1] if " " in lbl else lbl for k, lbl, _ in CATEGORIES}
-
-            if scope_cat is not None and not hits:
-                all_hits = self._index.search_tree(
-                    query,
-                    category_key=None,
-                    yield_preset=self._yield_preset,
-                    top100_only=top100_only,
-                    exclude_zahni=False,
-                    limit=60,
-                )
-                if all_hits:
-                    cat_lbl = cat_names.get(scope_cat, scope_cat)
-                    self._fallback_lbl.setText(f"Keine Treffer in „{cat_lbl}“.")
-                    self._fallback_btn.setText(f"In allen Bereichen suchen ({len(all_hits)}) →")
-                    self._fallback_bar.setVisible(True)
-                else:
-                    self._fallback_bar.setVisible(False)
+            if all_hits:
+                cat_lbl = cat_names.get(scope_cat, scope_cat)
+                self._fallback_lbl.setText(f"Keine Treffer in „{cat_lbl}“.")
+                self._fallback_btn.setText(f"In allen Bereichen suchen ({len(all_hits)}) →")
+                self._fallback_bar.setVisible(True)
             else:
                 self._fallback_bar.setVisible(False)
-
-            for node in hits:
-                parent_crumb = node.breadcrumb.rsplit(" › ", 1)[0] if " › " in node.breadcrumb else ""
-                if self._search_all_categories:
-                    cat_tag = cat_names.get(node.category_key, "")
-                    ctx = f"{cat_tag}: {parent_crumb}" if parent_crumb else cat_tag
-                    label = f"{node.display_name}  ({ctx})"
-                elif parent_crumb:
-                    label = f"{node.display_name}  ({parent_crumb})"
-                else:
-                    label = node.display_name
-                if item := self._build_subtree(node, override_label=label):
-                    self._tree.addTopLevelItem(item)
         else:
             self._fallback_bar.setVisible(False)
-            roots = self._index.roots.get(self._active_category, [])
-            for node in roots:
-                if item := self._build_subtree(node):
-                    self._tree.addTopLevelItem(item)
 
-        has_expandable = any(
-            self._tree.topLevelItem(i).childCount() > 0
-            for i in range(self._tree.topLevelItemCount())
-        )
-        self._tree.setRootIsDecorated(has_expandable)
+        name_counts = Counter(n.display_name.lower() for n in winners)
+        first_item: Optional[QTreeWidgetItem] = None
 
+        for idx, node in enumerate(winners):
+            al = aliases.get(node.key)
+            top_fach = node.breadcrumb.split(" › ", 1)[0] if " › " in node.breadcrumb else ""
+            if scope_cat is None:
+                cat_tag = cat_names.get(node.category_key, "")
+                ctx = f"{cat_tag} · {top_fach}" if top_fach else cat_tag
+                label = f"{node.display_name}  ({ctx})"
+            elif name_counts[node.display_name.lower()] > 1 and top_fach:
+                label = f"{node.display_name}  ({top_fach})"
+            else:
+                label = node.display_name
+
+            if item := self._build_subtree(
+                node,
+                override_label=label,
+                top100_only=top100_only,
+                aliases=al,
+                force_yield=_TREE_COUNT_YIELD,
+            ):
+                if idx == 0:
+                    font = item.font(0)
+                    font.setBold(True)
+                    item.setFont(0, font)
+                    first_item = item
+                self._tree.addTopLevelItem(item)
+
+        self._update_root_decoration()
         self._tree.blockSignals(False)
         self._tree.setUpdatesEnabled(True)
         self._populating_tree = False
 
+        if first_item is not None and winners:
+            self._tree.setCurrentItem(first_item)
+            self._focused_node = winners[0]
+            self._refresh_step_views()
+        else:
+            self._focused_node = None
+            self._refresh_step_views()
+
+    def _update_root_decoration(self) -> None:
+        has_expandable = False
+        for i in range(self._tree.topLevelItemCount()):
+            top_item = self._tree.topLevelItem(i)
+            if top_item.isHidden():
+                continue
+            for j in range(top_item.childCount()):
+                if not top_item.child(j).isHidden():
+                    has_expandable = True
+                    break
+            if has_expandable:
+                break
+        self._tree.setRootIsDecorated(has_expandable)
+
+    def _populate_topic_tree(self) -> None:
+        if not self._index.available_categories():
+            return
+        query = self._search_input.text().strip() if hasattr(self, "_search_input") else ""
+        if query:
+            scope_cat = None if self._search_all_categories else self._active_category
+            self._build_article_search_tree(query, scope_cat=scope_cat)
+            return
+
+        self._active_aliases = {}
+        self._fallback_bar.setVisible(False)
+        was_search = self._tree_is_cross_search
+        self._ensure_category_tree_built()
+        if was_search:
+            self._focused_node = None
+            self._refresh_step_views()
+
     def _update_tree_counts_in_place(self) -> None:
-        """Update item counts without collapsing expanded branches."""
+        """Update Step 1 item counts (Normal + High + Highest Yield) & tooltips without collapsing."""
         top100_only = self._effective_top100()
         self._tree.setUpdatesEnabled(False)
-
-        def _visit(item: QTreeWidgetItem) -> None:
-            key = item.data(0, Qt.ItemDataRole.UserRole)
+        for key, item in self._tree_items_by_key.items():
             node = self._node_by_key.get(key)
             if node is not None:
-                st = node.stats(self._yield_preset, top100_only, False)
-                item.setText(1, f"{st.active}/{st.total}" if st.active else f"{st.total}")
+                st = node.stats(_TREE_COUNT_YIELD, top100_only, False)
+                item.setText(1, self._format_item_count(st))
                 item.setHidden(st.total == 0)
-            for i in range(item.childCount()):
-                _visit(item.child(i))
-
-        for i in range(self._tree.topLevelItemCount()):
-            _visit(self._tree.topLevelItem(i))
-        has_expandable = any(
-            not self._tree.topLevelItem(i).isHidden() and self._tree.topLevelItem(i).childCount() > 0
-            for i in range(self._tree.topLevelItemCount())
-        )
-        self._tree.setRootIsDecorated(has_expandable)
+                tip = self._format_item_tooltip(node, st, self._active_aliases.get(key))
+                item.setToolTip(0, tip)
+                item.setToolTip(1, tip)
+        self._update_root_decoration()
         self._tree.setUpdatesEnabled(True)
 
-    def _make_tree_item(self, node: TopicNode, label: str, total: int, active: int) -> QTreeWidgetItem:
+    def _make_tree_item(
+        self,
+        node: TopicNode,
+        label: str,
+        st: TopicStats,
+        aliases: Optional[list[str]] = None,
+    ) -> QTreeWidgetItem:
         self._node_by_key[node.key] = node
-        item = QTreeWidgetItem([label, f"{active}/{total}" if active else f"{total}"])
+        item = QTreeWidgetItem([label, self._format_item_count(st)])
         item.setData(0, Qt.ItemDataRole.UserRole, node.key)
         item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
         item.setCheckState(
@@ -1169,17 +1412,56 @@ class AnkizinStudyHubDialog(QDialog):
             Qt.CheckState.Checked if node.key in self._checked_keys else Qt.CheckState.Unchecked,
         )
         item.setTextAlignment(1, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        tip = self._format_item_tooltip(node, st, aliases)
+        item.setToolTip(0, tip)
+        item.setToolTip(1, tip)
+        self._tree_items_by_key[node.key] = item
         return item
 
-    def _build_subtree(self, node: TopicNode, override_label: Optional[str] = None) -> Optional[QTreeWidgetItem]:
-        st = node.stats(self._yield_preset, self._effective_top100(), False)
-        if st.total == 0:
+    def _build_subtree(
+        self,
+        node: TopicNode,
+        override_label: Optional[str] = None,
+        *,
+        top100_only: Optional[bool] = None,
+        aliases: Optional[list[str]] = None,
+        force_yield: Optional[str] = None,
+    ) -> Optional[QTreeWidgetItem]:
+        eff_top100 = self._effective_top100() if top100_only is None else top100_only
+        gate_yield = force_yield or _TREE_COUNT_YIELD
+        if node.stats(gate_yield, eff_top100, False).total == 0:
             return None
-        item = self._make_tree_item(node, override_label or node.display_name, st.total, st.active)
-        for child in node.children:
-            if ch_item := self._build_subtree(child):
+        st = node.stats(_TREE_COUNT_YIELD, eff_top100, False)
+        if st.total == 0 and force_yield is None:
+            return None
+        item = self._make_tree_item(node, override_label or node.display_name, st, aliases=aliases)
+        if st.total == 0:
+            item.setHidden(True)
+        for child in self._sort_nodes(node.children, eff_top100):
+            if ch_item := self._build_subtree(child, top100_only=eff_top100, force_yield=force_yield):
                 item.addChild(ch_item)
         return item
+
+    def _update_straggler_banner(self) -> None:
+        if not self._is_loaded or not self._index.available_categories():
+            self._straggler_cids = []
+            self._straggler_banner.setVisible(False)
+            return
+        topics, cids = find_stragglers(
+            self._index,
+            category_key=self._active_category,
+            yield_preset=_TREE_COUNT_YIELD,
+            top100_only=self._effective_top100(),
+            exclude_zahni=False,
+        )
+        self._straggler_cids = cids
+        if not cids:
+            self._straggler_banner.setVisible(False)
+            return
+        t_txt = "einem deiner aktiven Themen" if topics == 1 else f"<b>{topics}</b> deiner aktiven Themen"
+        k_txt = "eine neue pausierte Karte" if len(cids) == 1 else f"<b>{len(cids)}</b> neue pausierte Karten"
+        self._straggler_lbl.setText(f"✨ In {t_txt} gibt es {k_txt} nach einem Update — direkt freischalten?")
+        self._straggler_banner.setVisible(True)
 
     def _on_tree_item_changed(self, item: QTreeWidgetItem, col_idx: int) -> None:
         if self._populating_tree or col_idx != 0:
@@ -1210,7 +1492,11 @@ class AnkizinStudyHubDialog(QDialog):
     def _clear_checked(self) -> None:
         self._checked_keys.clear()
         self._clear_sel_btn.setVisible(False)
-        self._populate_topic_tree()
+        self._populating_tree = True
+        for item in self._tree_items_by_key.values():
+            if item.checkState(0) == Qt.CheckState.Checked:
+                item.setCheckState(0, Qt.CheckState.Unchecked)
+        self._populating_tree = False
         self._refresh_step_views()
 
     def _target_nodes(self) -> list[TopicNode]:
@@ -1259,7 +1545,7 @@ class AnkizinStudyHubDialog(QDialog):
 
         if not nodes:
             col_st = self._index.collection_stats(
-                yield_preset=self._yield_preset,
+                yield_preset=_TREE_COUNT_YIELD,
                 top100_only=top100_only,
                 exclude_zahni=False,
             )
@@ -1282,6 +1568,7 @@ class AnkizinStudyHubDialog(QDialog):
             top100_only=top100_only,
             exclude_zahni=False,
         )
+        tree_st = breakdown[_TREE_COUNT_YIELD]
         st = breakdown[self._yield_preset]
 
         if len(nodes) == 1:
@@ -1294,11 +1581,11 @@ class AnkizinStudyHubDialog(QDialog):
             topic_title = f"{len(nodes)} Themen ausgewählt"
             topic_crumb = names
 
-        # Step 1 footer
+        # Step 1 footer mirrors Step 1's Normal + High + Highest Yield counts consistently
         self._step1_summary_lbl.setText(
             f"Ausgewählt: <b>{_html.escape(topic_title)}</b> · "
-            f"<span style='color:{COLORS['success']};font-weight:600;'>{st.active} aktiv</span> · "
-            f"<b>{st.suspended}</b> pausiert"
+            f"<span style='color:{COLORS['success']};font-weight:600;'>{tree_st.active} aktiv</span> · "
+            f"<b>{tree_st.suspended}</b> pausiert"
         )
         self._to_step2_btn.setEnabled(True)
         self._to_step2_btn.setText("Weiter: Wichtigkeit wählen →")
@@ -1311,6 +1598,11 @@ class AnkizinStudyHubDialog(QDialog):
             f"<b>{st.total}</b> passende Karten: "
             f"<span style='color:{COLORS['success']};font-weight:600;'>{st.active} aktiv</span> · "
             f"<b>{st.suspended}</b> pausiert"
+        )
+        self._sel_stages_lbl.setText(
+            f"Lernstand: <b>{st.new_count}</b> neu · "
+            f"<b>{st.seen_count}</b> gesehen (&lt; 21 Tage) · "
+            f"<b>{st.mature_count}</b> gefestigt (≥ 21 Tage)"
         )
 
         for ykey, badge in self._yield_count_badges.items():
@@ -1396,14 +1688,16 @@ class AnkizinStudyHubDialog(QDialog):
     ) -> None:
         focused_key = self._focused_node.key if self._focused_node else None
         self._index = new_index
-        self._node_by_key = {n.key: n for n in new_index.all_nodes}
+        self._node_by_key = dict(new_index.by_key)
         self._focused_node = self._node_by_key.get(focused_key) if focused_key else None
         if limit_info is not None:
             self._daily_limit_info = limit_info
         if repopulate_tree:
+            self._built_tree_sig = None
             self._populate_topic_tree()
         else:
             self._update_tree_counts_in_place()
+        self._update_straggler_banner()
         self._refresh_step_views()
 
     def _on_op_failed(self, exc: Exception) -> None:
@@ -1411,21 +1705,81 @@ class AnkizinStudyHubDialog(QDialog):
         self._refresh_step_views()
         showInfo(f"Vorgang fehlgeschlagen: {exc}", parent=self)
 
+    def _confirm_large_batch(self, count: int, new_count: int) -> bool:
+        if count < smart_decks.LARGE_BATCH_CONFIRM_THRESHOLD:
+            return True
+        lim = self._daily_limit_info.daily_limit
+        days = smart_decks.estimate_study_days(new_count, lim)
+        extra = ""
+        if days is not None and new_count > 0:
+            extra = (
+                f"<br><br>Davon sind <b>{new_count}</b> neue Karten — bei deinem Tageslimit von "
+                f"<b>{lim}/Tag</b> dauert das ca. <b>{days} Tage</b>."
+            )
+        return askUser(
+            f"Du schaltest gleich <b>{count} Karten</b> auf einmal frei.{extra}<br><br>"
+            "Möchtest du wirklich fortfahren?",
+            parent=self,
+        )
+
     # ── Actions ──────────────────────────────────────────────────────────────
 
+    def _activate_stragglers(self) -> None:
+        cids = list(self._straggler_cids)
+        if not cids or not self._confirm_large_batch(len(cids), len(cids)):
+            return
+        current_idx = self._index
+        self._set_busy(True)
+
+        def op(col):
+            activated, changes = smart_decks.unsuspend_card_ids(
+                col, cids, label="Ankizin: Nachzügler freischalten"
+            )
+            new_index = refresh_card_states(col, current_idx)
+            limit_info = smart_decks.get_daily_new_limit_info(col, activated)
+            return OpResult((len(activated), new_index, limit_info), changes)
+
+        def done(out: OpResult) -> None:
+            count, new_index, limit_info = out.value
+            self._set_busy(False)
+            self._apply_rebuilt_index(new_index, limit_info)
+            if count:
+                tooltip(f"{count} Nachzügler-Karten freigeschaltet!", parent=self, period=3500)
+
+        CollectionOp(self, op).success(done).failure(self._on_op_failed).run_in_background()
+
     def _on_primary_action(self) -> None:
-        nodes, search = self._current_search()
-        if not nodes or not search:
+        nodes = self._target_nodes()
+        if not nodes:
             return
 
         if self._mode == "unsuspend":
+            target_cids = self._index.filtered_card_ids(
+                nodes,
+                yield_preset=self._yield_preset,
+                top100_only=self._effective_top100(),
+                exclude_zahni=False,
+                only_suspended=True,
+            )
+            if not target_cids:
+                return
+            st = self._index.combined_stats(
+                nodes,
+                yield_preset=self._yield_preset,
+                top100_only=self._effective_top100(),
+                exclude_zahni=False,
+            )
+            if not self._confirm_large_batch(len(target_cids), st.suspended_new):
+                return
+
+            current_idx = self._index
             self._set_busy(True)
 
             def op(col):
-                cids, changes = smart_decks.unsuspend_matching_cards_detailed(col, search)
-                new_index = build_tag_index(col)
-                limit_info = smart_decks.get_daily_new_limit_info(col, cids)
-                return OpResult((len(cids), new_index, limit_info), changes)
+                activated, changes = smart_decks.unsuspend_card_ids(col, target_cids)
+                new_index = refresh_card_states(col, current_idx)
+                limit_info = smart_decks.get_daily_new_limit_info(col, activated)
+                return OpResult((len(activated), new_index, limit_info), changes)
 
             def done(out: OpResult) -> None:
                 count, new_index, limit_info = out.value
@@ -1452,8 +1806,12 @@ class AnkizinStudyHubDialog(QDialog):
 
             CollectionOp(self, op).success(done).failure(self._on_op_failed).run_in_background()
         else:
+            nodes, search = self._current_search()
+            if not search:
+                return
             lifecycle = self._lifecycle_combo.currentData() or "daily"
             title = nodes[0].display_name if len(nodes) == 1 else f"{nodes[0].display_name} +{len(nodes)-1}"
+            current_idx = self._index
             self._set_busy(True)
 
             def op(col):
@@ -1466,7 +1824,7 @@ class AnkizinStudyHubDialog(QDialog):
                     lifecycle=lifecycle,
                     yield_preset=self._yield_preset,
                 )
-                new_index = build_tag_index(col)
+                new_index = refresh_card_states(col, current_idx)
                 limit_info = smart_decks.get_daily_new_limit_info(col)
                 smart_items = smart_decks.list_smart_decks(col, conf)
                 return OpResult((res, conf, new_index, limit_info, smart_items), res.changes)
@@ -1495,16 +1853,26 @@ class AnkizinStudyHubDialog(QDialog):
             CollectionOp(self, op).success(done).failure(self._on_op_failed).run_in_background()
 
     def _on_suspend_selected(self) -> None:
-        nodes, search = self._current_search()
-        if not nodes or not search:
+        nodes = self._target_nodes()
+        if not nodes:
             return
+        active_cids = self._index.filtered_card_ids(
+            nodes,
+            yield_preset=self._yield_preset,
+            top100_only=self._effective_top100(),
+            exclude_zahni=False,
+            only_active=True,
+        )
+        if not active_cids:
+            return
+        current_idx = self._index
         self._set_busy(True)
 
         def op(col):
-            cnt, changes = smart_decks.suspend_matching_cards(col, search)
-            new_index = build_tag_index(col)
+            paused, changes = smart_decks.suspend_card_ids(col, active_cids)
+            new_index = refresh_card_states(col, current_idx)
             limit_info = smart_decks.get_daily_new_limit_info(col)
-            return OpResult((cnt, new_index, limit_info), changes)
+            return OpResult((len(paused), new_index, limit_info), changes)
 
         def done(out: OpResult) -> None:
             cnt, new_index, limit_info = out.value
@@ -1518,12 +1886,18 @@ class AnkizinStudyHubDialog(QDialog):
         nodes = self._target_nodes()
         if not nodes:
             return
-        topic_search = build_topic_search(
-            self._collect_tags(nodes),
-            yield_preset="all",
-            top100_only=self._effective_top100(),
-            exclude_zahni=False,
+        eff_top100 = self._effective_top100()
+        all_active = self._index.filtered_card_ids(
+            nodes, yield_preset="all", top100_only=eff_top100, exclude_zahni=False, only_active=True
         )
+        hy_active = set(
+            self._index.filtered_card_ids(
+                nodes, yield_preset="high_yield", top100_only=eff_top100, exclude_zahni=False, only_active=True
+            )
+        )
+        to_suspend = [cid for cid in all_active if cid not in hy_active]
+        kept_count = len(hy_active)
+
         if not askUser(
             "Alle aktiven Karten dieses Themas, die <b>kein High Yield</b> (stark/leicht gelb) sind, "
             "werden wieder pausiert.<br><br>Deine High-Yield-Karten bleiben aktiv. Fortfahren?",
@@ -1531,13 +1905,16 @@ class AnkizinStudyHubDialog(QDialog):
         ):
             return
 
+        current_idx = self._index
         self._set_busy(True)
 
         def op(col):
-            kept, suspended, changes = smart_decks.keep_only_high_yield(col, topic_search)
-            new_index = build_tag_index(col)
+            paused, changes = smart_decks.suspend_card_ids(
+                col, to_suspend, label="Nach Klausur: Nur High Yield behalten"
+            )
+            new_index = refresh_card_states(col, current_idx)
             limit_info = smart_decks.get_daily_new_limit_info(col)
-            return OpResult((kept, suspended, new_index, limit_info), changes)
+            return OpResult((kept_count, len(paused), new_index, limit_info), changes)
 
         def done(out: OpResult) -> None:
             kept, susp, new_index, limit_info = out.value

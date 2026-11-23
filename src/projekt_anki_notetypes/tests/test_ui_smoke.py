@@ -10,7 +10,7 @@ from ankizin.onboarding.wizard import AnkizinSetupWizard
 from ankizin.study_hub import dialog as hub_dialog_mod
 from ankizin.study_hub.dialog import AnkizinStudyHubDialog
 from ankizin.study_hub.smart_decks import DailyNewLimitInfo, create_smart_filtered_deck
-from ankizin.study_hub.tag_index import build_tag_index, build_topic_search
+from ankizin.study_hub.tag_index import build_tag_index, build_topic_search, refresh_card_states
 from ankizin.ui.styles import ANKIZIN_STYLE
 from .conftest import add_ankizin_note
 
@@ -157,13 +157,18 @@ def test_study_hub_3step_zero_freeze_and_bounds(qapp, mock_mw, tmp_col, monkeypa
 
     monkeypatch.setattr(tmp_col, "find_cards", forbid_find_cards)
 
-    # Scoped AMBOSS search for "Pneumonie" shows 1 expandable top-level row with 2 nested children
+    # Converged article-level search for "Pneumonie": clean top-level article row (no parent wrapper,
+    # no "+N identische Pfade" clutter), #1 hit bold & auto-selected, subtopics expandable underneath
     hub._search_input.setText("Pneumonie")
     hub._populate_topic_tree()
     assert hub._tree.topLevelItemCount() == 1
     pneu_item = hub._tree.topLevelItem(0)
-    assert "Pneumonie" in pneu_item.text(0)
+    assert pneu_item.text(0) == "Pneumonie"
+    assert "identische Pfade" not in pneu_item.text(0)
+    assert pneu_item.font(0).bold() is True
+    assert hub._tree.currentItem() is pneu_item
     assert pneu_item.childCount() == 2
+    assert not pneu_item.isExpanded()
     assert hub._tree.rootIsDecorated() is True
     assert not hub._fallback_bar.isVisible()
 
@@ -174,7 +179,14 @@ def test_study_hub_3step_zero_freeze_and_bounds(qapp, mock_mw, tmp_col, monkeypa
     assert not hub._fallback_bar.isHidden()
     assert "(1)" in hub._fallback_btn.text()
 
-    # Zahni toggle is completely gone; TOP-100 filter lives in Step 1 topic panel
+    # Clearing search restores the full nested category tree (Innere -> Kardiologie / Pneumologie)
+    hub._search_input.setText("")
+    hub._populate_topic_tree()
+    assert hub._tree.topLevelItemCount() == 1
+    assert hub._tree.topLevelItem(0).text(0) == "Innere"
+    assert hub._tree.topLevelItem(0).childCount() == 2
+
+    # Zahni toggle is completely gone; TOP-100 filter & sort live in Step 1 topic panel
     assert not hasattr(hub, "_zahni_cb")
     assert hub._tree.objectName() == "ankizin_topic_tree"
     assert "QTreeWidget#ankizin_topic_tree" in ANKIZIN_STYLE
@@ -182,11 +194,27 @@ def test_study_hub_3step_zero_freeze_and_bounds(qapp, mock_mw, tmp_col, monkeypa
     assert "border-radius: 0px" in ANKIZIN_STYLE
     assert hub._search_input.parentWidget() is hub._top100_cb.parentWidget()
 
+    # Step 1 card counts always stay fixed on Normal + High + Highest Yield ("standard"),
+    # regardless of which Yield option was last selected in Step 2
+    hub._search_input.setText("Pneumonie")
+    hub._populate_topic_tree()
+    count_before = hub._tree.topLevelItem(0).text(1)
     hub._yield_radios["stark"].setChecked(True)
+    assert hub._tree.topLevelItem(0).text(1) == count_before
+    hub._yield_radios["all"].setChecked(True)
+    assert hub._tree.topLevelItem(0).text(1) == count_before
+    hub._yield_radios["stark"].setChecked(True)
+
     hub._search_input.setText("Kardiologie")
     hub._populate_topic_tree()
     assert hub._tree.topLevelItemCount() == 1
+    assert hub._tree.topLevelItem(0).text(0) == "Kardiologie"
     assert hub._tree.rootIsDecorated() is False
+
+    # Sort combo works in RAM without DB queries
+    hub._sort_combo.setCurrentIndex(hub._sort_combo.findData("size"))
+    hub._sort_combo.setCurrentIndex(hub._sort_combo.findData("progress"))
+    hub._sort_combo.setCurrentIndex(hub._sort_combo.findData("alpha"))
 
     # TOP-100 filter updates tree cleanly in RAM without DB queries
     hub._top100_cb.setChecked(True)
@@ -194,14 +222,15 @@ def test_study_hub_3step_zero_freeze_and_bounds(qapp, mock_mw, tmp_col, monkeypa
     hub._top100_cb.setChecked(False)
     assert hub._tree.topLevelItemCount() == 1
 
-    item = hub._tree.topLevelItem(0)
-    hub._tree.setCurrentItem(item)
+    kardio_item = hub._tree.topLevelItem(0)
+    hub._tree.setCurrentItem(kardio_item)
     assert hub._to_step2_btn.isEnabled()
 
-    # Step 2 (Yield)
+    # Step 2 (Yield + learning stages)
     hub._go_to_step(1)
     assert hub._step_stack.currentIndex() == 1
     assert "Kardiologie" in hub._sel_title.text()
+    assert "neu" in hub._sel_stages_lbl.text()
     assert hub._yield_count_badges["stark"].text() == "1 Karten"
 
     # Step 3 (Freischalten)
@@ -212,18 +241,42 @@ def test_study_hub_3step_zero_freeze_and_bounds(qapp, mock_mw, tmp_col, monkeypa
 
     monkeypatch.undo()
 
-    # _apply_rebuilt_index applies a worker-rebuilt index without calling build_tag_index on main thread
+    # Fast refresh_card_states updates active topic + detects Nachzügler cleanly
+    for _ in range(9):
+        add_ankizin_note(
+            tmp_col,
+            did,
+            [
+                "#Ankizin_vAnkiCollab::#M2_M3_Klinik::#AMBOSS::#Bibliothek-Klinik::Neurologie",
+                "#Ankizin_vAnkiCollab::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-stark_gelb",
+            ],
+            suspended=False,
+        )
+    add_ankizin_note(
+        tmp_col,
+        did,
+        [
+            "#Ankizin_vAnkiCollab::#M2_M3_Klinik::#AMBOSS::#Bibliothek-Klinik::Neurologie",
+            "#Ankizin_vAnkiCollab::!MARKIERE_DIESE_KARTEN::M2_IMPP-Relevanz_(yield)::01-stark_gelb",
+        ],
+        suspended=True,
+    )
     rebuilt = build_tag_index(tmp_col)
+    fast_refreshed = refresh_card_states(tmp_col, rebuilt)
     monkeypatch.setattr(
         hub_dialog_mod,
         "build_tag_index",
         lambda *_a, **_kw: (_ for _ in ()).throw(AssertionError("build_tag_index must not run on main thread!")),
     )
-    hub._apply_rebuilt_index(rebuilt, DailyNewLimitInfo(daily_limit=0, total_active_new=0, deck_name="Ankizin"))
+    hub._apply_rebuilt_index(
+        fast_refreshed, DailyNewLimitInfo(daily_limit=0, total_active_new=0, deck_name="Ankizin"), repopulate_tree=True
+    )
     assert hub._limit_hint_lbl.isHidden()
+    assert not hub._straggler_banner.isHidden()
+    assert len(hub._straggler_cids) == 1
 
     # When suspended cards exceed daily limit, Step 3 explains the limit upfront
-    hub._apply_rebuilt_index(rebuilt, DailyNewLimitInfo(daily_limit=1, total_active_new=1, deck_name="Ankizin"))
+    hub._apply_rebuilt_index(fast_refreshed, DailyNewLimitInfo(daily_limit=1, total_active_new=1, deck_name="Ankizin"))
     assert not hub._limit_hint_lbl.isHidden()
     assert "Tageslimit" in hub._limit_hint_lbl.text()
 
