@@ -13,9 +13,15 @@ import os
 import re
 import sys
 import threading
+import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
+
+try:
+    import requests
+except ImportError:  # pragma: no cover
+    requests = None  # type: ignore[assignment]
 
 from anki.collection import Collection, OpChanges
 
@@ -233,6 +239,144 @@ def collab_signup_url() -> str:
         return _module(ANKICOLLAB_ADDON_ID, "var_defs").WEBSITE_BASE_URL + "/signup"
     except Exception:
         return ANKICOLLAB_WEBSITE + "/signup"
+
+
+def collab_website_base_url() -> str:
+    try:
+        url = str(_module(ANKICOLLAB_ADDON_ID, "var_defs").WEBSITE_BASE_URL or "").strip()
+        if url:
+            return url.rstrip("/")
+    except Exception:
+        pass
+    return ANKICOLLAB_WEBSITE.rstrip("/")
+
+
+def collab_api_base_url() -> str:
+    try:
+        url = str(_module(ANKICOLLAB_ADDON_ID, "var_defs").API_BASE_URL or "").strip()
+        if url:
+            return url.rstrip("/")
+    except Exception:
+        pass
+    return "https://plugin.ankicollab.com"
+
+
+def collab_device_id() -> str:
+    try:
+        did = str(_module(ANKICOLLAB_ADDON_ID, "config_manager").get_device_id() or "").strip()
+        if did:
+            return did
+    except Exception:
+        pass
+    return str(uuid.uuid4())
+
+
+def collab_pairing_url(code: str) -> str:
+    try:
+        return str(_module(ANKICOLLAB_ADDON_ID, "dialogs").pairing_url(code))
+    except Exception:
+        return f"{collab_website_base_url()}/pair?code={code}"
+
+
+def collab_interpret_poll(status_code: int, body: Any) -> str:
+    if status_code == 200:
+        status = body.get("status") if isinstance(body, dict) else ""
+        if status == "approved":
+            return "approved"
+        if status == "pending":
+            return "pending"
+        return "retry"
+    if status_code == 403:
+        return "rejected"
+    if status_code in (404, 410):
+        return "expired"
+    return "retry"
+
+
+def collab_pair_init(device_id: Optional[str] = None, timeout: int = 10) -> dict:
+    if requests is None:
+        return {"ok": False, "error": "Netzwerk-Bibliothek (requests) ist nicht verfügbar."}
+    try:
+        response = requests.post(
+            f"{collab_api_base_url()}/pair/init",
+            json={"device_id": device_id or collab_device_id()},
+            timeout=timeout,
+            verify=True,
+        )
+        if response.status_code == 200:
+            try:
+                data = response.json()
+            except ValueError:
+                data = {}
+            code = str(data.get("code", "")).strip() if isinstance(data, dict) else ""
+            poll_token = str(data.get("poll_token", "")).strip() if isinstance(data, dict) else ""
+            if code and poll_token:
+                try:
+                    expires_in = int(data.get("expires_in", 300) or 300)
+                except (TypeError, ValueError):
+                    expires_in = 300
+                return {
+                    "ok": True,
+                    "code": code,
+                    "poll_token": poll_token,
+                    "expires_in": expires_in,
+                }
+        return {
+            "ok": False,
+            "error": f"AnkiCollab hat die Anfrage abgelehnt ({response.status_code}).",
+        }
+    except requests.Timeout:
+        return {
+            "ok": False,
+            "error": "AnkiCollab hat nicht rechtzeitig geantwortet. Bitte prüfe deine Internetverbindung.",
+        }
+    except Exception:
+        return {
+            "ok": False,
+            "error": "AnkiCollab konnte nicht erreicht werden. Bitte prüfe deine Internetverbindung.",
+        }
+
+
+def collab_pair_poll(poll_token: str, timeout: int = 8) -> dict:
+    if requests is None:
+        return {"outcome": "retry", "body": {}, "token": poll_token}
+    try:
+        response = requests.post(
+            f"{collab_api_base_url()}/pair/poll",
+            json={"token": poll_token},
+            timeout=timeout,
+            verify=True,
+        )
+        try:
+            body = response.json()
+        except ValueError:
+            body = {}
+        return {
+            "outcome": collab_interpret_poll(response.status_code, body),
+            "body": body,
+            "token": poll_token,
+        }
+    except Exception:
+        return {"outcome": "retry", "body": {}, "token": poll_token}
+
+
+def collab_store_login_result(body: dict) -> bool:
+    if addon_status(ANKICOLLAB_ADDON_ID) != "loaded":
+        return False
+    try:
+        ok = bool(_module(ANKICOLLAB_ADDON_ID, "auth_manager").auth_manager.store_login_result(body))
+    except Exception:
+        return False
+    if ok:
+        try:
+            _module(ANKICOLLAB_ADDON_ID, "menu").update_ui_for_login_state()
+        except Exception:
+            pass
+        try:
+            _module(ANKICOLLAB_ADDON_ID, "hooks").refresh_note_status_record()
+        except Exception:
+            pass
+    return ok
 
 
 def collab_get_settings() -> dict:

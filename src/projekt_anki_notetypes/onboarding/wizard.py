@@ -7,6 +7,7 @@ applying recommended FSRS settings, and jumping straight into the Lern-Zentrale.
 """
 from __future__ import annotations
 
+import html
 import time
 import webbrowser
 from typing import Callable, Optional
@@ -20,12 +21,15 @@ from aqt.qt import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QObject,
     QPushButton,
     QScrollArea,
+    QThread,
     QTimer,
     QVBoxLayout,
     QWidget,
     Qt,
+    pyqtSignal,
 )
 from aqt.utils import tooltip
 
@@ -47,6 +51,43 @@ from . import engine
 
 ANKICOLLAB_ANKIWEB_PAGE = "https://ankiweb.net/shared/info/1957538407"
 DAY_SECS = 24 * 60 * 60
+_PAIR_TTL_SECONDS = 300
+_PAIR_POLL_INTERVAL_MS = 2000
+
+_ACTIVE_PAIR_WORKERS: set[QThread] = set()
+
+
+class _PairInitWorker(QThread):
+    result = pyqtSignal(object)
+
+    def __init__(self, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        _ACTIVE_PAIR_WORKERS.add(self)
+        self.finished.connect(self._on_finished)
+
+    def _on_finished(self) -> None:
+        _ACTIVE_PAIR_WORKERS.discard(self)
+        self.deleteLater()
+
+    def run(self) -> None:
+        self.result.emit(engine.collab_pair_init())
+
+
+class _PairPollWorker(QThread):
+    result = pyqtSignal(object)
+
+    def __init__(self, poll_token: str, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        self._poll_token = poll_token
+        _ACTIVE_PAIR_WORKERS.add(self)
+        self.finished.connect(self._on_finished)
+
+    def _on_finished(self) -> None:
+        _ACTIVE_PAIR_WORKERS.discard(self)
+        self.deleteLater()
+
+    def run(self) -> None:
+        self.result.emit(engine.collab_pair_poll(self._poll_token))
 
 STEPS = {
     "welcome": "Willkommen",
@@ -172,6 +213,19 @@ class AnkizinSetupWizard(QDialog):
         self._poll = QTimer(self)
         self._poll.timeout.connect(self._poll_download)
         self._pull_finished_at: Optional[float] = None
+
+        self._pair_code = ""
+        self._pair_token = ""
+        self._pair_outstanding = ""
+        self._pair_then: Optional[Callable] = None
+        self._pair_closing = False
+        self._pair_attempt_id = 0
+        self._pair_poll_timer = QTimer(self)
+        self._pair_poll_timer.setInterval(_PAIR_POLL_INTERVAL_MS)
+        self._pair_poll_timer.timeout.connect(self._pair_poll_once)
+        self._pair_expiry_timer = QTimer(self)
+        self._pair_expiry_timer.setSingleShot(True)
+        self._pair_expiry_timer.timeout.connect(self._on_pair_expired)
 
         self._build_ui()
         self.finished.connect(self._on_closed)
@@ -346,6 +400,7 @@ class AnkizinSetupWizard(QDialog):
         )
 
     def go(self, step: str) -> None:
+        self._stop_pairing()
         self.current = step
         self.busy = False
         self._refresh_rail()
@@ -511,16 +566,18 @@ class AnkizinSetupWizard(QDialog):
         self._page(
             "Dein kostenloses AnkiCollab-Konto",
             "<p>Um das Ankizin-Deck herunterzuladen, brauchst du ein kostenloses <b>AnkiCollab-Konto</b> "
-            "(eigenes Konto, unabhängig von AnkiWeb). Du meldest dich nur ein einziges Mal an.</p>",
-            primary=("Ich bin bereit → Jetzt anmelden", self._sign_in),
+            "(eigenes Konto, unabhängig von AnkiWeb). Anmeldung und Kontoerstellung öffnen deinen gewohnten "
+            "<b>Standard-Browser</b> — so funktionieren <b>Passkeys</b>, iCloud-Schlüsselbund / Windows Hello "
+            "und Passwortmanager (z. B. Bitwarden) zuverlässig.</p>",
+            primary=("Jetzt mit Anki verbinden", self._sign_in),
             secondary=("Später", self.close),
         )
 
         card1, lay1 = make_card("ankizin_card_soft")
         lay1.addWidget(QLabel("<b>Schritt 1: Noch kein Konto?</b>"))
         l1 = QLabel(
-            "Erstelle in 30 Sekunden ein kostenloses Konto auf ankicollab.com. "
-            "<b>Wichtig:</b> Speichere deinen Benutzernamen &amp; dein Passwort sicher ab (z. B. im Passwortmanager)."
+            "Erstelle in 30 Sekunden dein kostenloses Konto auf ankicollab.com. "
+            "Dein Browser kann Passwort oder Passkey dabei direkt sicher speichern."
         )
         l1.setWordWrap(True)
         lay1.addWidget(l1)
@@ -534,37 +591,179 @@ class AnkizinSetupWizard(QDialog):
         card2, lay2 = make_card("ankizin_card_accent")
         lay2.addWidget(QLabel("<b>Schritt 2: Mit Anki verbinden</b>"))
         l2 = QLabel(
-            "Klicke unten auf <b>Jetzt anmelden</b>. Im Browser erscheint ein kurzer Bestätigungs-Button — "
-            "danach ist Anki automatisch verbunden."
+            "Klicke unten auf <b>Jetzt mit Anki verbinden</b>. Dein Browser öffnet eine kurze "
+            "Bestätigungsseite — sobald du dort bestätigst, geht es hier <b>automatisch</b> weiter."
         )
         l2.setWordWrap(True)
         lay2.addWidget(l2)
+        classic_btn = QPushButton("Lieber mit Passwort anmelden (klassisches Fenster)")
+        classic_btn.setObjectName("ghost")
+        classic_btn.setAutoDefault(False)
+        classic_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        classic_btn.clicked.connect(self._sign_in_classic)
+        lay2.addWidget(classic_btn, 0, Qt.AlignmentFlag.AlignLeft)
         self._extra_lay.addWidget(card2)
+
+    def _record_logged_in(self) -> None:
+        if "Bei AnkiCollab angemeldet" not in self.summary:
+            self.summary.append("Bei AnkiCollab angemeldet")
 
     def _sign_up(self) -> None:
         webbrowser.open(engine.collab_signup_url())
         self._status_lbl.setText(
-            f"<span style='color:{COLORS['accent']};'>Konto erstellt? Dann klicke unten rechts auf "
-            "<b>Jetzt anmelden</b>.</span>"
+            f"<span style='color:{COLORS['accent']};'>Konto im Browser erstellt? "
+            "Dann klicke unten rechts auf <b>Jetzt mit Anki verbinden</b>.</span>"
         )
 
     def _sign_in(self, then: Optional[Callable] = None) -> None:
+        if engine.collab_is_logged_in():
+            self._stop_pairing()
+            self._record_logged_in()
+            (then or self.next)()
+            return
+        self._start_pairing(then=then)
+
+    def _start_pairing(self, then: Optional[Callable] = None) -> None:
+        self._stop_pairing()
+        self._pair_attempt_id += 1
+        attempt_id = self._pair_attempt_id
+        self._pair_then = then
+        self._status_lbl.setText(
+            f"<span style='color:{COLORS['accent']};font-weight:600;'>"
+            "⏳ Verbindungscode wird bei AnkiCollab angefordert…</span>"
+        )
+        parent = mw if isinstance(mw, QObject) else None
+        worker = _PairInitWorker(parent=parent)
+        worker.result.connect(lambda payload, aid=attempt_id: self._on_pair_init_result(payload, aid))
+        worker.start()
+
+    def _on_pair_init_result(self, payload: dict, attempt_id: Optional[int] = None) -> None:
+        if self._pair_closing:
+            return
+        if attempt_id is not None and attempt_id != self._pair_attempt_id:
+            return
+        if not isinstance(payload, dict) or not payload.get("ok"):
+            err = html.escape(str((payload or {}).get("error") or "Verbindungscode konnte nicht angefordert werden."))
+            self._status_lbl.setText(
+                f"<span style='color:{COLORS['danger']};'>{err} "
+                "Klicke einfach erneut auf <b>Jetzt mit Anki verbinden</b> oder nutze unten das klassische Passwort-Fenster.</span>"
+            )
+            return
+
+        code = str(payload.get("code", "")).strip()
+        token = str(payload.get("poll_token", "")).strip()
+        if not code or not token:
+            self._on_pair_init_result(
+                {"ok": False, "error": "Ungültige Antwort von AnkiCollab erhalten."},
+                attempt_id=attempt_id,
+            )
+            return
+
+        self._pair_code = code
+        self._pair_token = token
+        url = engine.collab_pairing_url(code)
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
+
+        safe_code = html.escape(code)
+        safe_url = html.escape(url, quote=True)
+        self._status_lbl.setText(
+            f"<span style='color:{COLORS['accent']};'><b>Browser geöffnet — Code:</b> "
+            f"<code>{safe_code}</code><br>"
+            "Bestätige die Anmeldung kurz in deinem Browser, danach geht es hier <b>automatisch</b> weiter. "
+            f"<a href='{safe_url}'>Link erneut öffnen ↗</a></span>"
+        )
+        self._pair_poll_timer.start()
+        try:
+            ttl = int(payload.get("expires_in") or _PAIR_TTL_SECONDS)
+        except (TypeError, ValueError):
+            ttl = _PAIR_TTL_SECONDS
+        self._pair_expiry_timer.start(max(10, ttl) * 1000)
+
+    def _pair_poll_once(self) -> None:
+        if self._pair_closing or not self._pair_token:
+            return
+        if self._pair_outstanding == self._pair_token:
+            return
+        self._pair_outstanding = self._pair_token
+
+        parent = mw if isinstance(mw, QObject) else None
+        worker = _PairPollWorker(self._pair_token, parent=parent)
+        worker.result.connect(self._on_pair_poll_result)
+        worker.start()
+
+    def _on_pair_poll_result(self, payload: dict) -> None:
+        if self._pair_closing:
+            return
+        if not isinstance(payload, dict) or payload.get("token") != self._pair_token:
+            return
+        self._pair_outstanding = ""
+
+        outcome = payload.get("outcome")
+        if outcome == "approved":
+            if engine.collab_store_login_result(payload.get("body") or {}):
+                cb = self._pair_then or self.next
+                self._stop_pairing()
+                self._record_logged_in()
+                self.raise_()
+                self.activateWindow()
+                cb()
+            else:
+                self._stop_pairing()
+                self._status_lbl.setText(
+                    f"<span style='color:{COLORS['danger']};'>AnkiCollab-Anmeldedaten konnten nicht gespeichert werden. "
+                    "Bitte versuche es erneut oder nutze das klassische Passwort-Fenster.</span>"
+                )
+            return
+
+        if outcome == "rejected":
+            self._stop_pairing()
+            self._status_lbl.setText(
+                f"<span style='color:{COLORS['warning']};'>Die Anmeldung wurde im Browser abgelehnt. "
+                "Klicke einfach erneut auf <b>Jetzt mit Anki verbinden</b>.</span>"
+            )
+            return
+
+        if outcome == "expired":
+            self._on_pair_expired()
+
+    def _on_pair_expired(self) -> None:
+        self._stop_pairing()
+        if self._pair_closing:
+            return
+        self._status_lbl.setText(
+            f"<span style='color:{COLORS['warning']};'>Der Verbindungscode ist abgelaufen. "
+            "Klicke einfach erneut auf <b>Jetzt mit Anki verbinden</b> für einen neuen Code.</span>"
+        )
+
+    def _stop_pairing(self) -> None:
+        self._pair_poll_timer.stop()
+        self._pair_expiry_timer.stop()
+        self._pair_code = ""
+        self._pair_token = ""
+        self._pair_outstanding = ""
+        self._pair_then = None
+
+    def _sign_in_classic(self, then: Optional[Callable] = None) -> None:
+        self._stop_pairing()
         if not engine.collab_is_logged_in():
             try:
                 engine.collab_open_login(self)
             except Exception as e:
                 self._status_lbl.setText(
                     f"<span style='color:{COLORS['danger']};'>Anmeldefenster konnte nicht geöffnet werden ({e}). "
-                    "Öffne oben im Menü <b>AnkiCollab → Login</b> und klicke danach hier erneut auf <b>Jetzt anmelden</b>.</span>"
+                    "Öffne oben im Menü <b>AnkiCollab → Login</b> und klicke danach hier erneut auf <b>Jetzt mit Anki verbinden</b>.</span>"
                 )
                 return
         if engine.collab_is_logged_in():
-            self.summary.append("Bei AnkiCollab angemeldet")
+            self._record_logged_in()
             (then or self.next)()
         else:
             self._status_lbl.setText(
                 f"<span style='color:{COLORS['warning']};'>Du bist noch nicht angemeldet. Bitte bestätige die Anmeldung "
-                "im Browser und klicke dann erneut auf <b>Jetzt anmelden</b>.</span>"
+                "im Browser und klicke dann erneut auf <b>Jetzt mit Anki verbinden</b>.</span>"
             )
 
     # Prepare & Backup -------------------------------------------------------
@@ -1123,6 +1322,8 @@ class AnkizinSetupWizard(QDialog):
         open_study_hub()
 
     def _on_closed(self, _result: int) -> None:
+        self._pair_closing = True
+        self._stop_pairing()
         self._poll.stop()
         if self.current == "download" and self.busy:
             tooltip("AnkiCollab lädt Ankizin im Hintergrund weiter herunter.", parent=mw, period=5000)
@@ -1132,6 +1333,11 @@ class AnkizinSetupWizard(QDialog):
                 parent=mw,
                 period=5000,
             )
+
+    def closeEvent(self, event) -> None:
+        self._pair_closing = True
+        self._stop_pairing()
+        super().closeEvent(event)
 
 
 def open_setup_wizard(resumed: bool = False, force: bool = False) -> None:
