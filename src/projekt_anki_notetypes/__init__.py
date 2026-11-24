@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from concurrent.futures import Future
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Sequence

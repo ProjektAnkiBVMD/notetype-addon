@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import webbrowser
 import aqt
 import re
