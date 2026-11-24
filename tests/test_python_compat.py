@@ -24,7 +24,7 @@ def uses_union_annotation(tree: ast.AST) -> bool:
 class TestPythonCompat(unittest.TestCase):
     def test_union_annotations_are_not_evaluated(self):
         for path in SRC.rglob("*.py"):
-            tree = ast.parse(path.read_text())
+            tree = ast.parse(path.read_text(), feature_version=(3, 9))  # the add-on supports Python 3.9, which Anki 2.1.50 to 25.05 ship
             has_future = any(
                 isinstance(n, ast.ImportFrom) and n.module == "__future__"
                 and any(a.name == "annotations" for a in n.names)
