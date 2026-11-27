@@ -179,3 +179,22 @@ def set_action_no_role(action: Any) -> None:
             action.setMenuRole(QAction.NoRole)
     except Exception:
         pass
+
+
+def qt_flag_int(flag: Any) -> int:
+    """Convert a Qt enum/flag to int cleanly across PyQt5 (QFlags) and PyQt6 (Enum)."""
+    val = getattr(flag, "value", None)
+    return int(val) if val is not None else int(flag)
+
+
+def clear_style_state(opt: Any, *flags: Any) -> None:
+    """Clear QStyle.StateFlag bits on QStyleOption safely on both PyQt5 and PyQt6."""
+    if not flags:
+        return
+    mask = flags[0]
+    for f in flags[1:]:
+        mask = mask | f
+    if hasattr(opt.state, "value"):
+        opt.state &= ~mask
+    else:
+        opt.state = type(opt.state)(int(opt.state) & ~qt_flag_int(mask))

@@ -52,7 +52,7 @@ from aqt.qt import (
 )
 from aqt.utils import askUser, showInfo, tooltip
 
-from ..compat import make_op_changes
+from ..compat import clear_style_state, make_op_changes, qt_flag_int
 from ..constants import ADDON_DIR_NAME
 from ..onboarding.engine import OpResult
 from ..ui import (
@@ -191,9 +191,12 @@ class _AnkizinTopicTree(QTreeWidget):
             painter.restore()
 
         opt = QStyleOptionViewItem(option)
-        opt.state &= ~QStyle.StateFlag.State_Selected
-        opt.state &= ~QStyle.StateFlag.State_MouseOver
-        opt.state &= ~QStyle.StateFlag.State_HasFocus
+        clear_style_state(
+            opt,
+            QStyle.StateFlag.State_Selected,
+            QStyle.StateFlag.State_MouseOver,
+            QStyle.StateFlag.State_HasFocus,
+        )
         super().drawRow(painter, opt, index)
 
     def drawBranches(self, painter: QPainter, rect: QRect, index: QModelIndex) -> None:
@@ -1159,9 +1162,10 @@ class AnkizinStudyHubDialog(QDialog):
             self.reject()
 
     def _shortcut_undo(self) -> None:
-        if not self._is_loaded or mw is None or not hasattr(mw, "onUndo"):
+        undo_fn = getattr(mw, "onUndo", None) or getattr(mw, "on_undo", None)
+        if not self._is_loaded or mw is None or not callable(undo_fn):
             return
-        mw.onUndo()
+        undo_fn()
         col = mw.col if mw else None
         if col is None:
             return
@@ -1411,7 +1415,7 @@ class AnkizinStudyHubDialog(QDialog):
             0,
             Qt.CheckState.Checked if node.key in self._checked_keys else Qt.CheckState.Unchecked,
         )
-        item.setTextAlignment(1, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        item.setTextAlignment(1, qt_flag_int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter))
         tip = self._format_item_tooltip(node, st, aliases)
         item.setToolTip(0, tip)
         item.setToolTip(1, tip)

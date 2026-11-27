@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from concurrent.futures import Future
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Sequence
+from typing import TYPE_CHECKING, List, Optional, Sequence
 
 if TYPE_CHECKING:
     from anki.notes import Note, NoteId
@@ -122,7 +124,7 @@ def maybe_show_notetypes_update_notice():
         pass
 
 
-def _major_minor(version: str | None) -> str | None:
+def _major_minor(version: Optional[str]) -> Optional[str]:
     """'6.3.2' -> '6.3', so that fix releases (6.3.1, 6.3.2, ...) don't count as a new version."""
     return ".".join(version.split(".")[:2]) if version else None
 
